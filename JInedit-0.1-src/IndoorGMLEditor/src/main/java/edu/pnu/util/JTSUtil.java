@@ -2,68 +2,43 @@ package edu.pnu.util;
 
 import java.util.ArrayList;
 
+import org.geotools.geometry.jts.JTSFactoryFinder;
+
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.PrecisionModel;
-
-import edu.pnu.gui.SpaceLayerPanel;
 
 public class JTSUtil {
-        private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
-	private static final GeometryFactory gf = new GeometryFactory(pm); 
+	private static GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
 	
 	public static Point snapPointToLineString(LineString line, Point point) {
-	        Point startPoint = line.getStartPoint();
-	        Point endPoint = line.getEndPoint();
-		double startX = startPoint.getX();
-		double startY = startPoint.getY();
-		double endX = endPoint.getX();
-                double endY = endPoint.getY();
-                double offsetX = endX - startX;
-                double offsetY = endY - startY;
+		Envelope envelope = line.getEnvelopeInternal();
+		double minX = envelope.getMinX();
+		double minY = envelope.getMinY();
 		
-		double minDistance = 50;
+		double minDistance = 999;
 		Point snapPoint = null;
 		
 		for(int i = 0; i < 1000; i++) {
-		        double dx = startX + offsetX * ((double) i) / 1000;
-		        double dy = startY + offsetY * ((double) i) / 1000;
-			//Coordinate coord = new Coordinate(minX + envelope.getWidth() * ((double) i) / 1000, minY + envelope.getHeight() * ((double)i) / 1000);
-		        Coordinate coord = new Coordinate(dx, dy);
-                        Point p = gf.createPoint(coord);
-                                                
-                        if(line.contains(p) && point.distance(p) < minDistance) {
-                                snapPoint = p;
-                                minDistance = point.distance(p);
-                                System.out.println("distance changed");
-                        }
-		        
-		        /*boolean isdxInteger = (dx == Math.floor(dx)) && Double.isFinite(dx);
-		        boolean isdyInteger = (dy == Math.floor(dy)) && Double.isFinite(dy);
-		        if(isdxInteger && isdyInteger) {
-        		        Coordinate coord = new Coordinate(dx, dy);
-        			Point p = geometryFactory.createPoint(coord);
-        			
-        			if(point.distance(p) < minDistance) {
-        				snapPoint = p;
-        				minDistance = point.distance(p);
-        				System.out.println("distance changed");
-        			}
-		        }*/
+			Coordinate coord = new Coordinate(minX + envelope.getWidth() * ((double) i) / 1000, minY + envelope.getHeight() * ((double)i) / 1000);
+			Point p = geometryFactory.createPoint(coord);
+			
+			if(point.distance(p) < minDistance) {
+				snapPoint = p;
+				minDistance = point.distance(p);
+			}
 		}
 		
-		if(snapPoint != null && line.contains(snapPoint)) {
-		    System.out.println("snappoint is contained");
-		}
-		return snapPoint;
+		return line.getCentroid();
+		//return snapPoint;
 	}
 	public static Point convertJTSPoint(net.opengis.indoorgml.geometry.Point p) {
 		Coordinate coord = new Coordinate(p.getPanelRatioX(), p.getPanelRatioY());
 		
-		Point point = gf.createPoint(coord);
+		Point point = geometryFactory.createPoint(coord);
 		
 		return point;
 	}
@@ -71,22 +46,22 @@ public class JTSUtil {
 	public static LineString convertJTSLineString(net.opengis.indoorgml.geometry.LineString ls) {
 		ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
 		for(net.opengis.indoorgml.geometry.Point p : ls.getPoints()) {
-			double x = p.getPanelX();
-			double y = p.getPanelY();
+			double x = p.getPanelRatioX();
+			double y = p.getPanelRatioY();
 			
 			coords.add(new Coordinate(x, y));
 		}
 		Coordinate[] coordsArr = new Coordinate[coords.size()];
 		coords.toArray(coordsArr);
-		LineString lineString = gf.createLineString(coordsArr);
+		LineString lineString = geometryFactory.createLineString(coordsArr);
 				
 		return lineString;
 	}
 	
 	public static net.opengis.indoorgml.geometry.Point convertPoint(Point point) {
 		net.opengis.indoorgml.geometry.Point newPoint = new net.opengis.indoorgml.geometry.Point();
-		newPoint.setPanelX(point.getX());
-		newPoint.setPanelY(point.getY());
+		newPoint.setPanelRatioX(point.getX());
+		newPoint.setPanelRatioY(point.getY());
 		
 		return newPoint;
 	}

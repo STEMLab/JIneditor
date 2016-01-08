@@ -5,13 +5,7 @@ import java.util.ArrayList;
 import net.opengis.indoorgml.geometry.LineString;
 import net.opengis.indoorgml.geometry.Point;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.PrecisionModel;
-
 public class GeometryUtil {
-        private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
-        public static final GeometryFactory jtsFactory = new GeometryFactory(pm); 
 	// use JTS
 	public static boolean isContainsLineString(LineString ls1, LineString ls2) {
 		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
@@ -81,24 +75,6 @@ public class GeometryUtil {
 		return splited;
 	}
 	
-	public static Point getSnapPointToLineString(double x1, double y1, double x2, double y2, double x, double y) {
-	    Coordinate coord1 = new Coordinate(x1, y1);
-	    Coordinate coord2 = new Coordinate(x2, y2);
-	    Coordinate coord3 = new Coordinate(x, y);
-            com.vividsolutions.jts.geom.Point p = jtsFactory.createPoint(coord3);
-            
-            com.vividsolutions.jts.geom.LineString ls = jtsFactory.createLineString(new Coordinate[]{coord1, coord2});
-            
-            com.vividsolutions.jts.geom.Point snapPoint = JTSUtil.snapPointToLineString(ls, p);
-            Point snap = null;
-            if(snapPoint != null) {
-                snap = new Point();
-                snap.setPanelX(snapPoint.getX());
-                snap.setPanelY(snapPoint.getY());
-            }
-            return snap;
-        }
-	
 	public static Point getSnapPointToLineString(LineString ls, double x, double y) {
 		Point p = new Point();
 		p.setPanelRatioX(x);
@@ -120,29 +96,4 @@ public class GeometryUtil {
 		
 		return snapP;
 	}
-	
-	public static double getDistancePointToLineString(LineString ls, Point p) {
-            com.vividsolutions.jts.geom.LineString line = JTSUtil.convertJTSLineString(ls);
-            com.vividsolutions.jts.geom.Point point = JTSUtil.convertJTSPoint(p);
-            
-            return line.distance(point);
-	}
-	
-	public static double getDistancePointToLineString(LineString ls, double x, double y) {
-            com.vividsolutions.jts.geom.LineString line = JTSUtil.convertJTSLineString(ls);
-            Coordinate coord = new Coordinate(x, y);
-            com.vividsolutions.jts.geom.Point point = jtsFactory.createPoint(coord);
-            
-            return line.distance(point);
-        }
-	
-	public static double getDistancePointToLine(double linex1, double liney1, double linex2, double liney2, double x, double y) {
-	    Coordinate coord1 = new Coordinate(linex1, liney1);
-	    Coordinate coord2 = new Coordinate(linex2, liney2);
-	    Coordinate coord3 = new Coordinate(x, y);
-            com.vividsolutions.jts.geom.LineString line = jtsFactory.createLineString(new Coordinate[]{coord1, coord2});
-            com.vividsolutions.jts.geom.Point point = jtsFactory.createPoint(coord3);
-            
-            return line.distance(point);
-        }
 }

@@ -433,7 +433,7 @@ public class ProjectFile implements Serializable {
 				boundaryDuality.setDuality(null);
 			}
 			
-			if(boundary.getGeometry2D() != null) {
+			if(boundary.getGeometry2D() != null) {			
 				if(boundary.getGeometry2D().getxLinkGeometry() == null) {
 					HashMap<LineString, ArrayList<LineString>> xLink2DMap = currentCellSpaceBoundaryOnFloor.getxLink2DMap();
 					if(xLink2DMap.containsKey(boundary.getGeometry2D())) {
