@@ -1,19 +1,3 @@
-/*
- *    GeoTools - The Open Source Java GIS Toolkit
- *    http://geotools.org
- *
- *    (C) 2016, Open Source Geospatial Foundation (OSGeo)
- *
- *    This library is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation;
- *    version 2.1 of the License.
- *
- *    This library is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
- */
 package edu.pnu.gui;
 
 import java.awt.BorderLayout;
@@ -21,15 +5,16 @@ import java.awt.FlowLayout;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
 
-/**
- * @author Donguk Seo
- *
- */
+import net.opengis.indoorgml.core.CellSpace;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 public class CellSpacePropertiesDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
@@ -44,10 +29,11 @@ public class CellSpacePropertiesDialog extends JDialog {
     private JLabel lblCeilingHeight;
     private JTextField textField_Ceiling;
 
+    private CellSpace cellSpace;
     /**
      * Launch the application.
      */
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         try {
             CellSpacePropertiesDialog dialog = new CellSpacePropertiesDialog();
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -55,12 +41,14 @@ public class CellSpacePropertiesDialog extends JDialog {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     /**
      * Create the dialog.
      */
-    public CellSpacePropertiesDialog() {
+    public CellSpacePropertiesDialog(CellSpace cellSpace) {
+        this.cellSpace = cellSpace;
+        
         setTitle("Properties");
         setBounds(100, 100, 261, 211);
         getContentPane().setLayout(new BorderLayout());
@@ -83,6 +71,23 @@ public class CellSpacePropertiesDialog extends JDialog {
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
                 JButton okButton = new JButton("OK");
+                okButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if (textField_ID.getText() != null) {
+                            cellSpace.setGmlID(textField_ID.getText());
+                        }
+                        if (textField_Name.getText() != null) {
+                            cellSpace.setName(textField_Name.getText());
+                        }
+                        if (textField_Description.getText() != null) {
+                            cellSpace.setDescription(textField_Description.getText());
+                        }
+                        if(textField_Ceiling.getText() != null) {
+                            cellSpace.setCeilingHeight(Double.parseDouble(textField_Ceiling.getText()));
+                        }
+                        dispose();
+                    }
+                });
                 okButton.setActionCommand("OK");
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
@@ -128,6 +133,7 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_ID.setBounds(112, 7, 116, 21);
         	textField_ID.setColumns(10);
         }
+        textField_ID.setText(cellSpace.getGmlID());
         return textField_ID;
     }
     private JTextField getTextField_Name() {
@@ -136,6 +142,7 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_Name.setBounds(112, 32, 116, 21);
         	textField_Name.setColumns(10);
         }
+        textField_Name.setText(cellSpace.getName());
         return textField_Name;
     }
     private JTextField getTextField_Description() {
@@ -144,6 +151,7 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_Description.setBounds(112, 57, 116, 21);
         	textField_Description.setColumns(10);
         }
+        textField_Description.setText(cellSpace.getDescription());
         return textField_Description;
     }
     private JTextField getTextField_Duality() {
@@ -152,6 +160,9 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_Duality.setEditable(false);
         	textField_Duality.setBounds(112, 107, 116, 21);
         	textField_Duality.setColumns(10);
+        }
+        if(cellSpace.getDuality() != null) {
+            textField_Duality.setText(cellSpace.getDuality().getGmlID());
         }
         return textField_Duality;
     }
@@ -168,6 +179,7 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_Ceiling.setBounds(112, 82, 116, 21);
         	textField_Ceiling.setColumns(10);
         }
+        textField_Ceiling.setText(String.valueOf(cellSpace.getCeilingHeight()));
         return textField_Ceiling;
     }
 }

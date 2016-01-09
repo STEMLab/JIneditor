@@ -48,7 +48,7 @@ public class IndoorGML3DGeometryBuilder {
 	public void fromCellSpaceBoundaryOnFloor(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
 		double groundHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getGroundHeight();
 		double ceilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
-		double doorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
+		double defaultDoorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
 		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
 		
 		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
@@ -144,6 +144,19 @@ public class IndoorGML3DGeometryBuilder {
 		
 		prevReference = currentReference;
 	}
+	
+	public void setDoorHeight(CellSpaceBoundary boundary, double defaultDoorHeight) {
+	        LineString ls = boundary.getGeometry2D();
+	        double doorHeight = defaultDoorHeight;
+	        
+	        if(!boundary.getIsDefaultDoor()) {
+	                doorHeight = boundary.getDoorHeight();
+	        }
+	        
+	        for(Point p : ls.getPoints()) {
+	                p.setZ(doorHeight);
+	        }
+	}
 		
 	public void fromCellSpaceOnFloor(CellSpaceOnFloor cellSpaceOnFloor, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
@@ -169,8 +182,11 @@ public class IndoorGML3DGeometryBuilder {
 		// 옆면은 CellSpcaeBoundary의 기하를 이용한다. 2D Geometry에서 xlink로 되어있는 boundary를 위해 Map에 정보를 저장해서 참조하도록 한다.
 			
 		double groundHeight = floorProperty.getGroundHeight();
-		double ceilingHeight = floorProperty.getCeilingHeight();
 		double doorHeight = floorProperty.getDoorHeight();
+                double ceilingHeight = floorProperty.getCeilingHeight();
+		if(!cellSpace.getIsDefaultCeiling()) {
+		        ceilingHeight = cellSpace.getCeilingHeight();
+		}
 		
 		Shell shell = new Shell();
 		ArrayList<Polygon> surfaceMember = new ArrayList<Polygon>();		

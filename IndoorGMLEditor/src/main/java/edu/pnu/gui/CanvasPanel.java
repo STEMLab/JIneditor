@@ -28,6 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import net.opengis.indoorgml.core.AbstractFeature;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
@@ -47,7 +48,6 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.GeometryUtil;
-import javax.swing.JButton;
 
 public class CanvasPanel extends JPanel implements MouseListener, MouseMotionListener,
         MouseWheelListener, KeyListener {
@@ -1044,7 +1044,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         dualityState.setDuality(cellSpace);
         stateOnFloor.getStateMember().add(dualityState);
         cellSpace.setDuality(dualityState);
-
+        
         // 변경 전
         // search adjacency boundary
         /*
@@ -2469,6 +2469,22 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         });
     }
 
+    private void showPropertiesDialog(String type, AbstractFeature feature) {
+            JDialog dialog = null;
+            if(type.equalsIgnoreCase("STATE")) {
+                    dialog = new StatePropertiesDialog((State) feature);
+            } else if(type.equalsIgnoreCase("TRANSITION")) {
+                    dialog = new TransitionPropertiesDialog((Transition) feature);
+            } else if(type.equalsIgnoreCase("CELLSPACE")) {
+                    dialog = new CellSpacePropertiesDialog((CellSpace) feature);
+            } else if(type.equalsIgnoreCase("CELLSPACEBOUNDARY")) {
+                    dialog = new CellSpaceBoundaryPropertiesDialog((CellSpaceBoundary) feature);
+            }
+            
+            dialog.setModal(true);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.setVisible(true);
+    }
     private JMenuItem getMntmStateDuality() {
         if (mntmStateDuality == null) {
             mntmStateDuality = new JMenuItem("Duality");
@@ -2549,10 +2565,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             mntmStateProperties = new JMenuItem("Properties");
             mntmStateProperties.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
-                    StatePropertiesDialog dialog = new StatePropertiesDialog(selectedState);
-                    dialog.setModal(true);
-                    dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                    dialog.setVisible(true);
+                    showPropertiesDialog("State", selectedState);
                 }
             });
         }
@@ -2562,6 +2575,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private JMenuItem getMntmCellSpaceProperties() {
         if (mntmCellSpaceProperties == null) {
             mntmCellSpaceProperties = new JMenuItem("Properties");
+            mntmCellSpaceProperties.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    showPropertiesDialog("CellSpace", selectedCellSpace);
+                }
+            });
         }
         return mntmCellSpaceProperties;
     }
@@ -2569,6 +2587,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private JMenuItem getMntmTransitionProperties() {
         if (mntmTransitionProperties == null) {
             mntmTransitionProperties = new JMenuItem("Properties");
+            mntmTransitionProperties.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    showPropertiesDialog("Transition", selectedTransition);
+                }
+            });
         }
         return mntmTransitionProperties;
     }
@@ -2576,6 +2599,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private JMenuItem getMntmCellSpaceBoundaryProperties() {
         if (mntmCellSpaceBoundaryProperties == null) {
             mntmCellSpaceBoundaryProperties = new JMenuItem("Properties");
+            mntmCellSpaceBoundaryProperties.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    showPropertiesDialog("CellSpaceBoundary", selectedCellSpaceBoundary);
+                }
+            });
         }
         return mntmCellSpaceBoundaryProperties;
     }

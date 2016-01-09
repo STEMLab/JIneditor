@@ -92,12 +92,13 @@ public class StatePropertiesDialog extends JDialog {
                             if(textField_ID.getText() != null) {
                                     state.setGmlID(textField_ID.getText());
                             }
-                            if(textField_Name != null) {
+                            if(textField_Name.getText() != null) {
                                     state.setName(textField_Name.getText());
                             }
-                            if(textField_Description != null) {
-                                    state.setDescription(textField_Name.getText());
+                            if(textField_Description.getText() != null) {
+                                    state.setDescription(textField_Description.getText());
                             }
+                            dispose();
                     }
                 });
                 okButton.setActionCommand("OK");
@@ -145,6 +146,7 @@ public class StatePropertiesDialog extends JDialog {
         	textField_ID.setBounds(91, 7, 116, 21);
         	textField_ID.setColumns(10);
         }
+        textField_ID.setText(state.getGmlID());
         return textField_ID;
     }
     private JTextField getTextField_Name() {
@@ -153,6 +155,7 @@ public class StatePropertiesDialog extends JDialog {
         	textField_Name.setBounds(91, 32, 116, 21);
         	textField_Name.setColumns(10);
         }
+        textField_Name.setText(state.getName());
         return textField_Name;
     }
     private JTextField getTextField_Description() {
@@ -161,6 +164,7 @@ public class StatePropertiesDialog extends JDialog {
         	textField_Description.setBounds(91, 57, 116, 21);
         	textField_Description.setColumns(10);
         }
+        textField_Description.setText(state.getDescription());
         return textField_Description;
     }
     private JTextField getTextField_Duality() {
@@ -169,6 +173,9 @@ public class StatePropertiesDialog extends JDialog {
         	textField_Duality.setEditable(false);
         	textField_Duality.setBounds(91, 82, 116, 21);
         	textField_Duality.setColumns(10);
+        }
+        if(state.getDuality() != null) {
+            textField_Duality.setText(state.getDuality().getGmlID());
         }
         return textField_Duality;
     }

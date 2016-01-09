@@ -26,10 +26,12 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 	private ArrayList<LineString> lineStringElements;
 	// for 3D
         private double ceilingHeight;
+        private boolean isDefaultCeiling;
 	
 	public CellSpace() {
 		super.setGmlID( "C" + (labelNumber++) );
 		partialBoundedBy = new ArrayList<CellSpaceBoundary>();
+		isDefaultCeiling = true;
 	}
 	
 	public static int getLabelNumber() {
@@ -88,9 +90,25 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 		this.lineStringElements = lineStringElements;
 	}
 
-	@Override
+	public double getCeilingHeight() {
+            return ceilingHeight;
+        }
+    
+        public void setCeilingHeight(double ceilingHeight) {
+            this.ceilingHeight = ceilingHeight;
+            setIsDefaultCeiling(false);
+        }
+
+        public boolean getIsDefaultCeiling() {
+            return isDefaultCeiling;
+        }
+
+        public void setIsDefaultCeiling(boolean isDefaultCeiling) {
+            this.isDefaultCeiling = isDefaultCeiling;
+        }
+
+        @Override
 	public void accept(IndoorGMLElementVisitor visitor) {
-		// TODO Auto-generated method stub
 		visitor.visit(this);
 	}
 
