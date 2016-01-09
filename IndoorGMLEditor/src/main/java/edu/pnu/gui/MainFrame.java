@@ -316,6 +316,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                             currentProject = (ProjectFile) ois.readObject();
                             ois.close();
 
+                            currentProject.loadIndoorGMLID();
+                            
                             if (currentProject.getCurrentFloorPlanScale() == 0) {
                                 currentProject.setCurrentFloorPlanScale(1.0);
                             }
@@ -357,6 +359,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             mntmSave = new JMenuItem("Save");
             mntmSave.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
+                    currentProject.saveIndoorGMLID();
+                    
                     JFileChooser fileChooser = new JFileChooser();
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("data (*.dat)",
                             "dat");
@@ -374,7 +378,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                         System.out.println(file.getPath());
 
                         System.out.println(file.getAbsolutePath());
-
+                        
                         FileOutputStream fos = null;
                         BufferedOutputStream bos = null;
                         ObjectOutputStream oos = null;

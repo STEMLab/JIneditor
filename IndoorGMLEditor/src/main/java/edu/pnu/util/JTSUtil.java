@@ -35,18 +35,15 @@ public class JTSUtil {
 		        Coordinate coord = new Coordinate(dx, dy);
                         Point p = gf.createPoint(coord);
                         
-                        if(point.distance(p) < minDistance) {
-                            System.out.println("distance changed");
-                        }
                         if(line.contains(p) && point.distance(p) < minDistance) {
                                 snapPoint = p;
                                 minDistance = point.distance(p);
-                                System.out.println("distance changed when line contains point");
+                                System.out.println("distance changed : line contains point");
                         }
 		}
 		
 		if(snapPoint != null && line.contains(snapPoint)) {
-		    System.out.println("snappoint is contained");
+		    System.out.println("JTSUtil : snappoint is found");
 		}
 		return snapPoint;
 	}

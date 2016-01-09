@@ -198,19 +198,21 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                 Point firstPoint = snapPointsToCreatingCellSpace.get(0);
                 if (size == 1) {
                     LineString ls = cellSpaceCreatingLineStrings.get(0);
-                    Point otherP = null;
-                    if (ls.getPoints().indexOf(firstPoint) == 0) {
-                        otherP = ls.getPoints().get(1);
-                    } else {
-                        otherP = ls.getPoints().get(0);
+                    if(ls.getPoints().size() > 1) {
+                        Point otherP = null;
+                        if (ls.getPoints().indexOf(firstPoint) == 0) {
+                            otherP = ls.getPoints().get(1);
+                        } else {
+                            otherP = ls.getPoints().get(0);
+                        }
+                        if (Math.abs(otherP.getPanelX() - firstPoint.getPanelX()) <= 5) {
+                            firstPoint.setPanelX(otherP.getPanelX());
+                        }
+                        if (Math.abs(otherP.getPanelY() - firstPoint.getPanelY()) <= 5) {
+                            firstPoint.setPanelY(otherP.getPanelY());
+                        }
+                        setPanelRatioXY(firstPoint);
                     }
-                    if (Math.abs(otherP.getPanelX() - firstPoint.getPanelX()) <= 2) {
-                        firstPoint.setPanelX(otherP.getPanelX());
-                    }
-                    if (Math.abs(otherP.getPanelY() - firstPoint.getPanelY()) <= 2) {
-                        firstPoint.setPanelY(otherP.getPanelY());
-                    }
-                    setPanelRatioXY(firstPoint);
                 } else {
                     Point otherP1 = null;
                     Point otherP2 = null;
@@ -231,16 +233,16 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                                 otherP2 = otherLS.getPoints().get(1);
                             }
                             for (Point point : snapPointsToCreatingCellSpace) {
-                                if (Math.abs(otherP1.getPanelX() - point.getPanelX()) <= 2) {
+                                if (Math.abs(otherP1.getPanelX() - point.getPanelX()) <= 5) {
                                     point.setPanelX(otherP1.getPanelX());
                                 }
-                                if (Math.abs(otherP1.getPanelY() - point.getPanelY()) <= 2) {
+                                if (Math.abs(otherP1.getPanelY() - point.getPanelY()) <= 5) {
                                     point.setPanelY(otherP1.getPanelY());
                                 }
-                                if (Math.abs(otherP2.getPanelX() - point.getPanelX()) <= 2) {
+                                if (Math.abs(otherP2.getPanelX() - point.getPanelX()) <= 5) {
                                     point.setPanelX(otherP2.getPanelX());
                                 }
-                                if (Math.abs(otherP2.getPanelY() - point.getPanelY()) <= 2) {
+                                if (Math.abs(otherP2.getPanelY() - point.getPanelY()) <= 5) {
                                     point.setPanelY(otherP2.getPanelY());
                                 }
                                 setPanelRatioXY(point);
@@ -941,6 +943,11 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                             if (doorBoundary.getBoundaryType() == BoundaryType.Door) {
                                 ArrayList<LineString> splitedLS = GeometryUtil.splitLineString(ls,
                                         otherLS);
+                                for(LineString splited : splitedLS) {
+                                    for(Point p : splited.getPoints()) {
+                                            setPanelRatioXY(p);
+                                    }
+                                }
                                 LineString doorInThisCellSpace = null;
                                 int insertCount = 0;
                                 for (int j = 0; j < splitedLS.size(); j++) {
@@ -986,8 +993,11 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                                             new ArrayList<CellSpace>());
                                 }
                                 boundaryOfReferenceCellSpaceMap.get(doorBoundary).add(cellSpace);
-                                project.getCurrentCellSpaceBoundaryOnFloor()
-                                        .getCellSpaceBoundaryMember().add(doorBoundary);
+                                
+                                ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember();
+                                if(!cellSpaceBoundaryMember.contains(doorBoundary)) {
+                                        cellSpaceBoundaryMember.add(doorBoundary);
+                                }
                             }
                         }
                     }
@@ -1084,6 +1094,12 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
 
                     ArrayList<LineString> splitedLS = GeometryUtil.splitLineString(ls,
                             doorLineString); // lineString 분할
+                    for(LineString splited : splitedLS) {
+                            for(Point p : splited.getPoints()) {
+                                    setPanelRatioXY(p);
+                            }
+                    }
+                    
                     LineString doorInThisCellSpace = null;
                     int insertCount = 0;
                     for (int j = 0; j < splitedLS.size(); j++) {
@@ -1272,6 +1288,11 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
 
         LineString boundaryLS = boundary.getGeometry2D();
         ArrayList<LineString> splited = GeometryUtil.splitLineString(boundaryLS, doorLineString);
+        for(LineString split : splited) {
+            for(Point p : split.getPoints()) {
+                    setPanelRatioXY(p);
+            }
+        }
         for (LineString split : splited) {
             ArrayList<Point> splitPoints = split.getPoints();
             if (splitPoints.get(0).equalsPanelRatioXY(splitPoints.get(1)))
@@ -1786,7 +1807,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
             }
         }
 
-        // display transition(createing transiton)
+        // display transition(creating transition)
         for (int i = 0; i < transitionPoints.size(); i++) {
             setPanelXYForCurrentScale(transitionPoints.get(i));
             double x1 = transitionPoints.get(i).getPanelX();
@@ -1888,6 +1909,9 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
             for (CellSpace cellSpace : selectedCellSpaceMap.keySet()) {
                 displayCellSpace(g, cellSpace, selectedCellSpaceMap.get(cellSpace), floorPlanWidth,
                         floorPlanHeight, floorPlanScale);
+                for(CellSpaceBoundary boundary : cellSpace.getPartialBoundedBy()) {
+                    selectedCellSpaceBoundaryMap.put(boundary, Color.CYAN);
+                }
             }
         }
         if (!selectedCellSpaceBoundaryMap.isEmpty()) {

@@ -50,11 +50,14 @@ public class ProjectFile implements Serializable {
 	private CellSpaceBoundaryOnFloor currentCellSpaceBoundaryOnFloor;
 	private String currentFloor;
 	
+	private IndoorGMLIDRegistry idRegistry;
+	
 	private BuildingProperty buildingProperty;
 	private EditState editState;
 	private EditWorkState editWorkState;
 
 	public ProjectFile() {
+	    /*
 		MultiLayeredGraph.setLabelNumber(1);
 		SpaceLayers.setLabelNumber(1);
 		SpaceLayer.setLabelNumber(1);
@@ -66,8 +69,9 @@ public class ProjectFile implements Serializable {
 		LineString.setLabelNumber(1);
 		InterEdges.setLabelNumber(1);
 		InterLayerConnection.setLabelNumber(1);
-		
+		*/
 		currentFloorPlanScale = 1.0;
+		idRegistry = new IndoorGMLIDRegistry();
 	}
 
 	public int getPanelWidth() {
@@ -276,6 +280,19 @@ public class ProjectFile implements Serializable {
 
 	public void computeGMLCoordinate() {
 
+	}
+	
+	public void saveIndoorGMLID() {
+	        if(idRegistry == null) {
+	                idRegistry = new IndoorGMLIDRegistry();
+	        }
+	        idRegistry.saveIndoorGMLID();
+	}
+	
+	public void loadIndoorGMLID() {
+	        if(idRegistry != null) {
+	                idRegistry.loadIndoorGMLID();
+	        }
 	}
 
 	public void addFloorProperty(FloorProperty floorProperty) {
