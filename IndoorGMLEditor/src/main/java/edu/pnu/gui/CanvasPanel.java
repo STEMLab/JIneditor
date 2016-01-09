@@ -49,7 +49,7 @@ import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.GeometryUtil;
 import javax.swing.JButton;
 
-public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotionListener,
+public class CanvasPanel extends JPanel implements MouseListener, MouseMotionListener,
         MouseWheelListener, KeyListener {
     private MainFrame mainFrame = null;
 
@@ -129,7 +129,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
 
     private JMenuItem mntmCellSpaceBoundaryDuality;
 
-    private JMenuItem mntmProperties;
+    private JMenuItem mntmStateProperties;
 
     private JMenuItem mntmCellSpaceProperties;
 
@@ -140,14 +140,14 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
     /**
      * Create the panel.
      */
-    public SpaceLayerPanel() {
+    public CanvasPanel() {
         addPopup(this, getPopupMenu_State());
         add(getPopupMenu_CellSpace());
         add(getPopupMenu_Transition());
         add(getPopupMenu_CellSpaceBoundary());
     }
 
-    public SpaceLayerPanel(MainFrame mainFrame) {
+    public CanvasPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
 
         this.addMouseListener(this);
@@ -2444,7 +2444,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         if (popupMenu_State == null) {
             popupMenu_State = new JPopupMenu();
             popupMenu_State.add(getMntmStateDuality());
-            popupMenu_State.add(getMntmProperties());
+            popupMenu_State.add(getMntmStateProperties());
         }
         return popupMenu_State;
     }
@@ -2544,11 +2544,19 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         return mntmCellSpaceBoundaryDuality;
     }
 
-    private JMenuItem getMntmProperties() {
-        if (mntmProperties == null) {
-            mntmProperties = new JMenuItem("Properties");
+    private JMenuItem getMntmStateProperties() {
+        if (mntmStateProperties == null) {
+            mntmStateProperties = new JMenuItem("Properties");
+            mntmStateProperties.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent arg0) {
+                    StatePropertiesDialog dialog = new StatePropertiesDialog(selectedState);
+                    dialog.setModal(true);
+                    dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                    dialog.setVisible(true);
+                }
+            });
         }
-        return mntmProperties;
+        return mntmStateProperties;
     }
 
     private JMenuItem getMntmCellSpaceProperties() {

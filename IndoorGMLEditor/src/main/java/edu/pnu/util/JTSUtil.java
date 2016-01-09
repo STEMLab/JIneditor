@@ -38,12 +38,12 @@ public class JTSUtil {
                         if(line.contains(p) && point.distance(p) < minDistance) {
                                 snapPoint = p;
                                 minDistance = point.distance(p);
-                                System.out.println("distance changed : line contains point");
+                                //System.out.println("distance changed : line contains point");
                         }
 		}
 		
 		if(snapPoint != null && line.contains(snapPoint)) {
-		    System.out.println("JTSUtil : snappoint is found");
+		        System.out.println("JTSUtil : snappoint is found");
 		}
 		return snapPoint;
 	}

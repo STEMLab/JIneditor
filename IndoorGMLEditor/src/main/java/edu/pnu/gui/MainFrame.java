@@ -102,7 +102,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JScrollPane scrollPane;
 
-    private SpaceLayerPanel panel;
+    private CanvasPanel panel;
 
     private ProjectFile currentProject;
 
@@ -794,9 +794,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         return scrollPane;
     }
 
-    private SpaceLayerPanel getSpaceLayerPanel() {
+    private CanvasPanel getSpaceLayerPanel() {
         if (panel == null) {
-            panel = new SpaceLayerPanel(MainFrame.this);
+            panel = new CanvasPanel(MainFrame.this);
             panel.setToolTipText("");
             panel.setLocation(5, 28);
             // panel.setProject(currentProject);

@@ -21,20 +21,16 @@ import java.awt.FlowLayout;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
-
-import net.opengis.indoorgml.core.State;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 /**
  * @author Donguk Seo
  *
  */
-public class StatePropertiesDialog extends JDialog {
+public class TransitionPropertiesDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
     private JLabel lblId;
@@ -45,28 +41,24 @@ public class StatePropertiesDialog extends JDialog {
     private JTextField textField_Name;
     private JTextField textField_Description;
     private JTextField textField_Duality;
-    
-    private State state;
 
     /**
      * Launch the application.
      */
-    /*public static void main(String[] args) {
+    public static void main(String[] args) {
         try {
-            StatePropertiesDialog dialog = new StatePropertiesDialog();
+            TransitionPropertiesDialog dialog = new TransitionPropertiesDialog();
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     /**
      * Create the dialog.
      */
-    public StatePropertiesDialog(State state) {
-        this.state = state;
-        
+    public TransitionPropertiesDialog() {
         setTitle("Properties");
         setBounds(100, 100, 240, 191);
         getContentPane().setLayout(new BorderLayout());
@@ -87,19 +79,6 @@ public class StatePropertiesDialog extends JDialog {
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
                 JButton okButton = new JButton("OK");
-                okButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                            if(textField_ID.getText() != null) {
-                                    state.setGmlID(textField_ID.getText());
-                            }
-                            if(textField_Name != null) {
-                                    state.setName(textField_Name.getText());
-                            }
-                            if(textField_Description != null) {
-                                    state.setDescription(textField_Name.getText());
-                            }
-                    }
-                });
                 okButton.setActionCommand("OK");
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
