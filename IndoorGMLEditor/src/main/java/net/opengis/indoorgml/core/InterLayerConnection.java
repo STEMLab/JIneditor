@@ -19,9 +19,12 @@ public class InterLayerConnection extends AbstractFeature implements
 	private SpaceLayer connectedLayers[] = new SpaceLayer[MAX_SPACELAYER_NUM];
 	private String topology;
 	private String comment;
+	
+	public InterLayerConnection() {
+                super.setGmlID( "IL" + (labelNumber++) );
+	}
 
 	public State[] getInterConnects() {
-		super.setGmlID( "IL" + (labelNumber++) );
 		return interConnects;
 	}
 

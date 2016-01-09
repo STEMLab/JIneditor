@@ -26,14 +26,14 @@ import net.opengis.indoorgml.geometry.Solid;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 
-public class IndoorGMLIDCoordinateGenerateVisitor implements IndoorGMLElementVisitor {
+public class IndoorGMLIDGenerateVisitor implements IndoorGMLElementVisitor {
 	private boolean is3DGeometry;
 	private boolean isMLGHeight;
 	private double floorGroundHeight;
 	private Point lowerCornerReference;
 	private Point upperCornerReference;
 
-	public IndoorGMLIDCoordinateGenerateVisitor(boolean is3DGeometry) {
+	public IndoorGMLIDGenerateVisitor(boolean is3DGeometry) {
 		// TODO Auto-generated constructor stub
 		this.is3DGeometry = is3DGeometry;
 	}

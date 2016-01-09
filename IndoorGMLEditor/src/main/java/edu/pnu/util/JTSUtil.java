@@ -6,10 +6,10 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
-
-import edu.pnu.gui.SpaceLayerPanel;
 
 public class JTSUtil {
         private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
@@ -25,34 +25,24 @@ public class JTSUtil {
                 double offsetX = endX - startX;
                 double offsetY = endY - startY;
 		
-		double minDistance = 50;
+		double minDistance = 15;
 		Point snapPoint = null;
 		
-		for(int i = 0; i < 1000; i++) {
-		        double dx = startX + offsetX * ((double) i) / 1000;
-		        double dy = startY + offsetY * ((double) i) / 1000;
+		for(int i = 0; i < 5000; i++) {
+		        double dx = startX + offsetX * ((double) i) / 5000;
+		        double dy = startY + offsetY * ((double) i) / 5000;
 			//Coordinate coord = new Coordinate(minX + envelope.getWidth() * ((double) i) / 1000, minY + envelope.getHeight() * ((double)i) / 1000);
 		        Coordinate coord = new Coordinate(dx, dy);
                         Point p = gf.createPoint(coord);
-                                                
+                        
+                        if(point.distance(p) < minDistance) {
+                            System.out.println("distance changed");
+                        }
                         if(line.contains(p) && point.distance(p) < minDistance) {
                                 snapPoint = p;
                                 minDistance = point.distance(p);
-                                System.out.println("distance changed");
+                                System.out.println("distance changed when line contains point");
                         }
-		        
-		        /*boolean isdxInteger = (dx == Math.floor(dx)) && Double.isFinite(dx);
-		        boolean isdyInteger = (dy == Math.floor(dy)) && Double.isFinite(dy);
-		        if(isdxInteger && isdyInteger) {
-        		        Coordinate coord = new Coordinate(dx, dy);
-        			Point p = geometryFactory.createPoint(coord);
-        			
-        			if(point.distance(p) < minDistance) {
-        				snapPoint = p;
-        				minDistance = point.distance(p);
-        				System.out.println("distance changed");
-        			}
-		        }*/
 		}
 		
 		if(snapPoint != null && line.contains(snapPoint)) {
@@ -81,6 +71,22 @@ public class JTSUtil {
 		LineString lineString = gf.createLineString(coordsArr);
 				
 		return lineString;
+	}
+	
+	public static LinearRing convertJTSLinearRing(net.opengis.indoorgml.geometry.LinearRing ring) {
+	        LineString lineString = convertJTSLineString(ring);
+	        Coordinate[] coords = lineString.getCoordinates();
+	        LinearRing jtsRing = gf.createLinearRing(coords);
+	        
+	        return jtsRing;
+	}
+	
+	public static Polygon convertJTSPolygon(net.opengis.indoorgml.geometry.Polygon poly) {
+	        LinearRing exterior = convertJTSLinearRing(poly.getExteriorRing());
+	        LinearRing[] interior = null; // Polygon have no interiorRings in this version.
+	        Polygon polygon = gf.createPolygon(exterior, interior);
+	        
+	        return polygon;
 	}
 	
 	public static net.opengis.indoorgml.geometry.Point convertPoint(Point point) {

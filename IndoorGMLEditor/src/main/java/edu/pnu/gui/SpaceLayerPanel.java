@@ -47,6 +47,7 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.GeometryUtil;
+import javax.swing.JButton;
 
 public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotionListener,
         MouseWheelListener, KeyListener {
@@ -89,7 +90,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
     // / for create cellspace
     private ArrayList<LineString> cellSpaceCreatingLineStrings = new ArrayList<LineString>();
 
-    private ArrayList<Point> snapPointList = new ArrayList<Point>();
+    private ArrayList<Point> snapPointsToCreatingCellSpace = new ArrayList<Point>();
 
     // /
 
@@ -114,19 +115,27 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
 
     private JPopupMenu popupMenu_State;
 
-    private JMenuItem mntmDuality;
+    private JMenuItem mntmStateDuality;
 
     private JPopupMenu popupMenu_CellSpace;
 
-    private JMenuItem mntmDuality_1;
+    private JMenuItem mntmCellSpaceDuality;
 
     private JPopupMenu popupMenu_Transition;
 
-    private JMenuItem mntmDuality_2;
+    private JMenuItem mntmTransitionDuality;
 
     private JPopupMenu popupMenu_CellSpaceBoundary;
 
-    private JMenuItem mntmDuality_3;
+    private JMenuItem mntmCellSpaceBoundaryDuality;
+
+    private JMenuItem mntmProperties;
+
+    private JMenuItem mntmCellSpaceProperties;
+
+    private JMenuItem mntmTransitionProperties;
+
+    private JMenuItem mntmCellSpaceBoundaryProperties;
 
     /**
      * Create the panel.
@@ -170,14 +179,74 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         } else if (currentEditState == EditState.SELECT_CELLSPACE
                 || currentEditState == EditState.MOVE_CELLSPACE) {
 
-        } else if (currentEditState == EditState.CREATE_CELLSPACE && snapPointList.size() > 0) {
+        } else if (currentEditState == EditState.CREATE_CELLSPACE
+                && snapPointsToCreatingCellSpace.size() > 0) {
             // cellSpaceLineString의 각 LineString과 event Point가 동일한것 찾음 -> 인접한 LineString의 공통된 Point는 좌표는 같지만 다른 객체이므로 2개씩 찾아진다.
-            for (Point point : snapPointList) {
+            // 점이 두개만 찍혔을 때는 1개씩 찾아진다.
+            for (Point point : snapPointsToCreatingCellSpace) {
                 movePoint(point, previousMouseX, previousMouseY, currentMouseX, currentMouseY);
-                Point snapPointToCellSpace = searchSnapPointToCellSpace(e);
-                if (snapPointToCellSpace != null) {
+            }
+
+            Point snapPointToCellSpace = searchSnapPointToCellSpace(e);
+            if (snapPointToCellSpace != null) {
+                for (Point point : snapPointsToCreatingCellSpace) {
                     point.setPanelRatioX(snapPointToCellSpace.getPanelRatioX());
                     point.setPanelRatioY(snapPointToCellSpace.getPanelRatioY());
+                }
+            } else if (snapPointToCellSpace == null) {
+                int size = cellSpaceCreatingLineStrings.size();
+                Point firstPoint = snapPointsToCreatingCellSpace.get(0);
+                if (size == 1) {
+                    LineString ls = cellSpaceCreatingLineStrings.get(0);
+                    Point otherP = null;
+                    if (ls.getPoints().indexOf(firstPoint) == 0) {
+                        otherP = ls.getPoints().get(1);
+                    } else {
+                        otherP = ls.getPoints().get(0);
+                    }
+                    if (Math.abs(otherP.getPanelX() - firstPoint.getPanelX()) <= 2) {
+                        firstPoint.setPanelX(otherP.getPanelX());
+                    }
+                    if (Math.abs(otherP.getPanelY() - firstPoint.getPanelY()) <= 2) {
+                        firstPoint.setPanelY(otherP.getPanelY());
+                    }
+                    setPanelRatioXY(firstPoint);
+                } else {
+                    Point otherP1 = null;
+                    Point otherP2 = null;
+                    LineString otherLS = null;
+                    for (int i = 0; i < size; i++) {
+                        LineString ls = cellSpaceCreatingLineStrings.get(i);
+                        if (ls.getPoints().contains(firstPoint)) {
+                            if (ls.getPoints().indexOf(firstPoint) == 0) {
+                                otherP2 = ls.getPoints().get(1);
+                                if (i == 0)
+                                    otherLS = cellSpaceCreatingLineStrings.get(size - 1);
+                                else
+                                    otherLS = cellSpaceCreatingLineStrings.get(i - 1);
+                                otherP1 = otherLS.getPoints().get(0);
+                            } else {
+                                otherP1 = ls.getPoints().get(0);
+                                otherLS = cellSpaceCreatingLineStrings.get((i + 1) % size);
+                                otherP2 = otherLS.getPoints().get(1);
+                            }
+                            for (Point point : snapPointsToCreatingCellSpace) {
+                                if (Math.abs(otherP1.getPanelX() - point.getPanelX()) <= 2) {
+                                    point.setPanelX(otherP1.getPanelX());
+                                }
+                                if (Math.abs(otherP1.getPanelY() - point.getPanelY()) <= 2) {
+                                    point.setPanelY(otherP1.getPanelY());
+                                }
+                                if (Math.abs(otherP2.getPanelX() - point.getPanelX()) <= 2) {
+                                    point.setPanelX(otherP2.getPanelX());
+                                }
+                                if (Math.abs(otherP2.getPanelY() - point.getPanelY()) <= 2) {
+                                    point.setPanelY(otherP2.getPanelY());
+                                }
+                                setPanelRatioXY(point);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -185,7 +254,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                 LineString baseLS = cellSpaceCreatingLineStrings.get(0);
                 Point p1 = baseLS.getPoints().get(0);
                 Point p2 = baseLS.getPoints().get(1);
-                if (left(p1, p2, snapPointList.get(0))) { // 반시계 방향이 되려면 직선의 왼쪽에 점이 와야한다.
+                if (left(p1, p2, snapPointsToCreatingCellSpace.get(0))) { // 반시계 방향이 되려면 직선의 왼쪽에 점이 와야한다.
                     baseLS.getPoints().clear();// 반시계 방향이 아니면 시작점과 끝점을 뒤집는다.
                     baseLS.getPoints().add(p2);
                     baseLS.getPoints().add(p1);
@@ -227,6 +296,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
 
         p.setPanelRatioX(p.getPanelRatioX() + offsetX);
         p.setPanelRatioY(p.getPanelRatioY() + offsetY);
+        setPanelXYForCurrentScale(p);
     }
 
     @Override
@@ -265,8 +335,9 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                 if (e.getY() > floorPlanHeight * floorPlanScale)
                     return;
 
-                point.setPanelRatioX((double) e.getX() / (floorPlanWidth * floorPlanScale));
-                point.setPanelRatioY((double) e.getY() / (floorPlanHeight * floorPlanScale));
+                point.setPanelX(e.getX());
+                point.setPanelY(e.getY());
+                setPanelRatioXY(point);
 
                 state.setPosition(point);
                 stateOnFloor.getStateMember().add(state);
@@ -388,33 +459,32 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                     spaceLayerEnd1 = project.getCurrentSpaceLayer();
                 }
 
-                snapPointList.clear();
-                searchSnapPointToCurrentCellSpace(e, snapPointList); // lineString의 점을 클릭하는지 확인
-                if (snapPointList.size() == 0) {
+                snapPointsToCreatingCellSpace.clear();
+                searchSnapPointToCreatingCellSpace(e, snapPointsToCreatingCellSpace); // lineString의 점을 클릭하는지 확인
+                if (snapPointsToCreatingCellSpace.size() == 0) {
                     Point point = searchSnapPointToCellSpace(e);
                     if (point == null) {
                         point = searchSnapPointToCellSpaceBoundary(e);
                     }
                     if (point == null) {
                         point = new Point();
-                        point.setPanelRatioX((double) e.getX() / (floorPlanWidth * floorPlanScale));
-                        point.setPanelRatioY((double) e.getY() / (floorPlanHeight * floorPlanScale));
                         point.setPanelX(e.getX());
                         point.setPanelY(e.getY());
+                        setPanelRatioXY(point);
                     }
 
                     if (currentEditWorkState == EditWorkState.CREATE_CELLSPACE_POINT1) {
                         cellSpaceCreatingLineStrings.add(new LineString());
-                        LineString newLineString = cellSpaceCreatingLineStrings.get(cellSpaceCreatingLineStrings
-                                .size() - 1);
+                        LineString newLineString = cellSpaceCreatingLineStrings
+                                .get(cellSpaceCreatingLineStrings.size() - 1);
                         ArrayList<Point> newLSPoints = newLineString.getPoints();
                         newLSPoints.add(point);
                         newLineString.setPoints(newLSPoints);
 
                         project.setEditWorkState(EditWorkState.CREATE_CELLSPACE_POINT2);
                     } else if (currentEditWorkState == EditWorkState.CREATE_CELLSPACE_POINT2) {
-                        LineString lineString = cellSpaceCreatingLineStrings.get(cellSpaceCreatingLineStrings
-                                .size() - 1);
+                        LineString lineString = cellSpaceCreatingLineStrings
+                                .get(cellSpaceCreatingLineStrings.size() - 1);
                         lineString.getPoints().add(point);
 
                         project.setEditWorkState(EditWorkState.CREATE_CELLSPACE_POINT3);
@@ -425,7 +495,8 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                         LineString newLS2 = new LineString();
 
                         for (LineString ls : cellSpaceCreatingLineStrings) {
-                            if (isAdjacencyPointToLineString(ls, point.getPanelX(), point.getPanelY())) {
+                            if (isAdjacencyPointToLineString(ls, point.getPanelX(),
+                                    point.getPanelY())) {
                                 baseLS = ls;
                                 break;
                             }
@@ -466,10 +537,10 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
 
                             newLS1.setPoints(ls1Points);
                             newLS2.setPoints(ls2Points);
-                            cellSpaceCreatingLineStrings.add(cellSpaceCreatingLineStrings.indexOf(baseLS) + 1,
-                                    newLS1);
-                            cellSpaceCreatingLineStrings.add(cellSpaceCreatingLineStrings.indexOf(baseLS) + 2,
-                                    newLS2);
+                            cellSpaceCreatingLineStrings.add(
+                                    cellSpaceCreatingLineStrings.indexOf(baseLS) + 1, newLS1);
+                            cellSpaceCreatingLineStrings.add(
+                                    cellSpaceCreatingLineStrings.indexOf(baseLS) + 2, newLS2);
                             if (currentEditWorkState == EditWorkState.CREATE_CELLSPACE_NEXTPOINT) {
                                 cellSpaceCreatingLineStrings.remove(baseLS);
                             }
@@ -828,7 +899,12 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                                 geometry2D.setIsReversed(false);
                             } else if (GeometryUtil.isOverlapsLineString(ls, otherLS)) {
                                 // geometry2d of boundary will be a intersection between ls and otherLS.
-                                
+                                LineString intersection = GeometryUtil.getIntersectionLineString(
+                                        ls, otherLS);
+                                geometry2D.setPoints((ArrayList<Point>) intersection.getPoints()
+                                        .clone());
+                                geometry2D.setxLinkGeometry(ls);
+                                geometry2D.setIsReversed(false);
                             }
                             newBoundary.setGeometry2D(geometry2D);
 
@@ -948,6 +1024,16 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         geometry2D.setExteriorRing(exteriorRing);
         cellSpace.setGeometry2D(geometry2D);
         project.getCurrentCellSpaceOnFloor().getCellSpaceMember().add(cellSpace);
+
+        // CellSpace를 생성 후 duality를 가지는 State 자동으로 생성
+        StateOnFloor stateOnFloor = project.getCurrentStateOnFloor();
+        State dualityState = new State();
+        Point point = GeometryUtil.getCentroidPointOnPolygon(geometry2D);
+        setPanelRatioXY(point);
+        dualityState.setPosition(point);
+        dualityState.setDuality(cellSpace);
+        stateOnFloor.getStateMember().add(dualityState);
+        cellSpace.setDuality(dualityState);
 
         // 변경 전
         // search adjacency boundary
@@ -1330,7 +1416,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         return adjacencyBoundary;
     }
 
-    public Boolean searchSnapPointToCurrentCellSpace(MouseEvent e, ArrayList<Point> snapPointList) {
+    public Boolean searchSnapPointToCreatingCellSpace(MouseEvent e, ArrayList<Point> snapPointList) {
         Boolean foundSnapPoint = false;
         for (LineString lineString : cellSpaceCreatingLineStrings) {
             for (Point point : lineString.getPoints()) {
@@ -1389,7 +1475,8 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                 // double y = ((double) e.getY() / floorPlanHeight * floorPlanScale);
 
                 // snapPoint = getSnapPointToLineString(x1, y1, x2, y2, e.getX(), e.getY());
-                snapPoint = GeometryUtil.getSnapPointToLineString(x1, y1, x2, y2, e.getX(), e.getY());
+                snapPoint = GeometryUtil.getSnapPointToLineString(x1, y1, x2, y2, e.getX(),
+                        e.getY());
                 if (snapPoint != null) {
                     System.out.println("snapPointfound");
                     setPanelRatioXY(snapPoint);
@@ -1598,7 +1685,12 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                 selectedCellSpaceMap.clear();
                 project.setEditState(EditState.NONE);
             } else if (state == EditState.SELECT_TRANSITION) {
-
+                for (Transition selected : selectedTransitionMap.keySet()) {
+                    project.deleteTransition(selected);
+                }
+                selectedTransition = null;
+                selectedTransitionMap.clear();
+                project.setEditState(EditState.NONE);
             }
             break;
         case KeyEvent.VK_ENTER:
@@ -1617,7 +1709,8 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
                     project.setEditState(EditState.NONE);
                     project.setEditWorkState(EditWorkState.NONE);
                 }
-            } else if (state == EditState.CREATE_CELLSPACE && cellSpaceCreatingLineStrings.size() >= 3) {
+            } else if (state == EditState.CREATE_CELLSPACE
+                    && cellSpaceCreatingLineStrings.size() >= 3) {
                 CellSpace newCellSpace = createCellSpace(cellSpaceCreatingLineStrings);
 
                 cellSpaceCreatingLineStrings.clear();
@@ -1843,14 +1936,14 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         double x = 0, y = 0;
         if (!stateMember.contains(states[0])) { // 다른 층의 state와 연결되었을 경우
             setPanelXYForCurrentScale(states[0].getPosition());
-            
+
             x = states[0].getPosition().getPanelX();
             y = states[0].getPosition().getPanelY();
             g2.setColor(Color.lightGray);
             g2.draw(new Ellipse2D.Double(x - 5, y - 5, 10, 10));
         } else if (!stateMember.contains(states[1])) {
             setPanelXYForCurrentScale(states[1].getPosition());
-            
+
             x = states[1].getPosition().getPanelX();
             y = states[1].getPosition().getPanelY();
             g2.setColor(Color.lightGray);
@@ -1869,7 +1962,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         for (int i = 0; i < points.size() - 1; i++) {
             setPanelXYForCurrentScale(points.get(i));
             setPanelXYForCurrentScale(points.get(i + 1));
-            
+
             double x1 = points.get(i).getPanelX();
             double y1 = points.get(i).getPanelY();
             double x2 = points.get(i + 1).getPanelX();
@@ -2135,7 +2228,7 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
             if (!(lowerX <= x && x <= upperX && lowerY <= y && y <= upperY))
                 continue;
 
-            //double distance = getDistancePointToLine(x1, y1, x2, y2, x, y);
+            // double distance = getDistancePointToLine(x1, y1, x2, y2, x, y);
             double distance = GeometryUtil.getDistancePointToLine(x1, y1, x2, y2, x, y);
             if (distance <= snapBounds) {
                 isAdjacency = true;
@@ -2145,7 +2238,8 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         return isAdjacency;
     }
 
-    public double getDistancePointToLine(double x1, double y1, double x2, double y2, double p, double q) {
+    public double getDistancePointToLine(double x1, double y1, double x2, double y2, double p,
+            double q) {
         double a = y1 - y2;
         double b = x2 - x1;
         double c = a * (-1) * x1 - b * y1;
@@ -2325,7 +2419,8 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
     private JPopupMenu getPopupMenu_State() {
         if (popupMenu_State == null) {
             popupMenu_State = new JPopupMenu();
-            popupMenu_State.add(getMntmDuality());
+            popupMenu_State.add(getMntmStateDuality());
+            popupMenu_State.add(getMntmProperties());
         }
         return popupMenu_State;
     }
@@ -2350,75 +2445,106 @@ public class SpaceLayerPanel extends JPanel implements MouseListener, MouseMotio
         });
     }
 
-    private JMenuItem getMntmDuality() {
-        if (mntmDuality == null) {
-            mntmDuality = new JMenuItem("Duality");
-            mntmDuality.addActionListener(new ActionListener() {
+    private JMenuItem getMntmStateDuality() {
+        if (mntmStateDuality == null) {
+            mntmStateDuality = new JMenuItem("Duality");
+            mntmStateDuality.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     project.setEditState(EditState.CREATE_STATE_DUALITY);
                 }
             });
         }
-        return mntmDuality;
+        return mntmStateDuality;
     }
 
     private JPopupMenu getPopupMenu_CellSpace() {
         if (popupMenu_CellSpace == null) {
             popupMenu_CellSpace = new JPopupMenu();
-            popupMenu_CellSpace.add(getMntmDuality_1());
+            popupMenu_CellSpace.add(getMntmCellSpaceDuality());
+            popupMenu_CellSpace.add(getMntmCellSpaceProperties());
         }
         return popupMenu_CellSpace;
     }
 
-    private JMenuItem getMntmDuality_1() {
-        if (mntmDuality_1 == null) {
-            mntmDuality_1 = new JMenuItem("Duality");
-            mntmDuality_1.addActionListener(new ActionListener() {
+    private JMenuItem getMntmCellSpaceDuality() {
+        if (mntmCellSpaceDuality == null) {
+            mntmCellSpaceDuality = new JMenuItem("Duality");
+            mntmCellSpaceDuality.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     project.setEditState(EditState.CREATE_CELLSPACE_DUALITY);
                 }
             });
         }
-        return mntmDuality_1;
+        return mntmCellSpaceDuality;
     }
 
     private JPopupMenu getPopupMenu_Transition() {
         if (popupMenu_Transition == null) {
             popupMenu_Transition = new JPopupMenu();
-            popupMenu_Transition.add(getMntmDuality_2());
+            popupMenu_Transition.add(getMntmTransitionDuality());
+            popupMenu_Transition.add(getMntmTransitionProperties());
         }
         return popupMenu_Transition;
     }
 
-    private JMenuItem getMntmDuality_2() {
-        if (mntmDuality_2 == null) {
-            mntmDuality_2 = new JMenuItem("Duality");
-            mntmDuality_2.addActionListener(new ActionListener() {
+    private JMenuItem getMntmTransitionDuality() {
+        if (mntmTransitionDuality == null) {
+            mntmTransitionDuality = new JMenuItem("Duality");
+            mntmTransitionDuality.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     project.setEditState(EditState.CREATE_TRANSITION_DUALITY);
                 }
             });
         }
-        return mntmDuality_2;
+        return mntmTransitionDuality;
     }
 
     private JPopupMenu getPopupMenu_CellSpaceBoundary() {
         if (popupMenu_CellSpaceBoundary == null) {
             popupMenu_CellSpaceBoundary = new JPopupMenu();
-            popupMenu_CellSpaceBoundary.add(getMntmDuality_3());
+            popupMenu_CellSpaceBoundary.add(getMntmCellSpaceBoundaryDuality());
+            popupMenu_CellSpaceBoundary.add(getMntmCellSpaceBoundaryProperties());
         }
         return popupMenu_CellSpaceBoundary;
     }
 
-    private JMenuItem getMntmDuality_3() {
-        if (mntmDuality_3 == null) {
-            mntmDuality_3 = new JMenuItem("Duality");
-            mntmDuality_3.addActionListener(new ActionListener() {
+    private JMenuItem getMntmCellSpaceBoundaryDuality() {
+        if (mntmCellSpaceBoundaryDuality == null) {
+            mntmCellSpaceBoundaryDuality = new JMenuItem("Duality");
+            mntmCellSpaceBoundaryDuality.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     project.setEditState(EditState.CREATE_CELLSPACEBOUNDARY_DUALITY);
                 }
             });
         }
-        return mntmDuality_3;
+        return mntmCellSpaceBoundaryDuality;
+    }
+
+    private JMenuItem getMntmProperties() {
+        if (mntmProperties == null) {
+            mntmProperties = new JMenuItem("Properties");
+        }
+        return mntmProperties;
+    }
+
+    private JMenuItem getMntmCellSpaceProperties() {
+        if (mntmCellSpaceProperties == null) {
+            mntmCellSpaceProperties = new JMenuItem("Properties");
+        }
+        return mntmCellSpaceProperties;
+    }
+
+    private JMenuItem getMntmTransitionProperties() {
+        if (mntmTransitionProperties == null) {
+            mntmTransitionProperties = new JMenuItem("Properties");
+        }
+        return mntmTransitionProperties;
+    }
+
+    private JMenuItem getMntmCellSpaceBoundaryProperties() {
+        if (mntmCellSpaceBoundaryProperties == null) {
+            mntmCellSpaceBoundaryProperties = new JMenuItem("Properties");
+        }
+        return mntmCellSpaceBoundaryProperties;
     }
 }

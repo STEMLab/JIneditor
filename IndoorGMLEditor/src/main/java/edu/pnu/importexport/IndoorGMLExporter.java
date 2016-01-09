@@ -27,8 +27,8 @@ import org.w3c.dom.Document;
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
+import edu.pnu.visitor.IndoorGMLCoordinateGenerateVisitor;
 import edu.pnu.visitor.IndoorGMLExportVisitor;
-import edu.pnu.visitor.IndoorGMLIDCoordinateGenerateVisitor;
 
 public class IndoorGMLExporter {
 	private ProjectFile project;
@@ -39,11 +39,12 @@ public class IndoorGMLExporter {
 	}
 	
 	public void export() throws JAXBException{
-		IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
+		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
+	        IndoorGMLCoordinateGenerateVisitor coordinateVisitor = new IndoorGMLCoordinateGenerateVisitor(project.getIs3DGeometry());
 		IndoorGMLExportVisitor exportVisitor = new IndoorGMLExportVisitor(project.getIs3DGeometry());
 		
 		IndoorFeatures indoorFeatures = project.getIndoorFeatures();
-		indoorFeatures.accept(idCoordinateVisitor);
+		indoorFeatures.accept(coordinateVisitor);
 		indoorFeatures.accept(exportVisitor);
 		
 		

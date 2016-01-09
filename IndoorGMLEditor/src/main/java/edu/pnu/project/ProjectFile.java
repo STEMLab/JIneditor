@@ -414,10 +414,37 @@ public class ProjectFile implements Serializable {
 		if(duality != null) {
 			duality.setDuality(null);
 		}
+
+		// InterLayerConnection
+		ArrayList<InterLayerConnection> interLayerConnections = multiLayeredGraph.getInterEdges().get(0).getInterLayerConnectionMember();
+		ArrayList<InterLayerConnection> removes = new ArrayList<InterLayerConnection>();
+		for(InterLayerConnection ilc : interLayerConnections) {
+		        State[] interConnects = ilc.getInterConnects();
+		        if(interConnects[0].equals(selectedState) || interConnects[1].equals(selectedState)) {
+		                removes.add(ilc);
+		        }
+		}
+		if(removes.size() > 0) {
+		        interLayerConnections.removeAll(removes);
+		}
 		
 		currentStateOnFloor.getStateMember().remove(selectedState);
 
 		System.out.println("delete");
+	}
+	
+	public void deleteTransition(Transition transition) {
+	        State[] states = transition.getStates();
+	        
+	        for(State state : states)
+	            states[0].getTransitionReference().remove(transition);
+	        
+	        CellSpaceBoundary duality = transition.getDuality();
+	        if(duality != null) {
+	            duality.setDuality(null);
+	        }
+
+                currentTransitionOnFloor.getTransitionMember().remove(transition);
 	}
 	
 	public void deleteCellSpace(CellSpace cellSpace) {
@@ -455,19 +482,30 @@ public class ProjectFile implements Serializable {
 					}
 				}			
 			}
-			HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjaccencyBoundaryMap= currentCellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
+			
+			// cellSpace를 구성하는 하나의 lineSegment에 인접하는 boundary들을 저장해놓은 map
+			HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjaccencyBoundaryMap = currentCellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
+			ArrayList<LineString> removedLS = new ArrayList<LineString>();
 			for(LineString ls : lineStringOfAdjaccencyBoundaryMap.keySet()) {
 				ArrayList<CellSpaceBoundary> adjacencyBoundary = lineStringOfAdjaccencyBoundaryMap.get(ls);
-				if(adjacencyBoundary.contains(boundary)) {
+				if(adjacencyBoundary.contains(boundary)) { // 삭제되어야할 boundary가 있으면 인접한 linestring에서 지운다.
 					adjacencyBoundary.remove(boundary);
 				}
+				if(adjacencyBoundary.size() == 0) {
+				    removedLS.add(ls);
+				}
 			}
+			for(LineString remove : removedLS) {
+			    lineStringOfAdjaccencyBoundaryMap.remove(remove);
+			}
+			
 			HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = currentCellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
 			ArrayList<CellSpace> referenceCellSpace = boundaryOfReferenceCellSpaceMap.get(boundary);
 			for(CellSpace reference : referenceCellSpace) {
 				if(reference.equals(cellSpace)) continue;
-				reference.getPartialBoundedBy().remove(boundary);
+				reference.getPartialBoundedBy().remove(boundary); // 같은 boundary를 참조하는 인접한 cellspace에서 boundary삭제
 			}
+			boundaryOfReferenceCellSpaceMap.remove(boundary);
 			currentCellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember().remove(boundary);
 		}
 		

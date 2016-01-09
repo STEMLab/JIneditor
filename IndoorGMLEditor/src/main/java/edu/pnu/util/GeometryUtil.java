@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import net.opengis.indoorgml.geometry.LineString;
 import net.opengis.indoorgml.geometry.Point;
+import net.opengis.indoorgml.geometry.Polygon;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -72,6 +73,14 @@ public class GeometryUtil {
 	
 	public static boolean isDisjointLineString(LineString ls1, LineString ls2) {
 		return !isIntersectsLineString(ls1, ls2);
+	}
+	
+	public static LineString getIntersectionLineString(LineString ls1, LineString ls2) {
+	        com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
+	        com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
+	        com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) line1.intersection(line2);
+	        
+	        return JTSUtil.convertLineString(intersection);
 	}
 	
 	// use JTS
@@ -145,4 +154,11 @@ public class GeometryUtil {
             
             return line.distance(point);
         }
+	
+	public static Point getCentroidPointOnPolygon(Polygon polygon) {
+	    com.vividsolutions.jts.geom.Polygon jtsPolygon = JTSUtil.convertJTSPolygon(polygon);
+	    com.vividsolutions.jts.geom.Point centroid = jtsPolygon.getCentroid();
+	    
+	    return JTSUtil.convertPoint(centroid);
+	}
 }

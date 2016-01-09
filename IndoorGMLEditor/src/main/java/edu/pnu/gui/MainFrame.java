@@ -52,7 +52,7 @@ import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
-import edu.pnu.visitor.IndoorGMLIDCoordinateGenerateVisitor;
+import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -828,7 +828,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             btnGenerateGmlid = new JButton("Generate GMLID");
             btnGenerateGmlid.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    IndoorGMLIDCoordinateGenerateVisitor visitor = new IndoorGMLIDCoordinateGenerateVisitor(
+                    IndoorGMLIDGenerateVisitor visitor = new IndoorGMLIDGenerateVisitor(
                             currentProject.getIs3DGeometry());
                     IndoorFeatures indoorFeatures = currentProject.getIndoorFeatures();
                     indoorFeatures.accept(visitor);

@@ -15,6 +15,7 @@ public class IndoorFeatures extends AbstractFeature implements Serializable, Ind
 	private MultiLayeredGraph multiLayeredGraph;
 	
 	public IndoorFeatures() {
+	        super.setGmlID( "IFs" );
 	}
 
 	public PrimalSpaceFeatures getPrimalSpaceFeatures() {
