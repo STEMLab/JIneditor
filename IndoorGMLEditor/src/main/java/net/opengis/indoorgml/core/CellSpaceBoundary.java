@@ -22,6 +22,7 @@ public class CellSpaceBoundary extends AbstractFeature implements Serializable, 
 	
 	// for door
 	private BoundaryType boundaryType;
+	// for 3D
 	private double ceilingHeight;
 	
 	public CellSpaceBoundary() {
@@ -88,7 +89,7 @@ public class CellSpaceBoundary extends AbstractFeature implements Serializable, 
 	@Override
 	public void accept(IndoorGMLElementVisitor visitor) {
 		// TODO Auto-generated method stub
-		
+	        visitor.visit(this);
 	}
 
 }

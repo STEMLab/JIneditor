@@ -24,6 +24,8 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 	
 	//
 	private ArrayList<LineString> lineStringElements;
+	// for 3D
+        private double ceilingHeight;
 	
 	public CellSpace() {
 		super.setGmlID( "C" + (labelNumber++) );
