@@ -1513,7 +1513,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
             }
 
-            if (snapPoint == null) {
+            if (minLS != null && snapPoint == null) {
                 Point p1 = minLS.getPoints().get(0);
                 Point p2 = minLS.getPoints().get(1);
                 setPanelXYForCurrentScale(p1);
@@ -1649,7 +1649,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        // TODO Auto-generated method stub
         int direction = e.getWheelRotation();
         double scale = project.getCurrentFloorPlanScale();
 
@@ -1682,7 +1681,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         mainFrame.getScrollPane().revalidate();
         mainFrame.getScrollPane().repaint();
         
-        mainFrame.getScrollPane().getViewport().setViewPosition(new java.awt.Point(e.getX(), e.getY()));
+        //mainFrame.getScrollPane().getViewport().setViewPosition(new java.awt.Point(e.getX(), e.getY()));
 
         repaint();
     }
@@ -1953,7 +1952,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             ArrayList<CellSpace> cellSpaceMember = project.getCurrentCellSpaceOnFloor()
                     .getCellSpaceMember();
             for (CellSpace cellSpace : cellSpaceMember) {
-                displayCellSpace(g, cellSpace, Color.BLACK, floorPlanWidth, floorPlanHeight,
+                displayCellSpace(g, cellSpace, Color.MAGENTA, floorPlanWidth, floorPlanHeight,
                         floorPlanScale);
             }
         }

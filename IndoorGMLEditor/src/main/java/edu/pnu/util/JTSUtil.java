@@ -28,9 +28,9 @@ public class JTSUtil {
 		double minDistance = 15;
 		Point snapPoint = null;
 		
-		for(int i = 0; i < 5000; i++) {
-		        double dx = startX + offsetX * ((double) i) / 5000;
-		        double dy = startY + offsetY * ((double) i) / 5000;
+		for(int i = 0; i < 3000; i++) {
+		        double dx = startX + offsetX * ((double) i) / 3000;
+		        double dy = startY + offsetY * ((double) i) / 3000;
 			//Coordinate coord = new Coordinate(minX + envelope.getWidth() * ((double) i) / 1000, minY + envelope.getHeight() * ((double)i) / 1000);
 		        Coordinate coord = new Coordinate(dx, dy);
                         Point p = gf.createPoint(coord);

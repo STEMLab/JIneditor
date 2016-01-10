@@ -72,6 +72,7 @@ public class ProjectFile implements Serializable {
 		*/
 		currentFloorPlanScale = 1.0;
 		idRegistry = new IndoorGMLIDRegistry();
+		editState = EditState.NONE;
 	}
 
 	public int getPanelWidth() {
