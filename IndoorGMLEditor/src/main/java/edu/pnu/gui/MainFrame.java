@@ -3,6 +3,7 @@ package edu.pnu.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -53,15 +54,26 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
+
 import javax.swing.JLabel;
+
 import java.awt.FlowLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+
 import javax.swing.JScrollBar;
+
 import java.awt.event.MouseWheelListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.AdjustmentEvent;
+
+import javax.swing.SwingConstants;
+import java.awt.GridLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import javax.swing.ImageIcon;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -134,7 +146,10 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JButton btnInterlayerconnection;
     private JPanel stateBarPane;
     private JLabel labelEditState;
-    private JSeparator separator_1;
+    private JLabel lblSpacelayer;
+    private JLabel lblFloor;
+    private JButton btnNone;
+    private JPanel panel_1;
 
     /**
      * Launch the application.
@@ -169,6 +184,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
         contentPane.add(getToolBar(), BorderLayout.NORTH);
+        contentPane.add(getPanel_1(), BorderLayout.WEST);
 
         scrollPane = getScrollPane();
         panel = getSpaceLayerPanel();
@@ -176,7 +192,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         scrollPane.setViewportView(panel);
 
         contentPane.add(scrollPane, BorderLayout.CENTER);
-        contentPane.add(getSeparator_1(), BorderLayout.WEST);
         contentPane.add(getStateBarPane(), BorderLayout.SOUTH);
 
         setVisible(true);
@@ -592,12 +607,13 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         if (toolBar == null) {
             toolBar = new JToolBar();
             toolBar.setFloatable(false);
-            toolBar.add(getBtnCellspace());
-            toolBar.add(getBtnDoorcellspaceboundary());
-            toolBar.add(getBtnState());
-            toolBar.add(getBtnTransition());
-            toolBar.add(getBtnInterlayerconnection());
+            //toolBar.setBorder(new EmptyBorder(5, 5, 5, 5));
+            FlowLayout fl_toolBar = new FlowLayout();
+            fl_toolBar.setAlignment(FlowLayout.RIGHT);
+            toolBar.setLayout(fl_toolBar);
+            toolBar.add(getLblSpacelayer());
             toolBar.add(getComboBox_SpaceLayer());
+            toolBar.add(getLblFloor());
             toolBar.add(getComboBox_Floor());
         }
         return toolBar;
@@ -605,7 +621,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnCellspace() {
         if (btnCellspace == null) {
-            btnCellspace = new JButton("CellSpace");
+            btnCellspace = new JButton("Cell");
+            btnCellspace.setToolTipText("Create CellSpace");
             btnCellspace.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACE);
@@ -619,7 +636,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnState() {
         if (btnState == null) {
-            btnState = new JButton("State");
+            btnState = new JButton("Stat");
+            btnState.setToolTipText("Create State");
             btnState.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_STATE);
@@ -632,7 +650,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnTransition() {
         if (btnTransition == null) {
-            btnTransition = new JButton("Transition");
+            btnTransition = new JButton("Tran");
+            btnTransition.setToolTipText("Create Transition");
             btnTransition.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     currentProject.setEditState(EditState.CREATE_TRANSITION);
@@ -662,6 +681,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JComboBox getComboBox_Floor() {
         if (comboBox_Floor == null) {
             comboBox_Floor = new JComboBox();
+            comboBox_Floor.setPreferredSize(new Dimension(200, 20));
             comboBox_Floor.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     refreshFloorPlan((String) comboBox_Floor.getSelectedItem());
@@ -794,6 +814,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JComboBox getComboBox_SpaceLayer() {
         if (comboBox_SpaceLayer == null) {
             comboBox_SpaceLayer = new JComboBox();
+            comboBox_SpaceLayer.setPreferredSize(new Dimension(200, 20));
             comboBox_SpaceLayer.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     boolean spaceLayerFound = false;
@@ -896,7 +917,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnDoorcellspaceboundary() {
         if (btnDoorcellspaceboundary == null) {
-            btnDoorcellspaceboundary = new JButton("Door(CellSpaceBoundary)");
+            btnDoorcellspaceboundary = new JButton("Door");
+            btnDoorcellspaceboundary.setToolTipText("Create Door(CellSpaceBoundary)");
             btnDoorcellspaceboundary.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR);
@@ -937,7 +959,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnInterlayerconnection() {
         if (btnInterlayerconnection == null) {
-            btnInterlayerconnection = new JButton("InterLayerConnection");
+            btnInterlayerconnection = new JButton("Inte");
+            btnInterlayerconnection.setToolTipText("Create InterLayerConnection");
             btnInterlayerconnection.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_INTERLAYERCONNECTION);
@@ -965,10 +988,77 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         }
         return labelEditState;
     }
-    private JSeparator getSeparator_1() {
-        if (separator_1 == null) {
-        	separator_1 = new JSeparator();
+    private JLabel getLblSpacelayer() {
+        if (lblSpacelayer == null) {
+        	lblSpacelayer = new JLabel("SpaceLayer");
         }
-        return separator_1;
+        return lblSpacelayer;
+    }
+    private JLabel getLblFloor() {
+        if (lblFloor == null) {
+        	lblFloor = new JLabel("Floor");
+        }
+        return lblFloor;
+    }
+    private JButton getBtnNone() {
+        if (btnNone == null) {
+        	btnNone = new JButton("");
+        	btnNone.setIcon(new ImageIcon(MainFrame.class.getResource("/images/mouse.png")));
+        	btnNone.addActionListener(new ActionListener() {
+        	    public void actionPerformed(ActionEvent arg0) {
+        	        panel.keyPressESCAPE(currentProject.getEditState());
+        	    }
+        	});
+        	btnNone.setToolTipText("Select");
+        }
+        return btnNone;
+    }
+    private JPanel getPanel_1() {
+        if (panel_1 == null) {
+        	panel_1 = new JPanel();
+        	GridBagLayout gbl_panel_1 = new GridBagLayout();
+        	gbl_panel_1.columnWidths = new int[]{20, 0};
+        	gbl_panel_1.rowHeights = new int[]{20, 0, 20, 0, 20, 0, 0};
+        	gbl_panel_1.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+        	gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+        	panel_1.setLayout(gbl_panel_1);
+        	GridBagConstraints gbc_btnNone = new GridBagConstraints();
+        	gbc_btnNone.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnNone.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnNone.gridx = 0;
+        	gbc_btnNone.gridy = 0;
+        	panel_1.add(getBtnNone(), gbc_btnNone);
+        	GridBagConstraints gbc_btnCellspace = new GridBagConstraints();
+        	gbc_btnCellspace.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnCellspace.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnCellspace.gridx = 0;
+        	gbc_btnCellspace.gridy = 1;
+        	panel_1.add(getBtnCellspace(), gbc_btnCellspace);
+        	GridBagConstraints gbc_btnDoorcellspaceboundary = new GridBagConstraints();
+        	gbc_btnDoorcellspaceboundary.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnDoorcellspaceboundary.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnDoorcellspaceboundary.gridx = 0;
+        	gbc_btnDoorcellspaceboundary.gridy = 2;
+        	panel_1.add(getBtnDoorcellspaceboundary(), gbc_btnDoorcellspaceboundary);
+        	GridBagConstraints gbc_btnState = new GridBagConstraints();
+        	gbc_btnState.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnState.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnState.gridx = 0;
+        	gbc_btnState.gridy = 3;
+        	panel_1.add(getBtnState(), gbc_btnState);
+        	GridBagConstraints gbc_btnTransition = new GridBagConstraints();
+        	gbc_btnTransition.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnTransition.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnTransition.gridx = 0;
+        	gbc_btnTransition.gridy = 4;
+        	panel_1.add(getBtnTransition(), gbc_btnTransition);
+        	GridBagConstraints gbc_btnInterlayerconnection = new GridBagConstraints();
+        	gbc_btnInterlayerconnection.insets = new Insets(0, 0, 0, 5);
+        	gbc_btnInterlayerconnection.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnInterlayerconnection.gridx = 0;
+        	gbc_btnInterlayerconnection.gridy = 5;
+        	panel_1.add(getBtnInterlayerconnection(), gbc_btnInterlayerconnection);
+        }
+        return panel_1;
     }
 }

@@ -1697,7 +1697,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         currentKeyEvent = e.getKeyCode();
         switch (e.getKeyCode()) {
         case KeyEvent.VK_ESCAPE:
-            if (state == EditState.CREATE_STATE) {
+            keyPressESCAPE(state);
+            
+            /*if (state == EditState.CREATE_STATE) {
                 project.setEditState(EditState.NONE);
             } else if (state == EditState.CREATE_TRANSITION) {
                 stateEnd1 = null;
@@ -1729,7 +1731,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             }
 
             project.setEditState(EditState.NONE);
-            mainFrame.setLabel_CurrentEditState("");
+            mainFrame.setLabel_CurrentEditState("");*/
             break;
         case KeyEvent.VK_DELETE:
             if (state == EditState.SELECT_STATE) {
@@ -1794,6 +1796,42 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         }
 
         repaint();
+    }
+    
+    public void keyPressESCAPE(EditState state) {
+        if (state == EditState.CREATE_STATE) {
+            project.setEditState(EditState.NONE);
+        } else if (state == EditState.CREATE_TRANSITION) {
+            stateEnd1 = null;
+            stateEnd2 = null;
+            transitionPoints.clear();
+        } else if (state == EditState.SELECT_STATE) {
+            selectedState = null;
+            selectedStateMap.clear();
+        } else if (state == EditState.CREATE_INTERLAYERCONNECTION) {
+            statesEnd1.clear();
+            statesEnd2.clear();
+        } else if (state == EditState.CREATE_CELLSPACE) {
+            cellSpaceCreatingLineStrings.clear();
+        } else if (state == EditState.SELECT_CELLSPACE) {
+            selectedCellSpace = null;
+            selectedCellSpaceMap.clear();
+        } else if (state == EditState.CREATE_CELLSPACE_DUALITY) {
+
+        } else if (state == EditState.CREATE_CELLSPACEBOUNDARY_DUALITY) {
+
+        } else if (state == EditState.CREATE_TRANSITION_DUALITY) {
+
+        } else if (state == EditState.CREATE_STATE_DUALITY) {
+
+        } else if (state == EditState.CREATE_CELLSPACE_AS_DOOR) {
+
+        } else if (state == EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR) {
+            doorPointList.clear();
+        }
+
+        project.setEditState(EditState.NONE);
+        mainFrame.setLabel_CurrentEditState("");
     }
 
     @Override
