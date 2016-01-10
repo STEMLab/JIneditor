@@ -102,8 +102,6 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 			if(cellSpaceBoundary.getGeometry2D() == null) return;
 			visit(cellSpaceBoundary.getGeometry2D());
 		}
-		cellSpaceBoundary.setGmlID("CB" + CellSpaceBoundary.getLabelNumber());
-		CellSpaceBoundary.setLabelNumber(CellSpaceBoundary.getLabelNumber() + 1);
 	}
 
 	@Override

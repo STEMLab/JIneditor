@@ -518,9 +518,11 @@ public class ProjectFile implements Serializable {
 			
 			HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = currentCellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
 			ArrayList<CellSpace> referenceCellSpace = boundaryOfReferenceCellSpaceMap.get(boundary);
-			for(CellSpace reference : referenceCellSpace) {
-				if(reference.equals(cellSpace)) continue;
-				reference.getPartialBoundedBy().remove(boundary); // 같은 boundary를 참조하는 인접한 cellspace에서 boundary삭제
+			if(referenceCellSpace != null && referenceCellSpace.size() > 0) {
+        			for(CellSpace reference : referenceCellSpace) {
+        				if(reference.equals(cellSpace)) continue;
+        				reference.getPartialBoundedBy().remove(boundary); // 같은 boundary를 참조하는 인접한 cellspace에서 boundary삭제
+        			}
 			}
 			boundaryOfReferenceCellSpaceMap.remove(boundary);
 			currentCellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember().remove(boundary);

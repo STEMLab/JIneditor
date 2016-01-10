@@ -53,6 +53,15 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
+import javax.swing.JLabel;
+import java.awt.FlowLayout;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import javax.swing.JScrollBar;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.AdjustmentEvent;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -123,6 +132,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JMenuItem mntmNew;
 
     private JButton btnInterlayerconnection;
+    private JPanel stateBarPane;
+    private JLabel labelEditState;
+    private JSeparator separator_1;
 
     /**
      * Launch the application.
@@ -164,6 +176,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         scrollPane.setViewportView(panel);
 
         contentPane.add(scrollPane, BorderLayout.CENTER);
+        contentPane.add(getSeparator_1(), BorderLayout.WEST);
+        contentPane.add(getStateBarPane(), BorderLayout.SOUTH);
 
         setVisible(true);
         pack();
@@ -317,26 +331,33 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                             ois.close();
 
                             currentProject.loadIndoorGMLID();
-                            
+
                             if (currentProject.getCurrentFloorPlanScale() == 0) {
                                 currentProject.setCurrentFloorPlanScale(1.0);
                             }
-                            BufferedImage floorPlan = ImageIO
-                                    .read(new File(currentProject.getCurrentStateOnFloor()
-                                            .getFloorProperty().getFloorPlanPath()));
-                            System.out.println(currentProject.getCurrentStateOnFloor()
+
+                            File floorPlanFile = new File(currentProject.getCurrentStateOnFloor()
                                     .getFloorProperty().getFloorPlanPath());
-                            currentProject.setCurrentFloorPlan(floorPlan);
+                            BufferedImage floorPlan = null;
+                            if (floorPlanFile.exists()) {
+                                floorPlan = ImageIO.read(floorPlanFile);
+                            }
+                            if (floorPlan != null) {
+                                System.out.println(currentProject.getCurrentStateOnFloor()
+                                        .getFloorProperty().getFloorPlanPath());
+                                currentProject.setCurrentFloorPlan(floorPlan);
+                            }
 
                             panel.setProject(currentProject);
                             comboBoxFloorRefresh();
                             comboBoxSpaceLayerRefresh();
+                            if (floorPlan != null) {
+                                resizePanelPrefferedDimension(floorPlan.getWidth(), floorPlan.getHeight());
+                            }
                             panel.repaint();
                             scrollPane.repaint();
-                            resizePanelPrefferedDimension(floorPlan.getWidth(),
-                                    floorPlan.getHeight());
-                            pack();
                             repaint();
+                            pack();
                         } catch (FileNotFoundException e1) {
                             // TODO Auto-generated catch block
                             e1.printStackTrace();
@@ -360,7 +381,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             mntmSave.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     currentProject.saveIndoorGMLID();
-                    
+
                     JFileChooser fileChooser = new JFileChooser();
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("data (*.dat)",
                             "dat");
@@ -378,7 +399,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                         System.out.println(file.getPath());
 
                         System.out.println(file.getAbsolutePath());
-                        
+
                         FileOutputStream fos = null;
                         BufferedOutputStream bos = null;
                         ObjectOutputStream oos = null;
@@ -534,6 +555,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACE);
                     currentProject.setEditWorkState(EditWorkState.CREATE_CELLSPACE_POINT1);
+                    setLabel_CurrentEditState("Create CellSpace");
                 }
             });
         }
@@ -546,6 +568,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             mntmState.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     currentProject.setEditState(EditState.CREATE_STATE);
+                    setLabel_CurrentEditState("Create State");
                 }
             });
         }
@@ -558,6 +581,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             mntmTransition.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     currentProject.setEditState(EditState.CREATE_TRANSITION);
+                    setLabel_CurrentEditState("Create Transition : Choose two states, and press ESC key");
                 }
             });
         }
@@ -586,6 +610,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACE);
                     currentProject.setEditWorkState(EditWorkState.CREATE_CELLSPACE_POINT1);
+                    setLabel_CurrentEditState("Create CellSpace");
                 }
             });
         }
@@ -598,6 +623,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             btnState.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_STATE);
+                    setLabel_CurrentEditState("Create State");
                 }
             });
         }
@@ -610,6 +636,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             btnTransition.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     currentProject.setEditState(EditState.CREATE_TRANSITION);
+                    setLabel_CurrentEditState("Create Transition : Choose two states, and press ESC key");
                 }
             });
         }
@@ -625,6 +652,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                     currentProject.setEditState(EditState.CREATE_INTERLAYERCONNECTION);
                     currentProject
                             .setEditWorkState(EditWorkState.CREATE_INTERLAYERCONNECTION_SELECTEND1);
+                    setLabel_CurrentEditState("Create InterLayerConnection : Choose the state(or states with CTRL key) and press Enter key");
                 }
             });
         }
@@ -738,10 +766,13 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             currentProject.setCurrentCellSpaceBoundaryOnFloor(tempCellSpaceBoundaryOnFloor);
         }
 
+        File floorPlanFile = new File(currentProject.getCurrentStateOnFloor()
+                .getFloorProperty().getFloorPlanPath());
         BufferedImage floorPlan = null;
         try {
-            floorPlan = ImageIO.read(new File(currentProject.getCurrentStateOnFloor()
-                    .getFloorProperty().getFloorPlanPath()));
+            if(floorPlanFile.exists()) {
+                floorPlan = ImageIO.read(floorPlanFile);
+            }
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -749,9 +780,13 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         currentProject.setCurrentFloorPlan(floorPlan);
         panel.repaint();
         scrollPane.repaint();
-        resizePanelPrefferedDimension(
-                (int) (floorPlan.getWidth() * currentProject.getCurrentFloorPlanScale()),
-                (int) (floorPlan.getHeight() * currentProject.getCurrentFloorPlanScale()));
+        if(floorPlan != null) {
+            
+            /*resizePanelPrefferedDimension(
+                    (int) (floorPlan.getWidth() * currentProject.getCurrentFloorPlanScale()),
+                    (int) (floorPlan.getHeight() * currentProject.getCurrentFloorPlanScale()));*/
+            resizePanelPrefferedDimension((int) (floorPlan.getWidth()), (int) (floorPlan.getHeight()));
+        }
         pack();
         repaint();
     }
@@ -789,6 +824,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         if (scrollPane == null) {
             scrollPane = new JScrollPane();
             scrollPane.setToolTipText("");
+            scrollPane.setWheelScrollingEnabled(true);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         }
 
         return scrollPane;
@@ -809,6 +846,12 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     public void resizePanelPrefferedDimension(int width, int height) {
         panel.setPreferredSize(new Dimension(width, height));
         scrollPane.setPreferredSize(new Dimension(width + 5, height + 5));
+        labelEditState.setPreferredSize(new Dimension(width, 15));        
+        //pack();
+    }
+    
+    public void setLabel_CurrentEditState(String state) {
+            labelEditState.setText(state);
     }
 
     private JMenuItem getMntmSpaceLayers() {
@@ -857,6 +900,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             btnDoorcellspaceboundary.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR);
+                    setLabel_CurrentEditState("Create Door(CellSpaceBoundary) : Choose two points on a CellSpaceBoundary");
                 }
             });
         }
@@ -869,6 +913,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             mntmDoorcellspaceboundary.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR);
+                    setLabel_CurrentEditState("Create Door(CellSpaceBoundary) : Choose two points on a CellSpaceBoundary");
                 }
             });
         }
@@ -898,9 +943,32 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                     currentProject.setEditState(EditState.CREATE_INTERLAYERCONNECTION);
                     currentProject
                             .setEditWorkState(EditWorkState.CREATE_INTERLAYERCONNECTION_SELECTEND1);
+                    setLabel_CurrentEditState("Create InterLayerConnection : Choose the state(or states with CTRL key) and press Enter key");
                 }
             });
         }
         return btnInterlayerconnection;
+    }
+    private JPanel getStateBarPane() {
+        if (stateBarPane == null) {
+        	stateBarPane = new JPanel();
+        	FlowLayout flowLayout = (FlowLayout) stateBarPane.getLayout();
+        	flowLayout.setAlignment(FlowLayout.LEFT);
+        	stateBarPane.add(getLabelEditState());
+        }
+        return stateBarPane;
+    }
+    private JLabel getLabelEditState() {
+        if (labelEditState == null) {
+        	labelEditState = new JLabel("");
+        	labelEditState.setPreferredSize(new Dimension(150, 15));
+        }
+        return labelEditState;
+    }
+    private JSeparator getSeparator_1() {
+        if (separator_1 == null) {
+        	separator_1 = new JSeparator();
+        }
+        return separator_1;
     }
 }

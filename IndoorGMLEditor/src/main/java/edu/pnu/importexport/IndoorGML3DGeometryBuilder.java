@@ -1,6 +1,7 @@
 package edu.pnu.importexport;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 import net.opengis.indoorgml.core.CellSpace;
@@ -50,22 +51,40 @@ public class IndoorGML3DGeometryBuilder {
 		double ceilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
 		double defaultDoorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
 		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
+                HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
+                
+		ArrayList<CellSpaceBoundary> removes = new ArrayList<CellSpaceBoundary>();
+                for(CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
+                        if(boundary.getBoundaryType() == BoundaryType.Boundary3D) {
+                                removes.add(boundary);
+                                
+                                ArrayList<CellSpace> references = boundaryOfReferenceCellSpaceMap.get(boundary);
+                                for(CellSpace reference : references) {
+                                        reference.getPartialBoundedBy().remove(boundary);
+                                }
+                        }
+                }
+                cellSpaceBoundaryMember.removeAll(removes);
 		
-		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
 		ArrayList<CellSpace> prevReference = null;
 		ArrayList<CellSpace> currentReference = null;
 		ArrayList<CellSpaceBoundary> newBoundaryList = new ArrayList<CellSpaceBoundary>();
 		LineString combineLS = null;
 		for(int i = 0; i < cellSpaceBoundaryMember.size(); i++) {
 			CellSpaceBoundary boundary = cellSpaceBoundaryMember.get(i);
+			
 			if(boundary.getGeometry2D() == null) continue;
+			
+			if(boundary.getBoundaryType() == BoundaryType.Door)
+			    setDoorHeight(boundary, defaultDoorHeight);
+			
 			currentReference = boundaryOfReferenceCellSpaceMap.get(boundary);
 			if(prevReference == null) {
 				prevReference = currentReference;
 				combineLS = new LineString();
 				combineLS.setPoints((ArrayList<Point>) boundary.getGeometry2D().getPoints().clone());
 			} else if(prevReference.size() == currentReference.size() && prevReference.containsAll(currentReference)) { // 하나의 3D Boundary로 합칠 수 있는 2D Boundary
-				combineLS.getPoints().addAll(boundary.getGeometry2D().getPoints());
+				combineLS.getPoints().addAll((ArrayList<Point>) boundary.getGeometry2D().getPoints().clone());
 			} else { // 다르면 이전까지 합친 boundary를 하나로 생성한다.
 				Polygon geometry3D = null;
 				for(LineString existingLS : xLink3DMap.keySet()) {
@@ -83,12 +102,14 @@ public class IndoorGML3DGeometryBuilder {
 				
 				if(combineLS.getPoints().size() > 2) {
 					CellSpaceBoundary newBoundary = new CellSpaceBoundary();
+					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
 					newBoundary.setGeometry3D(geometry3D);
 					newBoundaryList.add(newBoundary);
 					
 					for(CellSpace reference : prevReference) {
 						reference.getPartialBoundedBy().add(newBoundary);
 					}
+					boundaryOfReferenceCellSpaceMap.put(newBoundary, (ArrayList<CellSpace>) prevReference.clone());
 				} else {
 					boundary.setGeometry3D(geometry3D);
 				}
@@ -100,7 +121,7 @@ public class IndoorGML3DGeometryBuilder {
 			
 			if(boundary.getBoundaryType() == BoundaryType.Door) { // 문이면 문에 대한 boundary를 따로 생성한다.
 				Polygon geometry3D = new Polygon();
-				geometry3D = createPolygonFrom2Points(boundary.getGeometry2D().getPoints(), groundHeight);
+				geometry3D = createPolygonFrom2Points((ArrayList<Point>)boundary.getGeometry2D().getPoints().clone(), groundHeight);
 				boundary.setGeometry3D(geometry3D);
 				if(!xLink3DMap.containsKey(boundary.getGeometry2D())) {
 					xLink3DMap.put(boundary.getGeometry2D(), geometry3D);
@@ -127,11 +148,13 @@ public class IndoorGML3DGeometryBuilder {
 			CellSpaceBoundary boundary = null;
 			if(combineLS.getPoints().size() > 2) {
 				boundary = new CellSpaceBoundary();
+				boundary.setBoundaryType(BoundaryType.Boundary3D);
 				newBoundaryList.add(boundary);
 				
 				for(CellSpace reference : prevReference) {
 					reference.getPartialBoundedBy().add(boundary);
 				}
+                                boundaryOfReferenceCellSpaceMap.put(boundary, (ArrayList<CellSpace>) prevReference.clone());
 			} else {
 				boundary = cellSpaceBoundaryMember.get(cellSpaceBoundaryMember.size() - 1);
 			}

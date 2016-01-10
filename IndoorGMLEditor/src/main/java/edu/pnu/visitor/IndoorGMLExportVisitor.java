@@ -21,6 +21,7 @@ import net.opengis.gml.v_3_2_1.ShellType;
 import net.opengis.gml.v_3_2_1.SignType;
 import net.opengis.gml.v_3_2_1.SolidPropertyType;
 import net.opengis.gml.v_3_2_1.SolidType;
+import net.opengis.gml.v_3_2_1.StringOrRefType;
 import net.opengis.gml.v_3_2_1.SurfacePropertyType;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
@@ -264,7 +265,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(MultiLayeredGraph multiLayeredGraph) {
 		// TODO Auto-generated method stub
 		multiLayeredGraphType.setId(multiLayeredGraph.getGmlID());
-		multiLayeredGraphType.getName().add(createCodeType(multiLayeredGraph.getGmlID(), null));
+		multiLayeredGraphType.getName().add(createCodeType(multiLayeredGraph.getName(), null));
+		multiLayeredGraphType.setDescription(createStringOrRefType(multiLayeredGraph.getDescription()));
 		
 		ArrayList<SpaceLayers> spaceLayersList = multiLayeredGraph.getSpaceLayers();
 		for(SpaceLayers spaceLayers : spaceLayersList) {
@@ -288,6 +290,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		spaceLayersType.setId(spaceLayers.getGmlID());
 		spaceLayersType.getName().add(createCodeType(spaceLayers.getGmlID(), null));
+		spaceLayersType.setDescription(createStringOrRefType(spaceLayers.getDescription()));
 		
 		ArrayList<SpaceLayer> spaceLayerList = spaceLayers.getSpaceLayerMember();
 		for(SpaceLayer spaceLayer : spaceLayerList) {
@@ -306,6 +309,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		spaceLayerType.setId(spaceLayer.getGmlID());
 		spaceLayerType.getName().add(createCodeType(spaceLayer.getGmlID(), null));
+                spaceLayerType.setDescription(createStringOrRefType(spaceLayer.getDescription()));
 		
 		ArrayList<Nodes> nodesList = spaceLayer.getNodes();
 		for(Nodes nodes : nodesList) {
@@ -331,6 +335,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		nodesType.setId(nodes.getGmlID());
 		nodesType.getName().add(createCodeType(nodes.getGmlID(), null));
+                nodesType.setDescription(createStringOrRefType(nodes.getDescription()));
 		
 		ArrayList<StateOnFloor> stateOnFloorList = nodes.getStateOnFloors();
 		for(StateOnFloor stateOnFloor : stateOnFloorList) {
@@ -358,6 +363,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		stateType.setId(state.getGmlID());
 		stateType.getName().add(createCodeType(state.getGmlID(), null));
+                stateType.setDescription(createStringOrRefType(state.getDescription()));
 
 		ArrayList<Transition> connects = state.getTransitionReference();
 		if(state.getTransitionReference().size() > 0) {
@@ -398,6 +404,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		edgesType.setId(edges.getGmlID());
 		edgesType.getName().add(createCodeType(edges.getGmlID(), null));
+                edgesType.setDescription(createStringOrRefType(edges.getDescription()));
 		
 		ArrayList<TransitionOnFloor> transitionOnFloorList = edges.getTransitionOnFloors();
 		for(TransitionOnFloor transitionOnFloor : transitionOnFloorList) {
@@ -426,6 +433,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		transitionType.setId(transition.getGmlID());
 		transitionType.getName().add(createCodeType(transition.getGmlID(), null));
+                transitionType.setDescription(createStringOrRefType(transition.getDescription()));
 		
 		State[] states = transition.getStates();
 		for(State state : states) {
@@ -462,6 +470,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		interEdgesType.setId(interEdges.getGmlID());
 		interEdgesType.getName().add(createCodeType(interEdges.getGmlID(), null));
+                interEdgesType.setDescription(createStringOrRefType(interEdges.getDescription()));
 		
 		ArrayList<InterLayerConnection> interLayerConnectionList = interEdges.getInterLayerConnectionMember();
 		for(InterLayerConnection interLayerConnection : interLayerConnectionList) {
@@ -480,6 +489,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		interLayerConnectionType.setId(interLayerConnection.getGmlID());
 		interLayerConnectionType.getName().add(createCodeType(interLayerConnection.getGmlID(), null));
+                interLayerConnectionType.setDescription(createStringOrRefType(interLayerConnection.getDescription()));
 		interLayerConnectionType.setTypeOfTopoExpression(interLayerConnection.getTopology());
 		interLayerConnectionType.setComment(interLayerConnection.getComment());
 		
@@ -640,7 +650,13 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	}
 	
 	public CodeType createCodeType(String name, String codeSpace) {
-		CodeType codeType = GMLFactory.createCodeType();
+	        CodeType codeType = null;
+	        
+	        if(name == null && codeSpace == null)
+	                return codeType;
+	        else
+	            codeType = GMLFactory.createCodeType();
+	        
 		if(name != null) {
 			codeType.setValue(name);
 		}
@@ -649,6 +665,18 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		}
 		
 		return codeType;
+	}
+	
+	public StringOrRefType createStringOrRefType(String value) {
+	        StringOrRefType strOrRefType = null;
+	        
+	        if(value == null)
+	                return strOrRefType;
+	        else
+	                strOrRefType = GMLFactory.createStringOrRefType();
+	        
+	        strOrRefType.setValue(value);
+	        return strOrRefType;
 	}
 
 }

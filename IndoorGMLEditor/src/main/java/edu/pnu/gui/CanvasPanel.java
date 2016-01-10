@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +27,7 @@ import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 
 import net.opengis.indoorgml.core.AbstractFeature;
@@ -563,6 +565,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
                         doorPointList.clear();
                         project.setEditState(EditState.NONE);
+                        mainFrame.setLabel_CurrentEditState("");
                     }
                 }
             } else if (currentEditState == EditState.NONE
@@ -570,7 +573,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     || currentEditState == EditState.SELECT_CELLSPACE
                     || currentEditState == EditState.SELECT_TRANSITION
                     || currentEditState == EditState.SELECT_CELLSPACEBOUNDARY) {
-                boolean selected = false;
+                boolean isSelected = false;
                 selectedState = null;
                 selectedCellSpace = null;
                 selectedTransition = null;
@@ -594,12 +597,17 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     }
 
                     project.setEditState(EditState.SELECT_STATE);
-
-                    System.out.println("select state");
-                    selected = true;
+                    isSelected = true;
+                    
+                    String selectedStateIDs = "";
+                    for(State selected : selectedStateMap.keySet()) {
+                        selectedStateIDs += selected.getGmlID() + ", ";
+                    }
+                    selectedStateIDs = selectedStateIDs.substring(0, selectedStateIDs.length() - 2);
+                    mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs);
                 }
 
-                if (!selected) {
+                if (!isSelected) {
                     selectedTransition = searchAdjacencyTransition(e);
                     if (selectedTransition != null) {
                         if (currentEditState != EditState.SELECT_TRANSITION) {
@@ -613,13 +621,18 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                         }
 
                         project.setEditState(EditState.SELECT_TRANSITION);
-
-                        System.out.println("select transition");
-                        selected = true;
+                        isSelected = true;
+                        
+                        String selectedTransitionIDs = "";
+                        for(Transition selected : selectedTransitionMap.keySet()) {
+                            selectedTransitionIDs += selected.getGmlID() + ", ";
+                        }
+                        selectedTransitionIDs = selectedTransitionIDs.substring(0, selectedTransitionIDs.length() - 2);
+                        mainFrame.setLabel_CurrentEditState("Selected Transition : " + selectedTransitionIDs);
                     }
                 }
 
-                if (!selected) {
+                if (!isSelected) {
                     selectedCellSpaceBoundary = searchAdjacencyCellSpaceBoundary(e);
                     if (selectedCellSpaceBoundary != null) {
                         if (currentEditState != EditState.SELECT_CELLSPACEBOUNDARY) {
@@ -633,13 +646,18 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                         }
 
                         project.setEditState(EditState.SELECT_CELLSPACEBOUNDARY);
-
-                        System.out.println("select cellspaceboundary");
-                        selected = true;
+                        isSelected = true;
+                        
+                        String selectedCellSpaceBoundaryIDs = "";
+                        for(CellSpaceBoundary selected : selectedCellSpaceBoundaryMap.keySet()) {
+                            selectedCellSpaceBoundaryIDs += selected.getGmlID() + ", ";
+                        }
+                        selectedCellSpaceBoundaryIDs = selectedCellSpaceBoundaryIDs.substring(0, selectedCellSpaceBoundaryIDs.length() - 2);
+                        mainFrame.setLabel_CurrentEditState("Selected State : " + selectedCellSpaceBoundaryIDs);
                     }
                 }
 
-                if (!selected) {
+                if (!isSelected) {
                     selectedCellSpace = searchPointInCellSpace(e);
                     if (selectedCellSpace != null) {
                         if (currentEditState != EditState.SELECT_CELLSPACE) {
@@ -652,13 +670,20 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                         }
 
                         project.setEditState(EditState.SELECT_CELLSPACE);
-                        System.out.println("select cellspace");
-                        selected = true;
+                        isSelected = true;
+                        
+                        String selectedCellSpaceIDs = "";
+                        for(CellSpace selected : selectedCellSpaceMap.keySet()) {
+                            selectedCellSpaceIDs += selected.getGmlID() + ", ";
+                        }
+                        selectedCellSpaceIDs = selectedCellSpaceIDs.substring(0, selectedCellSpaceIDs.length() - 2);
+                        mainFrame.setLabel_CurrentEditState("Selected State : " + selectedCellSpaceIDs);
                     }
                 }
 
-                if (!selected) {
+                if (!isSelected) {
                     project.setEditState(EditState.NONE);
+                    mainFrame.setLabel_CurrentEditState("");
                     selectedStateMap.clear();
                     selectedCellSpaceMap.clear();
                     selectedTransitionMap.clear();
@@ -679,6 +704,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
 
                 project.setEditState(EditState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
             } else if (currentEditState == EditState.CREATE_CELLSPACE_DUALITY) {
                 selectedState = searchAdjacencyState(e);
 
@@ -693,6 +719,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     System.out.println("create cellspace duality");
                 }
                 project.setEditState(EditState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
             } else if (currentEditState == EditState.CREATE_TRANSITION_DUALITY) {
                 selectedCellSpaceBoundary = searchAdjacencyCellSpaceBoundary(e);
 
@@ -707,6 +734,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     System.out.println("create transition duality");
                 }
                 project.setEditState(EditState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
             } else if (currentEditState == EditState.CREATE_CELLSPACEBOUNDARY_DUALITY) {
                 selectedTransition = searchAdjacencyTransition(e);
 
@@ -721,6 +749,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     System.out.println("create cellspaceboundary duality");
                 }
                 project.setEditState(EditState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
             }
         } else if (e.getButton() == 3) { // 우클릭
             boolean selected = false;
@@ -806,6 +835,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
             if (!selected) {
                 project.setEditState(EditState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
                 selectedStateMap.clear();
                 selectedCellSpaceMap.clear();
                 selectedTransitionMap.clear();
@@ -1623,8 +1653,17 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         int direction = e.getWheelRotation();
         double scale = project.getCurrentFloorPlanScale();
 
-        if (currentKeyEvent != KeyEvent.VK_CONTROL)
+        if (currentKeyEvent != KeyEvent.VK_CONTROL){
+            JScrollBar verticalScrollBar = mainFrame.getScrollPane().getVerticalScrollBar();
+            int currentValue = verticalScrollBar.getValue();
+            int increment = verticalScrollBar.getUnitIncrement();
+            if(direction > 0) {
+                verticalScrollBar.setValue(currentValue + increment * 2);
+            } else {
+                verticalScrollBar.setValue(currentValue - increment * 2);
+            }
             return;
+        }
 
         if (direction > 0) {
             if (scale > 0.3) {
@@ -1642,6 +1681,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                         .getCurrentFloorPlan().getHeight() * scale));
         mainFrame.getScrollPane().revalidate();
         mainFrame.getScrollPane().repaint();
+        
+        mainFrame.getScrollPane().getViewport().setViewPosition(new java.awt.Point(e.getX(), e.getY()));
 
         repaint();
     }
@@ -1684,10 +1725,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             } else if (state == EditState.CREATE_CELLSPACE_AS_DOOR) {
 
             } else if (state == EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR) {
-
+                doorPointList.clear();
             }
 
             project.setEditState(EditState.NONE);
+            mainFrame.setLabel_CurrentEditState("");
             break;
         case KeyEvent.VK_DELETE:
             if (state == EditState.SELECT_STATE) {
@@ -1712,6 +1754,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 selectedTransition = null;
                 selectedTransitionMap.clear();
                 project.setEditState(EditState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
             }
             break;
         case KeyEvent.VK_ENTER:
@@ -1720,15 +1763,18 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     System.out.println("interlayerconnection_end2");
                     workState = EditWorkState.CREATE_INTERLAYERCONNECTION_SELECTEND2;
                     project.setEditWorkState(workState);
+                    mainFrame.setLabel_CurrentEditState("Create InterLayerConnection : Choose the other state(or states) and press Enter key");
                 } else if (workState == EditWorkState.CREATE_INTERLAYERCONNECTION_SELECTEND2) {
                     workState = EditWorkState.CREATE_INTERLAYERCONNECTION_CREATE;
                     project.setEditWorkState(workState);
+                    mainFrame.setLabel_CurrentEditState(workState.toString());
                     System.out.println("interlayerconnection_create");
                     //
                     createInterLayerConnection();
 
                     project.setEditState(EditState.NONE);
                     project.setEditWorkState(EditWorkState.NONE);
+                    mainFrame.setLabel_CurrentEditState("");
                 }
             } else if (state == EditState.CREATE_CELLSPACE
                     && cellSpaceCreatingLineStrings.size() >= 3) {
@@ -1738,6 +1784,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
                 project.setEditState(EditState.NONE);
                 project.setEditWorkState(EditWorkState.NONE);
+                mainFrame.setLabel_CurrentEditState("");
             }
 
             break;
