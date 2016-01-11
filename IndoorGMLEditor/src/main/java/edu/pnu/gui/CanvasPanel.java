@@ -601,10 +601,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     
                     String selectedStateIDs = "";
                     for(State selected : selectedStateMap.keySet()) {
-                        selectedStateIDs += selected.getGmlID() + ", ";
+                        selectedStateIDs += selected.getGmlID() + ", " + selected.getPosition().getPanelRatioX() + " " + (1 - selected.getPosition().getPanelRatioY());
+                        System.out.println("State : " + selected.getGmlID() + ", " + selected.getPosition().getPanelRatioX() + " " + (1 - selected.getPosition().getPanelRatioY()));
                     }
                     selectedStateIDs = selectedStateIDs.substring(0, selectedStateIDs.length() - 2);
-                    mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs);
+                    mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs );
                 }
 
                 if (!isSelected) {
@@ -1486,6 +1487,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         CellSpaceOnFloor cellSpaceOnFloor = project.getCurrentCellSpaceOnFloor();
         ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
         for (CellSpace cellSpace : cellSpaceMember) {
+            double d = GeometryUtil.getDistancePointToPolygon(cellSpace.getGeometry2D(), e.getX(), e.getY());
+            if(d > 100) continue;
             double minDistance = 999;
             LineString minLS = null;
             for (LineString ls : cellSpace.getLineStringElements()) {

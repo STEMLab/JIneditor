@@ -609,7 +609,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             toolBar.setFloatable(false);
             //toolBar.setBorder(new EmptyBorder(5, 5, 5, 5));
             FlowLayout fl_toolBar = new FlowLayout();
-            fl_toolBar.setAlignment(FlowLayout.RIGHT);
+            fl_toolBar.setAlignment(FlowLayout.LEFT);
             toolBar.setLayout(fl_toolBar);
             toolBar.add(getLblSpacelayer());
             toolBar.add(getComboBox_SpaceLayer());

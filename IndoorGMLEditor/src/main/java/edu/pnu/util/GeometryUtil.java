@@ -144,7 +144,14 @@ public class GeometryUtil {
             
             return line.distance(point);
         }
-	
+        
+        public static double getDistancePointToPolygon(Polygon poly, double x, double y) {
+            com.vividsolutions.jts.geom.Polygon polygon = JTSUtil.convertJTSPolygon(poly);
+            Coordinate coord = new Coordinate(x, y);
+            com.vividsolutions.jts.geom.Point point = jtsFactory.createPoint(coord);
+            
+            return polygon.distance(point);
+        }
 	public static double getDistancePointToLine(double linex1, double liney1, double linex2, double liney2, double x, double y) {
 	    Coordinate coord1 = new Coordinate(linex1, liney1);
 	    Coordinate coord2 = new Coordinate(linex2, liney2);
