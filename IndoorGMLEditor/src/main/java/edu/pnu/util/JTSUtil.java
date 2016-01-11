@@ -117,6 +117,23 @@ public class JTSUtil {
 		
 		return ls;
 	}
+	
+	public static net.opengis.indoorgml.geometry.LinearRing convertLinearRing(LinearRing ring) {
+	    net.opengis.indoorgml.geometry.LineString lineString = convertLineString(ring);
+	    net.opengis.indoorgml.geometry.LinearRing linearRing = new net.opengis.indoorgml.geometry.LinearRing();
+	    linearRing.setPoints(lineString.getPoints());
+	    
+	    return linearRing;
+	}
+	
+	public static net.opengis.indoorgml.geometry.Polygon convertPolygon(Polygon polygon) {
+	        LinearRing exteriorRing = (LinearRing) polygon.getExteriorRing();
+	        net.opengis.indoorgml.geometry.LinearRing exterior = convertLinearRing(exteriorRing);
+	        net.opengis.indoorgml.geometry.Polygon poly = new net.opengis.indoorgml.geometry.Polygon();
+	        poly.setExteriorRing(exterior);
+	        
+	        return poly;
+	}
 
 	public static ArrayList<net.opengis.indoorgml.geometry.LineString> splitLineString(net.opengis.indoorgml.geometry.LineString ls1, net.opengis.indoorgml.geometry.LineString ls2) {
 		ls2 = ls2.clone();

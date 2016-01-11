@@ -129,7 +129,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		indoorFeaturesType = IGMLFactory.createIndoorFeaturesType();
 		indoorFeaturesType.setId(indoorFeatures.getGmlID());
-		indoorFeaturesType.getName().add(createCodeType(indoorFeatures.getGmlID(), null));
+		//indoorFeaturesType.getName().add(createCodeType(indoorFeatures.getGmlID(), null));
 		
 		multiLayeredGraphType = IGMLFactory.createMultiLayeredGraphType();
 		visit(indoorFeatures.getMultiLayeredGraph());
@@ -145,7 +145,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	@Override
 	public void visit(PrimalSpaceFeatures primalSpaceFeatures) {
 		primalSpaceFeaturesType.setId(primalSpaceFeatures.getGmlID());
-		primalSpaceFeaturesType.getName().add(createCodeType(primalSpaceFeatures.getGmlID(), null));
+		//primalSpaceFeaturesType.getName().add(createCodeType(primalSpaceFeatures.getGmlID(), null));
 		
 		ArrayList<CellSpaceOnFloor> cellSpaceOnFloors = primalSpaceFeatures.getCellSpaceOnFloors();
 		for(CellSpaceOnFloor cellSpaceOnFloor : cellSpaceOnFloors) {
@@ -179,7 +179,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(CellSpace cellSpace) {
 		// TODO Auto-generated method stub
 		cellSpaceType.setId(cellSpace.getGmlID());
-		cellSpaceType.getName().add(createCodeType(cellSpace.getGmlID(), null));
+		//cellSpaceType.getName().add(createCodeType(cellSpace.getGmlID(), null));
 
 		State duality = cellSpace.getDuality();
 		if(duality != null) {
@@ -238,7 +238,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(CellSpaceBoundary cellSpaceBoundary) {
 		// TODO Auto-generated method stub
 		cellSpaceBoundaryType.setId(cellSpaceBoundary.getGmlID());
-		cellSpaceBoundaryType.getName().add(createCodeType(cellSpaceBoundary.getGmlID(), null));
+		//cellSpaceBoundaryType.getName().add(createCodeType(cellSpaceBoundary.getGmlID(), null));
 
 		Transition duality = cellSpaceBoundary.getDuality();
 		if(duality != null) {
@@ -265,8 +265,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(MultiLayeredGraph multiLayeredGraph) {
 		// TODO Auto-generated method stub
 		multiLayeredGraphType.setId(multiLayeredGraph.getGmlID());
-		multiLayeredGraphType.getName().add(createCodeType(multiLayeredGraph.getName(), null));
-		multiLayeredGraphType.setDescription(createStringOrRefType(multiLayeredGraph.getDescription()));
+		//multiLayeredGraphType.getName().add(createCodeType(multiLayeredGraph.getName(), null));
+		//multiLayeredGraphType.setDescription(createStringOrRefType(multiLayeredGraph.getDescription()));
 		
 		ArrayList<SpaceLayers> spaceLayersList = multiLayeredGraph.getSpaceLayers();
 		for(SpaceLayers spaceLayers : spaceLayersList) {
@@ -289,8 +289,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(SpaceLayers spaceLayers) {
 		// TODO Auto-generated method stub
 		spaceLayersType.setId(spaceLayers.getGmlID());
-		spaceLayersType.getName().add(createCodeType(spaceLayers.getGmlID(), null));
-		spaceLayersType.setDescription(createStringOrRefType(spaceLayers.getDescription()));
+		//spaceLayersType.getName().add(createCodeType(spaceLayers.getGmlID(), null));
+		//spaceLayersType.setDescription(createStringOrRefType(spaceLayers.getDescription()));
 		
 		ArrayList<SpaceLayer> spaceLayerList = spaceLayers.getSpaceLayerMember();
 		for(SpaceLayer spaceLayer : spaceLayerList) {
@@ -308,8 +308,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(SpaceLayer spaceLayer) {
 		// TODO Auto-generated method stub
 		spaceLayerType.setId(spaceLayer.getGmlID());
-		spaceLayerType.getName().add(createCodeType(spaceLayer.getGmlID(), null));
-                spaceLayerType.setDescription(createStringOrRefType(spaceLayer.getDescription()));
+		//spaceLayerType.getName().add(createCodeType(spaceLayer.getGmlID(), null));
+                //spaceLayerType.setDescription(createStringOrRefType(spaceLayer.getDescription()));
 		
 		ArrayList<Nodes> nodesList = spaceLayer.getNodes();
 		for(Nodes nodes : nodesList) {
@@ -334,8 +334,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(Nodes nodes) {
 		// TODO Auto-generated method stub
 		nodesType.setId(nodes.getGmlID());
-		nodesType.getName().add(createCodeType(nodes.getGmlID(), null));
-                nodesType.setDescription(createStringOrRefType(nodes.getDescription()));
+		//nodesType.getName().add(createCodeType(nodes.getGmlID(), null));
+                //nodesType.setDescription(createStringOrRefType(nodes.getDescription()));
 		
 		ArrayList<StateOnFloor> stateOnFloorList = nodes.getStateOnFloors();
 		for(StateOnFloor stateOnFloor : stateOnFloorList) {
@@ -362,8 +362,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(State state) {
 		// TODO Auto-generated method stub
 		stateType.setId(state.getGmlID());
-		stateType.getName().add(createCodeType(state.getGmlID(), null));
-                stateType.setDescription(createStringOrRefType(state.getDescription()));
+		//stateType.getName().add(createCodeType(state.getGmlID(), null));
+                //stateType.setDescription(createStringOrRefType(state.getDescription()));
 
 		ArrayList<Transition> connects = state.getTransitionReference();
 		if(state.getTransitionReference().size() > 0) {
@@ -390,21 +390,21 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		
 		pointPropertyType.setPoint(pointType);
 		stateType.setGeometry(pointPropertyType);
-		
+		/*
 		if(state.getName() != null) {
 			CodeType codeType = GMLFactory.createCodeType();
 			codeType.setValue(state.getName());
 			
 			stateType.getName().add(codeType);
-		}
+		}*/
 	}
 
 	@Override
 	public void visit(Edges edges) {
 		// TODO Auto-generated method stub
 		edgesType.setId(edges.getGmlID());
-		edgesType.getName().add(createCodeType(edges.getGmlID(), null));
-                edgesType.setDescription(createStringOrRefType(edges.getDescription()));
+		//edgesType.getName().add(createCodeType(edges.getGmlID(), null));
+                //edgesType.setDescription(createStringOrRefType(edges.getDescription()));
 		
 		ArrayList<TransitionOnFloor> transitionOnFloorList = edges.getTransitionOnFloors();
 		for(TransitionOnFloor transitionOnFloor : transitionOnFloorList) {
@@ -432,8 +432,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(Transition transition) {
 		// TODO Auto-generated method stub
 		transitionType.setId(transition.getGmlID());
-		transitionType.getName().add(createCodeType(transition.getGmlID(), null));
-                transitionType.setDescription(createStringOrRefType(transition.getDescription()));
+		//transitionType.getName().add(createCodeType(transition.getGmlID(), null));
+                //transitionType.setDescription(createStringOrRefType(transition.getDescription()));
 		
 		State[] states = transition.getStates();
 		for(State state : states) {
@@ -456,21 +456,22 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		curvePropertyType = GMLFactory.createCurvePropertyType();
 		visit(transition.getPath());
 		transitionType.setGeometry(curvePropertyType);
-		
+		/*
 		if(transition.getName() != null) {
 			CodeType codeType = GMLFactory.createCodeType();
 			codeType.setValue(transition.getName());
 			
 			transitionType.getName().add(codeType);
 		}
+		*/
 	}
 
 	@Override
 	public void visit(InterEdges interEdges) {
 		// TODO Auto-generated method stub
 		interEdgesType.setId(interEdges.getGmlID());
-		interEdgesType.getName().add(createCodeType(interEdges.getGmlID(), null));
-                interEdgesType.setDescription(createStringOrRefType(interEdges.getDescription()));
+		//interEdgesType.getName().add(createCodeType(interEdges.getGmlID(), null));
+                //interEdgesType.setDescription(createStringOrRefType(interEdges.getDescription()));
 		
 		ArrayList<InterLayerConnection> interLayerConnectionList = interEdges.getInterLayerConnectionMember();
 		for(InterLayerConnection interLayerConnection : interLayerConnectionList) {
@@ -488,8 +489,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(InterLayerConnection interLayerConnection) {
 		// TODO Auto-generated method stub
 		interLayerConnectionType.setId(interLayerConnection.getGmlID());
-		interLayerConnectionType.getName().add(createCodeType(interLayerConnection.getGmlID(), null));
-                interLayerConnectionType.setDescription(createStringOrRefType(interLayerConnection.getDescription()));
+		//interLayerConnectionType.getName().add(createCodeType(interLayerConnection.getGmlID(), null));
+                //interLayerConnectionType.setDescription(createStringOrRefType(interLayerConnection.getDescription()));
 		interLayerConnectionType.setTypeOfTopoExpression(interLayerConnection.getTopology());
 		interLayerConnectionType.setComment(interLayerConnection.getComment());
 		
@@ -513,7 +514,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	public void visit(Point point) {
 		// TODO Auto-generated method stub
 		pointType.setId(point.getGMLID());
-		pointType.getName().add(createCodeType(point.getGMLID(), null));
+		//pointType.getName().add(createCodeType(point.getGMLID(), null));
 		
 		DirectPositionType directPositionType = GMLFactory.createDirectPositionType();
 		directPositionType.getValue().add(point.getRealX());
@@ -542,9 +543,14 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		} else {
 			LineStringType lineStringType = GMLFactory.createLineStringType();
 			lineStringType.setId(lineString.getGMLID());
-			lineStringType.getName().add(createCodeType(lineString.getGMLID(), null));
+			//lineStringType.getName().add(createCodeType(lineString.getGMLID(), null));
 			ArrayList<Point> points = lineString.getPoints();
-			for(Point point : points) {
+			for(int i = 0; i < points.size(); i++) {
+	                        Point point = points.get(i);
+	                        if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
+	                                && points.get(i - 1).getRealY() == points.get(i).getRealY()
+	                                && points.get(i - 1).getZ() == points.get(i).getZ()) 
+	                            continue;
 				DirectPositionType directPositionType = GMLFactory.createDirectPositionType();
 				directPositionType.getValue().add(point.getRealX());
 				directPositionType.getValue().add(point.getRealY());
@@ -565,7 +571,12 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		LinearRingType linearRingType = GMLFactory.createLinearRingType();
 		ArrayList<Point> points = linearRing.getPoints();
-		for(Point point : points) {
+		for(int i = 0; i < points.size(); i++) {
+		        Point point = points.get(i);
+		        if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
+                                && points.get(i - 1).getRealY() == points.get(i).getRealY()
+                                && points.get(i - 1).getZ() == points.get(i).getZ()) 
+                            continue;
 			DirectPositionType directPositonType = GMLFactory.createDirectPositionType();
 			directPositonType.getValue().add(point.getRealX());
 			directPositonType.getValue().add(point.getRealY());
@@ -580,9 +591,58 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	}
 
 	@Override
-	public void visit(Polygon polygon) {
+	public void visit(Polygon _polygon) {
 		// TODO Auto-generated method stub
-		if(polygon.getxLinkGeometry() != null) {
+	    
+	        Polygon polygon = null;
+	        if(_polygon.getxLinkGeometry() != null) {
+	                polygon = new Polygon();
+	                Polygon xlinkGeometry = (Polygon) _polygon.getxLinkGeometry();
+	                if(!_polygon.getIsReversed()) {
+    	                        ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
+                                ArrayList<Point> newPoints = new ArrayList<Point>();
+                                for(int i = 0; i < points.size(); i++) {
+                                        Point newPoint = points.get(i).clone();
+                                        newPoint.setRealX(points.get(i).getRealX());
+                                        newPoint.setRealY(points.get(i).getRealY());
+                                        newPoints.add(newPoint);
+                                }
+                                LinearRing linearRing = new LinearRing();
+                                linearRing.setPoints(newPoints);
+                                polygon.setExteriorRing(linearRing);
+	                } else {
+	                        ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
+	                        ArrayList<Point> newPoints = new ArrayList<Point>();
+	                        for(int i = points.size() - 1; i >= 0; i--) {
+	                                newPoints.add(points.get(i).clone());
+	                        }
+	                        LinearRing linearRing = new LinearRing();
+	                        linearRing.setPoints(newPoints);
+	                        polygon.setExteriorRing(linearRing);
+	                }
+	                
+	        } else {
+	                polygon = _polygon;
+	        }
+	        PolygonType polygonType = GMLFactory.createPolygonType();
+                polygonType.setId(polygon.getGMLID());
+                //polygonType.getName().add(createCodeType(polygon.getGMLID(), null));
+                
+                // exterior
+                abstractRingPropertyType = GMLFactory.createAbstractRingPropertyType();
+                visit(polygon.getExteriorRing());
+                polygonType.setExterior(abstractRingPropertyType);
+                
+                // interior
+                ArrayList<LinearRing> interiorRings = polygon.getInteriorRing();
+                for(LinearRing interiorRing : interiorRings) {
+                        abstractRingPropertyType = GMLFactory.createAbstractRingPropertyType();                 
+                        visit(interiorRing);
+                        polygonType.getInterior().add(abstractRingPropertyType);
+                }
+                JAXBElement<PolygonType> jPolygonType = GMLFactory.createPolygon(polygonType);
+                surfacePropertyType.setAbstractSurface(jPolygonType);
+		/*if(polygon.getxLinkGeometry() != null) {
 			OrientableSurfaceType orientableSurfaceType = GMLFactory.createOrientableSurfaceType();
 			SurfacePropertyType baseSurfacePropertyType = GMLFactory.createSurfacePropertyType();
 			
@@ -598,7 +658,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		} else {
 			PolygonType polygonType = GMLFactory.createPolygonType();
 			polygonType.setId(polygon.getGMLID());
-			polygonType.getName().add(createCodeType(polygon.getGMLID(), null));
+			//polygonType.getName().add(createCodeType(polygon.getGMLID(), null));
 			
 			// exterior
 			abstractRingPropertyType = GMLFactory.createAbstractRingPropertyType();
@@ -614,7 +674,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 			}
 			JAXBElement<PolygonType> jPolygonType = GMLFactory.createPolygon(polygonType);
 			surfacePropertyType.setAbstractSurface(jPolygonType);
-		}
+		}*/
 	}
 
 	@Override
@@ -627,6 +687,10 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 			visit(polygon);
 			shellType.getSurfaceMember().add(surfacePropertyType);
 		}
+		/*Polygon polygon = surfaceMember.get(surfaceMember.size() - 1);
+		surfacePropertyType = GMLFactory.createSurfacePropertyType();                 
+                visit(polygon);
+                shellType.getSurfaceMember().add(surfacePropertyType);*/
 		
 		shellPropertyType.setShell(shellType);
 	}
@@ -636,7 +700,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		// TODO Auto-generated method stub
 		SolidType solidType = GMLFactory.createSolidType();
 		solidType.setId(solid.getGMLID());
-		solidType.getName().add(createCodeType(solid.getGMLID(), null));
+		//solidType.getName().add(createCodeType(solid.getGMLID(), null));
 		
 		// exteior
 		shellPropertyType = GMLFactory.createShellPropertyType();

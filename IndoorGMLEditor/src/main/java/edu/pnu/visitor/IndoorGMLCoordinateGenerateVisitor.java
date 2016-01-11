@@ -214,7 +214,12 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 
 	@Override
 	public void visit(Point point) {
-	        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
+	        // AffineTransformation
+	        /*
+                Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
+                point.setRealX(transformationP.getPanelX());
+                point.setRealY(transformationP.getPanelY());
+                */
 	        
 	        /*double tempX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
 	        double tempY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
@@ -234,11 +239,9 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	        realYStr = realYStr.substring(0, 3) + "." + realYStr.substring(3, realYStr.length());
 	        double realX = Double.parseDouble(realXStr);
 	        double realY = Double.parseDouble(realYStr);*/
-	        
-	        point.setRealX(transformationP.getPanelX());
-	        point.setRealY(transformationP.getPanelY());
-		/*point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-		point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));*/
+	    
+		point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
+		point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
 		//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 		if(!is3DGeometry || isMLGHeight) {
 			point.setZ(floorGroundHeight);
@@ -252,6 +255,13 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 		
 		ArrayList<Point> points = lineString.getPoints();
 		for(Point point : points) {
+		        // AffineTransmation
+		        /*
+                        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
+                        point.setRealX(transformationP.getPanelX());
+                        point.setRealY(transformationP.getPanelY());
+                        */
+                        
 		        /*double tempX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
 	                double tempY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
 	                NumberFormat nf = NumberFormat.getInstance();
@@ -270,12 +280,9 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	                realYStr = realYStr.substring(0, 3) + "." + realYStr.substring(3, realYStr.length());
 	                double realX = Double.parseDouble(realXStr);
 	                double realY = Double.parseDouble(realYStr);*/
-		        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
-		        point.setRealX(transformationP.getPanelX());
-	                point.setRealY(transformationP.getPanelY());
 			
-	                /*point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));*/
+	                point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
+			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
 			//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
@@ -287,6 +294,12 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	public void visit(LinearRing linearRing) {
 		ArrayList<Point> points = linearRing.getPoints();
 		for(Point point : points) {
+		        // AffineTransformation
+		        /*
+                        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
+                        point.setRealX(transformationP.getPanelX());
+                        point.setRealY(transformationP.getPanelY());
+		         */
 		        /*double tempX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
 	                double tempY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
 	                NumberFormat nf = NumberFormat.getInstance();
@@ -308,11 +321,9 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	                
 	                point.setRealX(realX);
 	                point.setRealY(realY);*/
-    		        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
-                        point.setRealX(transformationP.getPanelX());
-                        point.setRealY(transformationP.getPanelY());
-			/*point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));*/
+		    
+			point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
+			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
 			//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);

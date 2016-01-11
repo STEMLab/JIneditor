@@ -3,7 +3,10 @@ package edu.pnu.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Window;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -24,11 +27,13 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -47,6 +52,7 @@ import net.opengis.indoorgml.core.Nodes;
 import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
+import edu.pnu.importexport.WKTImporter;
 import edu.pnu.project.EditState;
 import edu.pnu.project.EditWorkState;
 import edu.pnu.project.FloorProperty;
@@ -54,26 +60,6 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
-
-import javax.swing.JLabel;
-
-import java.awt.FlowLayout;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-
-import javax.swing.JScrollBar;
-
-import java.awt.event.MouseWheelListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.AdjustmentEvent;
-
-import javax.swing.SwingConstants;
-import java.awt.GridLayout;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import javax.swing.ImageIcon;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -150,6 +136,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JLabel lblFloor;
     private JButton btnNone;
     private JPanel panel_1;
+    private JButton btnImport;
 
     /**
      * Launch the application.
@@ -615,6 +602,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             toolBar.add(getComboBox_SpaceLayer());
             toolBar.add(getLblFloor());
             toolBar.add(getComboBox_Floor());
+            toolBar.add(getBtnImport());
         }
         return toolBar;
     }
@@ -1060,5 +1048,26 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	panel_1.add(getBtnInterlayerconnection(), gbc_btnInterlayerconnection);
         }
         return panel_1;
+    }
+    private JButton getBtnImport() {
+        if (btnImport == null) {
+        	btnImport = new JButton("Import");
+        	btnImport.addActionListener(new ActionListener() {
+        	    public void actionPerformed(ActionEvent arg0) {
+        	            WKTImporter wktImporter = new WKTImporter(panel, currentProject);
+        	            String filePath;
+                            JFileChooser fileChooser = new JFileChooser();
+
+                            int returnVal = fileChooser.showOpenDialog(MainFrame.this);
+                            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                                File file = fileChooser.getSelectedFile();
+                                wktImporter.read(file);
+                            }
+                            panel.repaint();
+                            repaint();
+        	    }
+        	});
+        }
+        return btnImport;
     }
 }
