@@ -8,6 +8,7 @@ import net.opengis.indoorgml.geometry.Polygon;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
 public class GeometryUtil {
@@ -167,5 +168,17 @@ public class GeometryUtil {
 	    com.vividsolutions.jts.geom.Point centroid = jtsPolygon.getCentroid();
 	    
 	    return JTSUtil.convertPoint(centroid);
+	}
+	
+	public static Polygon getCouterClockwisedPolygon(Polygon polygon) {
+	        com.vividsolutions.jts.geom.Polygon jtsPolygon = JTSUtil.convertJTSPolygon(polygon);
+	        com.vividsolutions.jts.geom.LinearRing exteriorRing = (LinearRing) jtsPolygon.getExteriorRing();
+	        
+	        double counterClockwised = JTSUtil.Orientation2D_Polygon(jtsPolygon.getCoordinates().length, exteriorRing.getCoordinateSequence());
+	        if(counterClockwised >= 0) {
+	            jtsPolygon = (com.vividsolutions.jts.geom.Polygon) jtsPolygon.reverse();
+	        }
+	        
+	        return JTSUtil.convertPolygon(jtsPolygon);
 	}
 }

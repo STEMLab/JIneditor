@@ -78,12 +78,35 @@ public class WKTImporter {
                     com.vividsolutions.jts.geom.Polygon polygon = (com.vividsolutions.jts.geom.Polygon) wktReader.read(line);
                     com.vividsolutions.jts.geom.Polygon transformation = (com.vividsolutions.jts.geom.Polygon) transformation(polygon);
                     Polygon geometry2D = getIndoorGMLGeometry(transformation);
-                    createCellSpace(geometry2D);
+                    geometry2D = removeDuplicatePoint(geometry2D);
+                    if(geometry2D != null)
+                        createCellSpace(geometry2D);
                 }
             } catch (IOException | ParseException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }       
+    }
+    
+    private Polygon removeDuplicatePoint(Polygon polygon) {
+        ArrayList<Point> before = polygon.getExteriorRing().getPoints();
+        ArrayList<Point> after = new ArrayList<Point>();
+        
+        after.add(before.get(0));
+        for(int i = 1; i < before.size(); i++) {
+            Point p0 = before.get(i - 1);
+            Point p1 = before.get(i);
+            if(p0.getPanelX() == p1.getPanelX() && p0.getPanelY() == p1.getPanelY())
+                    continue;
+            else
+                after.add(before.get(i));
+        }
+        if(after.size() >= 4) {
+            polygon.getExteriorRing().setPoints(after);
+        } else
+            polygon = null;
+        
+        return polygon;
     }
     
     private CellSpace createCellSpace(Polygon geometry2D) {

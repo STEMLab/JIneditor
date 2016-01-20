@@ -151,11 +151,12 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		for(CellSpaceOnFloor cellSpaceOnFloor : cellSpaceOnFloors) {
 			visit(cellSpaceOnFloor);
 		}
-		
+		/*
 		ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors = primalSpaceFeatures.getCellSpaceBoundaryOnFloors();
 		for(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor : cellSpaceBoundaryOnFloors) {
 			visit(cellSpaceBoundaryOnFloor);
 		}
+		*/
 	}
 
 	@Override
@@ -201,7 +202,8 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		
 		if(is3DGeometry) {
 			// geometry3D solid
-			solidPropertyType = GMLFactory.createSolidPropertyType();
+			solidPropertyType = GMLFactory.createSolidPropertyType(); 
+			System.out.println(cellSpace.getGmlID());
 			visit(cellSpace.getGeometry3D());			
 			cellSpaceType.setGeometry3D(solidPropertyType);
 		} else {
@@ -547,10 +549,10 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 			ArrayList<Point> points = lineString.getPoints();
 			for(int i = 0; i < points.size(); i++) {
 	                        Point point = points.get(i);
-	                        if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
+	                        /*if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
 	                                && points.get(i - 1).getRealY() == points.get(i).getRealY()
 	                                && points.get(i - 1).getZ() == points.get(i).getZ()) 
-	                            continue;
+	                            continue;*/
 				DirectPositionType directPositionType = GMLFactory.createDirectPositionType();
 				directPositionType.getValue().add(point.getRealX());
 				directPositionType.getValue().add(point.getRealY());
@@ -573,10 +575,10 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 		ArrayList<Point> points = linearRing.getPoints();
 		for(int i = 0; i < points.size(); i++) {
 		        Point point = points.get(i);
-		        if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
+		        /*if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
                                 && points.get(i - 1).getRealY() == points.get(i).getRealY()
                                 && points.get(i - 1).getZ() == points.get(i).getZ()) 
-                            continue;
+                            continue;*/
 			DirectPositionType directPositonType = GMLFactory.createDirectPositionType();
 			directPositonType.getValue().add(point.getRealX());
 			directPositonType.getValue().add(point.getRealY());
@@ -596,6 +598,7 @@ public class IndoorGMLExportVisitor implements IndoorGMLElementVisitor {
 	    
 	        Polygon polygon = null;
 	        if(_polygon.getxLinkGeometry() != null) {
+	                System.out.println("-------Orientable Surface---------");
 	                polygon = new Polygon();
 	                Polygon xlinkGeometry = (Polygon) _polygon.getxLinkGeometry();
 	                if(!_polygon.getIsReversed()) {

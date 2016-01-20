@@ -1,7 +1,6 @@
-package edu.pnu.importexport;
+package edu.pnu.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 
 import net.opengis.indoorgml.core.CellSpace;
@@ -16,16 +15,18 @@ import net.opengis.indoorgml.geometry.Point;
 import net.opengis.indoorgml.geometry.Polygon;
 import net.opengis.indoorgml.geometry.Shell;
 import net.opengis.indoorgml.geometry.Solid;
+import edu.pnu.gui.CanvasPanel;
 import edu.pnu.project.BoundaryType;
 import edu.pnu.project.FloorProperty;
-import edu.pnu.util.GeometryUtil;
 
 public class IndoorGML3DGeometryBuilder {
 	private IndoorFeatures indoorFeatures;
 	private HashMap<LineString, Polygon> xLink3DMap;
 	private ArrayList<LineString> combineLineStrings;
+	private CanvasPanel panel;
 		
-	public IndoorGML3DGeometryBuilder(IndoorFeatures indoorFeatures) {
+	public IndoorGML3DGeometryBuilder(CanvasPanel panel, IndoorFeatures indoorFeatures) {
+	        this.panel = panel;
 		this.indoorFeatures = indoorFeatures;
 		
 		xLink3DMap = new HashMap<LineString, Polygon>();
@@ -184,6 +185,8 @@ public class IndoorGML3DGeometryBuilder {
 	public void fromCellSpaceOnFloor(CellSpaceOnFloor cellSpaceOnFloor, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		for(CellSpace cellSpace : cellSpaceMember) {
+		        if(cellSpace.getGmlID().equalsIgnoreCase("C1"))
+		            System.out.println("C1 found");
 			Solid solid = createSolidForCellSpace(cellSpace, cellSpaceOnFloor.getFloorProperty());
 			cellSpace.setGeometry3D(solid);
 		}
@@ -211,17 +214,112 @@ public class IndoorGML3DGeometryBuilder {
 		        ceilingHeight = cellSpace.getCeilingHeight();
 		}
 		
+		Polygon originPolygon = cellSpace.getGeometry2D();
+		Polygon counterClockwisedPolygon = GeometryUtil.getCouterClockwisedPolygon(originPolygon);
+		ArrayList<Point> exteriorPoints = counterClockwisedPolygon.getExteriorRing().getPoints();
+		ArrayList<LineString> lineStrings = new ArrayList<LineString>();
+		for (int i = 0; i < exteriorPoints.size() - 1; i++) {
+		    LineString newLS = new LineString();
+		    newLS.getPoints().add(exteriorPoints.get(i).clone());
+		    newLS.getPoints().add(exteriorPoints.get((i + 1) % exteriorPoints.size()).clone());
+		    lineStrings.add(newLS);
+		}
+		cellSpace.setLineStringElements(lineStrings);
+		
+		
 		Shell shell = new Shell();
-		ArrayList<Polygon> surfaceMember = new ArrayList<Polygon>();		
+		ArrayList<Polygon> surfaceMember = new ArrayList<Polygon>();
 		ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
+
+		// upper side
+                ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
+                ArrayList<Point> upperPointList = new ArrayList<Point>();
+                for(int i = 0; i < points.size(); i++) {
+                        Point point = points.get(i).clone();
+                        point.setZ(ceilingHeight);
+                        
+                        upperPointList.add(point);
+                }
+                LinearRing upperRing = new LinearRing();
+                upperRing.setPoints(upperPointList);
+                Polygon upperSurface = new Polygon();
+                upperSurface.setExteriorRing(upperRing);
+                surfaceMember.add(upperSurface);
+                
+                ArrayList<Point> originPointList = cellSpace.getGeometry2D().getExteriorRing().getPoints();
+                for(int i = 0; i < originPointList.size() - 1; i++) {
+                        ArrayList<Point> sidePointList = new ArrayList<Point>();
+                        Point p1 = originPointList.get(i).clone();
+                        p1.setZ(groundHeight);
+                        Point p2 = originPointList.get(i+1).clone();
+                        p2.setZ(groundHeight);
+                        Point p3 = upperPointList.get(i+1).clone();
+                        p3.setZ(ceilingHeight);
+                        Point p4 = upperPointList.get(i).clone();
+                        p4.setZ(ceilingHeight);/*
+                        panel.setPanelRatioXY(p1);
+                        panel.setPanelRatioXY(p2);
+                        panel.setPanelRatioXY(p3);
+                        panel.setPanelRatioXY(p4);*/
+                        
+                        sidePointList.add(p1);
+                        sidePointList.add(p2);
+                        sidePointList.add(p3);
+                        sidePointList.add(p4);
+                        sidePointList.add(p1);
+                        
+                        LinearRing sideRing = new LinearRing();
+                        sideRing.setPoints(sidePointList);
+                        Polygon sideSurface = new Polygon();
+                        sideSurface.setExteriorRing(sideRing);
+                        surfaceMember.add(sideSurface);
+                }
+                
+                // lower side
+                ArrayList<Point> lowerPointList = new ArrayList<Point>();
+                for(int i = points.size() - 1; i >= 0; i--) {
+                        Point point = points.get(i).clone();
+                        point.setZ(groundHeight);
+                        
+                        lowerPointList.add(point);
+                }
+                LinearRing lowerRing = new LinearRing();
+                lowerRing.setPoints(lowerPointList);
+                Polygon lowerSurface = new Polygon();
+                lowerSurface.setExteriorRing(lowerRing);
+                surfaceMember.add(lowerSurface);
+                
+		
 		// side facet : shell의 옆면
+                /*
 		LineString combineLS = null;
 		for(int i = 0; i < lineStringElements.size(); i++) {
 			// 3차원으로 extrude 할 때 옆면 외에 2D에는 없는 윗면, 아랫면의 기하도 추가로 만들어야함
+		        Point checkP1 = lineStringElements.get(i).getPoints().get(0);
+		        Point checkP2 = lineStringElements.get(i).getPoints().get(1);
+		        panel.setPanelRatioXY(checkP1);
+		        panel.setPanelRatioXY(checkP2);
+		        
+		        if(checkP1.getPanelRatioX() == checkP2.getPanelRatioX() && checkP1.getPanelRatioY() == checkP2.getPanelRatioY())
+		            continue;
+		        
 			Polygon sideFacet = null;
-			LineString geometry2D = lineStringElements.get(i);
-			Polygon geometry3D = new Polygon();
-			
+			LineString line = lineStringElements.get(i);
+			ArrayList<Point> geometryPoints = line.getPoints();
+                        ArrayList<Point> pointList = new ArrayList<Point>();
+                        for(int j = geometryPoints.size() - 1; i >= 0; i--) {
+                                Point p = geometryPoints.get(i);
+                                Point newPoint = p.clone();
+                                if(newPoint.getZ() != doorHeight) {
+                                        newPoint.setZ(groundHeight);
+                                }
+                                pointList.add(newPoint);
+                        }
+                        
+                        sideFacet = createPolygonFrom2Points(pointList, ceilingHeight);
+                        surfaceMember.add(sideFacet);
+			*/
+                        /********** 임시로 주석처리 
 			if(combineLS == null) {
 				combineLS = new LineString();
 				for(Point p : geometry2D.getPoints()) {
@@ -304,6 +402,7 @@ public class IndoorGML3DGeometryBuilder {
 				}
 				surfaceMember.add(sideFacet);
 			}
+			임시로 추석 처리*/
 			
 			/*
 			Point p1 = geometry2D.getPoints().get(0);
@@ -373,7 +472,7 @@ public class IndoorGML3DGeometryBuilder {
 			}
 			*/
 			
-		}
+		//}
 		/*
 		// side facet
 		for(int i = 0; i < points.size(); i++) {
@@ -390,7 +489,7 @@ public class IndoorGML3DGeometryBuilder {
 			surfaceMember.add(surface);
 		}
 		*/
-		// upper side
+		/*// upper side
 		ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
 		ArrayList<Point> pointList = new ArrayList<Point>();
 		for(int i = 0; i < points.size(); i++) {
@@ -417,7 +516,7 @@ public class IndoorGML3DGeometryBuilder {
 		lowerRing.setPoints(pointList);
 		Polygon lowerSurface = new Polygon();
 		lowerSurface.setExteriorRing(lowerRing);
-		surfaceMember.add(lowerSurface);
+		surfaceMember.add(lowerSurface);*/
 		
 		shell.setSurfaceMember(surfaceMember);
 		

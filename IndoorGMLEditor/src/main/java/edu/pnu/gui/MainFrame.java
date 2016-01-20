@@ -1,6 +1,7 @@
 package edu.pnu.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
@@ -40,6 +41,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -137,6 +139,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JButton btnNone;
     private JPanel panel_1;
     private JButton btnImport;
+    private JTextField textField_ID;
+    private JButton btnAa;
 
     /**
      * Launch the application.
@@ -464,7 +468,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                      * TODO Auto-generated catch block e1.printStackTrace(); }
                      */
 
-                    GeometryExportDialog dialog = new GeometryExportDialog(currentProject);
+                    GeometryExportDialog dialog = new GeometryExportDialog(panel, currentProject);
                     dialog.setModal(true);
                     dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     dialog.setVisible(true);
@@ -603,13 +607,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             toolBar.add(getLblFloor());
             toolBar.add(getComboBox_Floor());
             toolBar.add(getBtnImport());
+            toolBar.add(getTextField_ID());
+            toolBar.add(getBtnAa());
         }
         return toolBar;
     }
 
     private JButton getBtnCellspace() {
         if (btnCellspace == null) {
-            btnCellspace = new JButton("Cell");
+            btnCellspace = new JButton("CellSpace");
+            btnCellspace.setBackground(Color.white);
+            btnCellspace.setOpaque(false);
             btnCellspace.setToolTipText("Create CellSpace");
             btnCellspace.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
@@ -624,7 +632,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnState() {
         if (btnState == null) {
-            btnState = new JButton("Stat");
+            btnState = new JButton("State");
+            btnState.setBackground(Color.white);
+            btnState.setOpaque(false);
             btnState.setToolTipText("Create State");
             btnState.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
@@ -638,7 +648,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnTransition() {
         if (btnTransition == null) {
-            btnTransition = new JButton("Tran");
+            btnTransition = new JButton("Transition");
+            btnTransition.setBackground(Color.white);
+            btnTransition.setOpaque(false);
             btnTransition.setToolTipText("Create Transition");
             btnTransition.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -906,6 +918,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JButton getBtnDoorcellspaceboundary() {
         if (btnDoorcellspaceboundary == null) {
             btnDoorcellspaceboundary = new JButton("Door");
+            btnDoorcellspaceboundary.setBackground(Color.white);
+            btnDoorcellspaceboundary.setOpaque(false);
             btnDoorcellspaceboundary.setToolTipText("Create Door(CellSpaceBoundary)");
             btnDoorcellspaceboundary.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
@@ -947,7 +961,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnInterlayerconnection() {
         if (btnInterlayerconnection == null) {
-            btnInterlayerconnection = new JButton("Inte");
+            btnInterlayerconnection = new JButton("<html>InterLayer<br />Connection</html>");
+            btnInterlayerconnection.setBackground(Color.white);
+            btnInterlayerconnection.setOpaque(false);
             btnInterlayerconnection.setToolTipText("Create InterLayerConnection");
             btnInterlayerconnection.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
@@ -990,8 +1006,10 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     }
     private JButton getBtnNone() {
         if (btnNone == null) {
-        	btnNone = new JButton("");
-        	btnNone.setIcon(new ImageIcon(MainFrame.class.getResource("/images/mouse.png")));
+        	btnNone = new JButton("Select");
+        	btnNone.setBackground(Color.white);
+        	btnNone.setOpaque(false);
+        	btnNone.setIcon(null);
         	btnNone.addActionListener(new ActionListener() {
         	    public void actionPerformed(ActionEvent arg0) {
         	        panel.keyPressESCAPE(currentProject.getEditState());
@@ -1005,44 +1023,45 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         if (panel_1 == null) {
         	panel_1 = new JPanel();
         	GridBagLayout gbl_panel_1 = new GridBagLayout();
-        	gbl_panel_1.columnWidths = new int[]{20, 0};
-        	gbl_panel_1.rowHeights = new int[]{20, 0, 20, 0, 20, 0, 0};
-        	gbl_panel_1.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+        	gbl_panel_1.columnWidths = new int[] {5};
+        	gbl_panel_1.rowHeights = new int[] {40, 40, 40, 40, 40, 40, 40};
+        	gbl_panel_1.columnWeights = new double[]{0.0};
         	gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
         	panel_1.setLayout(gbl_panel_1);
         	GridBagConstraints gbc_btnNone = new GridBagConstraints();
-        	gbc_btnNone.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnNone.fill = GridBagConstraints.BOTH;
         	gbc_btnNone.insets = new Insets(0, 0, 5, 5);
         	gbc_btnNone.gridx = 0;
         	gbc_btnNone.gridy = 0;
         	panel_1.add(getBtnNone(), gbc_btnNone);
         	GridBagConstraints gbc_btnCellspace = new GridBagConstraints();
-        	gbc_btnCellspace.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnCellspace.fill = GridBagConstraints.BOTH;
         	gbc_btnCellspace.insets = new Insets(0, 0, 5, 5);
         	gbc_btnCellspace.gridx = 0;
         	gbc_btnCellspace.gridy = 1;
         	panel_1.add(getBtnCellspace(), gbc_btnCellspace);
         	GridBagConstraints gbc_btnDoorcellspaceboundary = new GridBagConstraints();
-        	gbc_btnDoorcellspaceboundary.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnDoorcellspaceboundary.fill = GridBagConstraints.BOTH;
         	gbc_btnDoorcellspaceboundary.insets = new Insets(0, 0, 5, 5);
         	gbc_btnDoorcellspaceboundary.gridx = 0;
         	gbc_btnDoorcellspaceboundary.gridy = 2;
         	panel_1.add(getBtnDoorcellspaceboundary(), gbc_btnDoorcellspaceboundary);
         	GridBagConstraints gbc_btnState = new GridBagConstraints();
-        	gbc_btnState.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnState.fill = GridBagConstraints.BOTH;
         	gbc_btnState.insets = new Insets(0, 0, 5, 5);
         	gbc_btnState.gridx = 0;
         	gbc_btnState.gridy = 3;
         	panel_1.add(getBtnState(), gbc_btnState);
         	GridBagConstraints gbc_btnTransition = new GridBagConstraints();
-        	gbc_btnTransition.anchor = GridBagConstraints.NORTHWEST;
+        	gbc_btnTransition.fill = GridBagConstraints.BOTH;
         	gbc_btnTransition.insets = new Insets(0, 0, 5, 5);
         	gbc_btnTransition.gridx = 0;
         	gbc_btnTransition.gridy = 4;
         	panel_1.add(getBtnTransition(), gbc_btnTransition);
         	GridBagConstraints gbc_btnInterlayerconnection = new GridBagConstraints();
+        	gbc_btnInterlayerconnection.anchor = GridBagConstraints.WEST;
+        	gbc_btnInterlayerconnection.fill = GridBagConstraints.VERTICAL;
         	gbc_btnInterlayerconnection.insets = new Insets(0, 0, 0, 5);
-        	gbc_btnInterlayerconnection.anchor = GridBagConstraints.NORTHWEST;
         	gbc_btnInterlayerconnection.gridx = 0;
         	gbc_btnInterlayerconnection.gridy = 5;
         	panel_1.add(getBtnInterlayerconnection(), gbc_btnInterlayerconnection);
@@ -1068,6 +1087,27 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
+        //btnImport.setVisible(false);
         return btnImport;
+    }
+    private JTextField getTextField_ID() {
+        if (textField_ID == null) {
+        	textField_ID = new JTextField();
+        	textField_ID.setColumns(10);
+        }
+        //textField_ID.setVisible(false);
+        return textField_ID;
+    }
+    private JButton getBtnAa() {
+        if (btnAa == null) {
+        	btnAa = new JButton("Test");
+        	btnAa.addActionListener(new ActionListener() {
+        	    public void actionPerformed(ActionEvent arg0) {
+        	            panel.searchByID(textField_ID.getText());
+        	    }
+        	});
+        }
+        //btnAa.setVisible(false);
+        return btnAa;
     }
 }

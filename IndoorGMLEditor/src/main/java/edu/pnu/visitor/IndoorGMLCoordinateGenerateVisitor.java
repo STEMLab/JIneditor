@@ -1,6 +1,6 @@
 package edu.pnu.visitor;
 
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import net.opengis.indoorgml.core.CellSpace;
@@ -34,7 +34,6 @@ import com.vividsolutions.jts.geom.util.AffineTransformationBuilder;
 
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
-import edu.pnu.util.GeometryUtil;
 import edu.pnu.util.JTSUtil;
 
 public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisitor {
@@ -85,6 +84,8 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 
 	@Override
 	public void visit(CellSpace cellSpace) {
+	        if(cellSpace.getGmlID().equalsIgnoreCase("C1"))
+	            System.out.println("C! found");
 		if(is3DGeometry) {
 			visit(cellSpace.getGeometry3D());
 		} else {
@@ -239,9 +240,16 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	        realYStr = realYStr.substring(0, 3) + "." + realYStr.substring(3, realYStr.length());
 	        double realX = Double.parseDouble(realXStr);
 	        double realY = Double.parseDouble(realYStr);*/
-	    
-		point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-		point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
+	        
+	        DecimalFormat format = new DecimalFormat(".#####");
+	        double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
+	        double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
+                String realXStr = format.format(realX);
+                String realYStr = format.format(realY);
+                realX = Double.parseDouble(realXStr);
+                realY = Double.parseDouble(realYStr);
+		point.setRealX(realX);
+		point.setRealY(realY);
 		//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 		if(!is3DGeometry || isMLGHeight) {
 			point.setZ(floorGroundHeight);
@@ -281,9 +289,19 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	                double realX = Double.parseDouble(realXStr);
 	                double realY = Double.parseDouble(realYStr);*/
 			
-	                point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
-			//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
+		        /*
+		        DecimalFormat format = new DecimalFormat(".###");
+	                double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
+	                double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
+	                String realXStr = format.format(realX);
+	                String realYStr = format.format(realY);
+	                realX = Double.parseDouble(realXStr);
+	                realY = Double.parseDouble(realYStr);
+	                point.setRealX(realX);
+	                point.setRealY(realY);
+	                */
+		        visit(point);
+	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
 			}
@@ -322,9 +340,19 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	                point.setRealX(realX);
 	                point.setRealY(realY);*/
 		    
-			point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
-			//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
+		        /*
+    		        DecimalFormat format = new DecimalFormat(".###");
+                        double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
+                        double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
+                        String realXStr = format.format(realX);
+                        String realYStr = format.format(realY);
+                        realX = Double.parseDouble(realXStr);
+                        realY = Double.parseDouble(realYStr);
+                        point.setRealX(realX);
+                        point.setRealY(realY);
+                        */
+		        visit(point);
+	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
 			}

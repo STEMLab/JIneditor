@@ -3,6 +3,7 @@ package edu.pnu.util;
 import java.util.ArrayList;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
@@ -121,12 +122,14 @@ public class JTSUtil {
 	public static net.opengis.indoorgml.geometry.LinearRing convertLinearRing(LinearRing ring) {
 	    net.opengis.indoorgml.geometry.LineString lineString = convertLineString(ring);
 	    net.opengis.indoorgml.geometry.LinearRing linearRing = new net.opengis.indoorgml.geometry.LinearRing();
+	    
 	    linearRing.setPoints(lineString.getPoints());
 	    
 	    return linearRing;
 	}
 	
 	public static net.opengis.indoorgml.geometry.Polygon convertPolygon(Polygon polygon) {
+	        
 	        LinearRing exteriorRing = (LinearRing) polygon.getExteriorRing();
 	        net.opengis.indoorgml.geometry.LinearRing exterior = convertLinearRing(exteriorRing);
 	        net.opengis.indoorgml.geometry.Polygon poly = new net.opengis.indoorgml.geometry.Polygon();
@@ -179,4 +182,48 @@ public class JTSUtil {
 		
 		return splited;
 	}
+	
+	public static double IsLeft(Coordinate P0, Coordinate P1, Coordinate P2)
+        {
+            return ((P1.X - P0.X) * (P2.Y - P0.Y)
+                    - (P2.X - P0.X) * (P1.Y - P0.Y));
+        }
+
+        //===================================================================
+
+        // orientation2D_Polygon(): tests the orientation of a simple polygon
+        //    Input:  int n = the number of vertices in the polygon
+        //            Point* V = an array of n+1 vertices with V[n]=V[0]
+        //    Return: >0 for counterclockwise 
+        //            =0 for none (degenerate)
+        //            <0 for clockwise
+        //    Note: this algorithm is faster than computing the signed area.
+        public static double Orientation2D_Polygon(int n, CoordinateSequence V)
+        {
+            // first find rightmost lowest vertex of the polygon
+            int rmin = 0;
+            double xmin = V.getOrdinate(0, 0);
+            double ymin = V.getOrdinate(0, 1);
+
+            for (int i = 1; i < n; i++)
+            {
+                if (V.getOrdinate(i, 1) > ymin)
+                    continue;
+                if (V.getOrdinate(i, 1) == ymin)
+                {    // just as low
+                    if (V.getOrdinate(i, 0) < xmin)   // and to left
+                        continue;
+                }
+                rmin = i;          // a new rightmost lowest vertex
+                xmin = V.getOrdinate(i, 0);
+                ymin = V.getOrdinate(i, 1);
+            }
+
+            // test orientation at this rmin vertex
+            // ccw <=> the edge leaving is left of the entering edge
+            if (rmin == 0)
+                return IsLeft(V.getCoordinate(n - 1), V.getCoordinate(0), V.getCoordinate(1));
+            else
+                return IsLeft(V.getCoordinate(rmin - 1), V.getCoordinate(rmin), V.getCoordinate((rmin + 1) % n));
+        }
 }

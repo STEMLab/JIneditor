@@ -20,6 +20,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -601,8 +602,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     
                     String selectedStateIDs = "";
                     for(State selected : selectedStateMap.keySet()) {
-                        selectedStateIDs += selected.getGmlID() + ", " + selected.getPosition().getPanelRatioX() + " " + (1 - selected.getPosition().getPanelRatioY());
-                        System.out.println("State : " + selected.getGmlID() + ", " + selected.getPosition().getPanelRatioX() + " " + (1 - selected.getPosition().getPanelRatioY()));
+                        selectedStateIDs += selected.getGmlID() + ", ";
+                        //System.out.println("State : " + selected.getGmlID() + ", " + selected.getPosition().getPanelRatioX() + " " + (1 - selected.getPosition().getPanelRatioY()));
                     }
                     selectedStateIDs = selectedStateIDs.substring(0, selectedStateIDs.length() - 2);
                     mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs );
@@ -654,7 +655,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                             selectedCellSpaceBoundaryIDs += selected.getGmlID() + ", ";
                         }
                         selectedCellSpaceBoundaryIDs = selectedCellSpaceBoundaryIDs.substring(0, selectedCellSpaceBoundaryIDs.length() - 2);
-                        mainFrame.setLabel_CurrentEditState("Selected State : " + selectedCellSpaceBoundaryIDs);
+                        mainFrame.setLabel_CurrentEditState("Selected CellSpace : " + selectedCellSpaceBoundaryIDs);
                     }
                 }
 
@@ -678,7 +679,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                             selectedCellSpaceIDs += selected.getGmlID() + ", ";
                         }
                         selectedCellSpaceIDs = selectedCellSpaceIDs.substring(0, selectedCellSpaceIDs.length() - 2);
-                        mainFrame.setLabel_CurrentEditState("Selected State : " + selectedCellSpaceIDs);
+                        mainFrame.setLabel_CurrentEditState("Selected CellSpace : " + selectedCellSpaceIDs);
                     }
                 }
 
@@ -2373,7 +2374,13 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         double ratioX = ((double) x / (floorPlanWidth * floorPlanScale));
         double ratioY = ((double) y / (floorPlanHeight * floorPlanScale));
-
+        /*
+        DecimalFormat format = new DecimalFormat(".#####");
+        String realXStr = format.format(ratioX);
+        String realYStr = format.format(ratioY);
+        ratioX = Double.parseDouble(realXStr);
+        ratioY = Double.parseDouble(realYStr);
+        */
         p.setPanelRatioX(ratioX);
         p.setPanelRatioY(ratioY);
     }
@@ -2693,5 +2700,17 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             });
         }
         return mntmCellSpaceBoundaryProperties;
+    }
+    
+    public void searchByID(String ID) {
+        ArrayList<CellSpace> cellSpaces = project.getCurrentCellSpaceOnFloor().getCellSpaceMember();
+        selectedCellSpaceMap.clear();
+        for(CellSpace cellSpace : cellSpaces) {
+                if(cellSpace.getGmlID().equalsIgnoreCase(ID)) {
+                        selectedCellSpaceMap.put(cellSpace, Color.yellow);
+                        System.out.println("searched");
+                }
+        }
+        repaint();
     }
 }
