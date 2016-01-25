@@ -3,6 +3,8 @@ package edu.pnu.visitor;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import net.opengis.indoorgml.core.CCTV;
+import net.opengis.indoorgml.core.CCTVOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
@@ -69,6 +71,11 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 		for(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor : cellSpaceBoundaryOnFloors) {
 			visit(cellSpaceBoundaryOnFloor);
 		}
+		
+		ArrayList<CCTVOnFloor> cctvOnFloors = primalSpaceFeatures.getCctvOnFloors();
+		for(CCTVOnFloor cctvOnFloor : cctvOnFloors) {
+			visit(cctvOnFloor);
+		}
 	}
 
 	@Override
@@ -114,6 +121,16 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 			if(cellSpaceBoundary.getGeometry2D() == null) return;
 			visit(cellSpaceBoundary.getGeometry2D());
 		}
+	}
+	
+	public void visit(CCTVOnFloor cctvOnFloor) {
+		for(CCTV cctv : cctvOnFloor.getCCTVMember()) {
+			visit(cctv);
+		}
+	}
+	
+	public void visit(CCTV cctv) {
+		visit(cctv.getLocation());
 	}
 
 	@Override

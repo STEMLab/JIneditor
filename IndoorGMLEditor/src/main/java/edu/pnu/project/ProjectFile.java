@@ -5,13 +5,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import net.opengis.indoorgml.core.CCTV;
+import net.opengis.indoorgml.core.CCTVOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
 import net.opengis.indoorgml.core.CellSpaceOnFloor;
 import net.opengis.indoorgml.core.Edges;
 import net.opengis.indoorgml.core.IndoorFeatures;
-import net.opengis.indoorgml.core.InterEdges;
 import net.opengis.indoorgml.core.InterLayerConnection;
 import net.opengis.indoorgml.core.MultiLayeredGraph;
 import net.opengis.indoorgml.core.Nodes;
@@ -21,7 +22,6 @@ import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
 import net.opengis.indoorgml.geometry.LineString;
-import net.opengis.indoorgml.geometry.Point;
 
 public class ProjectFile implements Serializable {
 	/**
@@ -39,6 +39,8 @@ public class ProjectFile implements Serializable {
 
 	private transient BufferedImage currentFloorPlan;
 	private double currentFloorPlanScale;
+	
+	private CCTVOnFloor currentCCTVOnFloor;
 	
 	private SpaceLayers currentSpaceLayers;
 	private SpaceLayer currentSpaceLayer;
@@ -254,6 +256,14 @@ public class ProjectFile implements Serializable {
 			CellSpaceBoundaryOnFloor currentCellSpaceBoundaryOnFloor) {
 		this.currentCellSpaceBoundaryOnFloor = currentCellSpaceBoundaryOnFloor;
 	}
+	
+	public CCTVOnFloor getCurrentCCTVOnFloor() {
+		return currentCCTVOnFloor;
+	}
+	
+	public void setCurrentCCTVOnFloor(CCTVOnFloor currentCCTVOnFloor) {
+		this.currentCCTVOnFloor = currentCCTVOnFloor;
+	}
 
 	public String getCurrentFloor() {
 		return currentFloor;
@@ -446,6 +456,13 @@ public class ProjectFile implements Serializable {
 		        interLayerConnections.removeAll(removes);
 		}
 		
+		// CCTV
+		if(selectedState.getCCTVList() != null) {
+			for(CCTV cctv : selectedState.getCCTVList()) {
+				cctv.setMappedState(null);
+			}
+		}
+		
 		currentStateOnFloor.getStateMember().remove(selectedState);
 
 		System.out.println("delete");
@@ -530,5 +547,14 @@ public class ProjectFile implements Serializable {
 		}
 		
 		currentCellSpaceOnFloor.getCellSpaceMember().remove(cellSpace);
+	}
+	
+	public void deleteCCTV(CCTV cctv) {
+        State mapped = cctv.getMappedState();
+        if(mapped != null) {
+            mapped.getCCTVList().remove(cctv);
+        }
+
+        currentCCTVOnFloor.getCCTVMember().remove(cctv);
 	}
 }

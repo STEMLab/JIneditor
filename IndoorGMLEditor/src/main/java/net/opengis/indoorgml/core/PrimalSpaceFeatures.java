@@ -12,6 +12,8 @@ public class PrimalSpaceFeatures extends AbstractFeature implements Serializable
 	private ArrayList<CellSpaceOnFloor> cellSpaceOnFloors;
 	private ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors;
 	
+	private ArrayList<CCTVOnFloor> cctvOnFloors;
+	
 	public PrimalSpaceFeatures() {
 		super.setGmlID( "PS" + (labelNumber++) );
 	}
@@ -47,4 +49,16 @@ public class PrimalSpaceFeatures extends AbstractFeature implements Serializable
 			ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors) {
 		this.cellSpaceBoundaryOnFloors = cellSpaceBoundaryOnFloors;
 	}
+
+	public ArrayList<CCTVOnFloor> getCctvOnFloors() {
+		if(cctvOnFloors == null) {
+			cctvOnFloors = new ArrayList<CCTVOnFloor>();
+		}
+		return cctvOnFloors;
+	}
+
+	public void setCctvOnFloors(ArrayList<CCTVOnFloor> cctvOnFloors) {
+		this.cctvOnFloors = cctvOnFloors;
+	}
+	
 }

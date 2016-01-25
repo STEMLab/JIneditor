@@ -18,6 +18,9 @@ public class State extends AbstractFeature implements Serializable, IndoorGMLEle
 	private ArrayList<Transition> connects;
 	private Point realPoint;
 	
+	// CCTV
+	private ArrayList<CCTV> cctvs;
+	
 	public State() {
 		super.setGmlID("R" + (labelNumber++));
 		connects = new ArrayList<Transition>();
@@ -62,6 +65,18 @@ public class State extends AbstractFeature implements Serializable, IndoorGMLEle
 
 	public static void setLabelNumber(int labelNumber) {
 		State.labelNumber = labelNumber;
+	}
+
+	public ArrayList<CCTV> getCCTVList() {
+		if(cctvs == null) {
+			cctvs = new ArrayList<CCTV>();
+		}
+		
+		return cctvs;
+	}
+
+	public void setCCTVList(ArrayList<CCTV> cctvs) {
+		this.cctvs = cctvs;
 	}
 
 	@Override

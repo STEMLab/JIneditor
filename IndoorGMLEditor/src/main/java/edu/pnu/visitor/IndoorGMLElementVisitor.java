@@ -1,5 +1,7 @@
 package edu.pnu.visitor;
 
+import net.opengis.indoorgml.core.CCTV;
+import net.opengis.indoorgml.core.CCTVOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;

@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,10 +16,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -32,6 +31,8 @@ import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 
 import net.opengis.indoorgml.core.AbstractFeature;
+import net.opengis.indoorgml.core.CCTV;
+import net.opengis.indoorgml.core.CCTVOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
@@ -51,6 +52,7 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.GeometryUtil;
+import javax.swing.JMenu;
 
 public class CanvasPanel extends JPanel implements MouseListener, MouseMotionListener,
         MouseWheelListener, KeyListener {
@@ -88,6 +90,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
     private HashMap<CellSpaceBoundary, Color> selectedCellSpaceBoundaryMap = new HashMap<CellSpaceBoundary, Color>();
 
+    private CCTV selectedCCTV = null;
+    
     // //// for create cellspace
     // private ArrayList<Point> cellSpacePoints = new ArrayList<Point>();
     // / for create cellspace
@@ -139,6 +143,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private JMenuItem mntmTransitionProperties;
 
     private JMenuItem mntmCellSpaceBoundaryProperties;
+    private JPopupMenu popupMenu_CCTV;
+    private JMenuItem mntmNewMenuItem;
 
     /**
      * Create the panel.
@@ -148,6 +154,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         add(getPopupMenu_CellSpace());
         add(getPopupMenu_Transition());
         add(getPopupMenu_CellSpaceBoundary());
+        add(getPopupMenu_CCTV());
     }
 
     public CanvasPanel(MainFrame mainFrame) {
@@ -283,7 +290,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     System.out.println("left reverse");
                 }
             }
-        }
+        } else if (currentEditState == EditState.SELECT_CCTV || currentEditState == EditState.MOVE_CCTV) {
+            movePoint(selectedCCTV.getLocation(), previousMouseX, previousMouseY, currentMouseX, currentMouseY);
+        }        
 
         previousMouseX = currentMouseX;
         previousMouseY = currentMouseY;
@@ -573,12 +582,14 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     || currentEditState == EditState.SELECT_STATE
                     || currentEditState == EditState.SELECT_CELLSPACE
                     || currentEditState == EditState.SELECT_TRANSITION
-                    || currentEditState == EditState.SELECT_CELLSPACEBOUNDARY) {
+                    || currentEditState == EditState.SELECT_CELLSPACEBOUNDARY
+                    || currentEditState == EditState.SELECT_CCTV) {
                 boolean isSelected = false;
                 selectedState = null;
                 selectedCellSpace = null;
                 selectedTransition = null;
                 selectedCellSpaceBoundary = null;
+                selectedCCTV = null;
                 if (currentKeyEvent == KeyEvent.KEY_RELEASED) {
                     selectedStateMap.clear();
                     selectedCellSpaceMap.clear();
@@ -608,6 +619,23 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     selectedStateIDs = selectedStateIDs.substring(0, selectedStateIDs.length() - 2);
                     mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs );
                 }
+                
+                // CCTV
+                if (!isSelected) {
+                	selectedCCTV = searchAdjacencyCCTV(e);
+                	if (selectedCCTV != null) {
+                		if(selectedCCTV.getMappedState() != null) {
+                			selectedStateMap.put(selectedCCTV.getMappedState(), Color.BLUE);
+                		}
+                		
+                		project.setEditState(EditState.SELECT_CCTV);
+                		isSelected = true;
+                		
+                		mainFrame.setCCTVProperties(selectedCCTV);
+                		mainFrame.setLabel_CurrentEditState("Selected CCTV : " + selectedCCTV.getCctvID());
+                	}
+                }
+                
 
                 if (!isSelected) {
                     selectedTransition = searchAdjacencyTransition(e);
@@ -686,6 +714,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 if (!isSelected) {
                     project.setEditState(EditState.NONE);
                     mainFrame.setLabel_CurrentEditState("");
+                    mainFrame.setCCTVPropertiesVisible(false);
                     selectedStateMap.clear();
                     selectedCellSpaceMap.clear();
                     selectedTransitionMap.clear();
@@ -752,6 +781,57 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
                 project.setEditState(EditState.NONE);
                 mainFrame.setLabel_CurrentEditState("");
+            } else if (currentEditState == EditState.CREATE_CCTV_MAPPEDSTATE) {
+            	selectedState = searchAdjacencyState(e);
+            	
+            	if (selectedState != null) {
+            		if(selectedCCTV.getMappedState() != null) {
+            			selectedStateMap.remove(selectedCCTV.getMappedState());
+            			selectedCCTV.getMappedState().getCCTVList().remove(selectedCCTV);
+            		}
+            		
+            		if(!selectedState.getCCTVList().contains(selectedCCTV)) {
+            			selectedState.getCCTVList().add(selectedCCTV);
+            		}
+            		selectedCCTV.setMappedState(selectedState);
+            		selectedStateMap.put(selectedState, Color.CYAN);
+            		System.out.println("create mapping state for cctv");
+            	}
+            	project.setEditState(EditState.NONE);
+            	mainFrame.setLabel_CurrentEditState("");
+            	mainFrame.setCCTVProperties(selectedCCTV);
+            	mainFrame.updateCCTVTableModel();
+            } else if (currentEditState == EditState.CREATE_CCTV) {
+            	CCTVOnFloor cctvOnFloor = project.getCurrentCCTVOnFloor();
+
+                floorPlan = project.getCurrentFloorPlan();
+                if (floorPlan == null)
+                    return;
+                floorPlanWidth = floorPlan.getWidth();
+                floorPlanHeight = floorPlan.getHeight();
+                floorPlanScale = project.getCurrentFloorPlanScale();
+
+                CCTV cctv = new CCTV();
+                Point point = new Point();
+
+                if (e.getX() > floorPlanWidth * floorPlanScale)
+                    return;
+                if (e.getY() > floorPlanHeight * floorPlanScale)
+                    return;
+
+                point.setPanelX(e.getX());
+                point.setPanelY(e.getY());
+                setPanelRatioXY(point);
+
+                cctv.setLocation(point);
+                cctvOnFloor.getCCTVMember().add(cctv);
+                
+                selectedCCTV = cctv;
+                
+                project.setEditState(EditState.SELECT_CCTV);
+                mainFrame.setLabel_CurrentEditState("");
+                mainFrame.setCCTVProperties(selectedCCTV);
+                System.out.println("cctv created");
             }
         } else if (e.getButton() == 3) { // 우클릭
             boolean selected = false;
@@ -771,6 +851,24 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 System.out.println("select state");
                 selected = true;
                 getPopupMenu_State().show(this, e.getX(), e.getY());
+            }
+            
+            if(!selected) {
+            	selectedCCTV = searchAdjacencyCCTV(e);
+            	
+            	if(selectedCCTV != null) {
+            		if(selectedCCTV.getMappedState() != null) {
+            			selectedStateMap.put(selectedCCTV.getMappedState(), Color.CYAN);
+            		}
+            		
+            		project.setEditState(EditState.SELECT_CCTV);
+            		mainFrame.setCCTVProperties(selectedCCTV);
+            		
+            		System.out.println("select cctv");
+            		selected = true;
+            		getPopupMenu_CCTV().show(this, e.getX(), e.getY());
+            	}
+            	
             }
 
             if (!selected) {
@@ -1409,6 +1507,22 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         return adjacencyState;
     }
+    
+    public CCTV searchAdjacencyCCTV(MouseEvent e) {
+        CCTV adjacencyCCTV = null;
+        CCTVOnFloor cctvOnFloor = project.getCurrentCCTVOnFloor();
+        ArrayList<CCTV> cctvMember = cctvOnFloor.getCCTVMember();
+        for (CCTV cctv : cctvMember) {
+            if (isAdjacencyPointToPoint(cctv.getLocation(), e.getX(), e.getY())) {
+                adjacencyCCTV = cctv;
+
+                System.out.println("select cctv");
+                break;
+            }
+        }
+
+        return adjacencyCCTV;
+    }
 
     public CellSpace searchPointInCellSpace(MouseEvent e) {
         CellSpace pointInCellSpace = null;
@@ -1760,6 +1874,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 selectedTransitionMap.clear();
                 project.setEditState(EditState.NONE);
                 mainFrame.setLabel_CurrentEditState("");
+            } else if(state == EditState.SELECT_CCTV) {
+            	project.deleteCCTV(selectedCCTV);
+            	selectedCCTV = null;
+            	project.setEditState(EditState.NONE);
+            	mainFrame.setLabel_CurrentEditState("");
+            	mainFrame.updateCCTVTableModel();
             }
             break;
         case KeyEvent.VK_ENTER:
@@ -1831,6 +1951,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         } else if (state == EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR) {
             doorPointList.clear();
+        } else if (state == EditState.CREATE_CCTV) {
+        	selectedState = null;
+        	mainFrame.setCCTVPropertiesVisible(false);
+        } else if (state == EditState.SELECT_CCTV) {
+        	selectedState = null;
+        	mainFrame.setCCTVPropertiesVisible(false);
         }
 
         project.setEditState(EditState.NONE);
@@ -1883,18 +2009,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             // this.getHeight(), this);
         }
 
-        if (project.getCurrentStateOnFloor() != null) {
-            floorPlan = project.getCurrentFloorPlan();
-            floorPlanScale = project.getCurrentFloorPlanScale();
-
-            // display state
-
-            ArrayList<State> stateList = project.getCurrentStateOnFloor().getStateMember();
-            for (State state : stateList) {
-                displayState(g, state, Color.RED, floorPlanWidth, floorPlanHeight, floorPlanScale);
-            }
-        }
-
         // display transition(creating transition)
         for (int i = 0; i < transitionPoints.size(); i++) {
             setPanelXYForCurrentScale(transitionPoints.get(i));
@@ -1923,6 +2037,18 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             for (Transition transition : transitionMember) {
                 displayTransition(g, transition, Color.BLUE, floorPlanWidth, floorPlanHeight,
                         floorPlanScale);
+            }
+        }
+
+        if (project.getCurrentStateOnFloor() != null) {
+            floorPlan = project.getCurrentFloorPlan();
+            floorPlanScale = project.getCurrentFloorPlanScale();
+
+            // display state
+
+            ArrayList<State> stateList = project.getCurrentStateOnFloor().getStateMember();
+            for (State state : stateList) {
+                displayState(g, state, Color.RED, floorPlanWidth, floorPlanHeight, floorPlanScale);
             }
         }
 
@@ -1980,6 +2106,20 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
             }
         }
+        
+        // display CCTV
+        if (project.getCurrentCCTVOnFloor() != null) {
+            floorPlan = project.getCurrentFloorPlan();
+            floorPlanScale = project.getCurrentFloorPlanScale();
+
+            // display cctv
+
+            ArrayList<CCTV> cctvList = project.getCurrentCCTVOnFloor().getCCTVMember();
+            for (CCTV cctv : cctvList) {
+            	displayCCTV(g2, cctv, Color.CYAN, floorPlanWidth, floorPlanHeight, floorPlanScale);
+            }
+        }
+        
 
         if (!selectedStateMap.isEmpty()) {
             for (State state : selectedStateMap.keySet()) {
@@ -2007,6 +2147,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 displayCellSpaceBoundary(g, boundary, selectedCellSpaceBoundaryMap.get(boundary),
                         floorPlanWidth, floorPlanHeight, floorPlanScale);
             }
+        }
+        if(selectedCCTV != null) {
+        	displayCCTV(g2, selectedCCTV, Color.YELLOW, floorPlanWidth, floorPlanHeight, floorPlanScale);
         }
     }
 
@@ -2112,6 +2255,23 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
         }
+    }
+    
+    public void displayCCTV(Graphics g, CCTV cctv, Color color, int floorPlanWidth, int floorPlanHeight, double floorPlanScale) {
+    	setPanelXYForCurrentScale(cctv.getLocation());
+    	double x = cctv.getLocation().getPanelX();
+    	double y = cctv.getLocation().getPanelY();
+    	double orientation = cctv.getOrientation();
+    	double fov = cctv.getFov();
+    	
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setStroke(new BasicStroke(2));
+        g2.setColor(color);
+        
+        g2.fill(new Ellipse2D.Double(x - 5, y - 5, 10, 10));
+        g2.setColor(Color.LIGHT_GRAY);
+        g2.fill(new Arc2D.Double(x - 25, y - 25, 50, 50, orientation - (fov / 2), fov, Arc2D.PIE));
     }
 
     public boolean hasInterLayerConnection(State state) {
@@ -2713,4 +2873,38 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         }
         repaint();
     }
+    public void setSelectedCCTV(CCTV selectedCCTV) {
+    	selectedState = null;
+        selectedCellSpace = null;
+        selectedTransition = null;
+        selectedCellSpaceBoundary = null;
+        selectedStateMap.clear();
+        selectedCellSpaceMap.clear();
+        selectedTransitionMap.clear();
+        selectedCellSpaceBoundaryMap.clear();
+    	
+    	this.selectedCCTV = selectedCCTV;
+    }
+    public CCTV getSelectedCCTV() {
+    	return selectedCCTV;
+    }
+	private JPopupMenu getPopupMenu_CCTV() {
+		if (popupMenu_CCTV == null) {
+			popupMenu_CCTV = new JPopupMenu();
+			popupMenu_CCTV.add(getMntmNewMenuItem());
+		}
+		return popupMenu_CCTV;
+	}
+	private JMenuItem getMntmNewMenuItem() {
+		if (mntmNewMenuItem == null) {
+			mntmNewMenuItem = new JMenuItem("Mapping state");
+			mntmNewMenuItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					project.setEditState(EditState.CREATE_CCTV_MAPPEDSTATE);
+				}
+			});
+		}
+		return mntmNewMenuItem;
+	}
+	
 }

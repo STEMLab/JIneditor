@@ -27,6 +27,7 @@ import org.w3c.dom.Document;
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
+import edu.pnu.util.CCTVExporter;
 import edu.pnu.visitor.IndoorGMLCoordinateGenerateVisitor;
 import edu.pnu.visitor.IndoorGMLExportVisitor;
 
@@ -40,7 +41,7 @@ public class IndoorGMLExporter {
 	
 	public void export() throws JAXBException{
 		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
-	        IndoorGMLCoordinateGenerateVisitor coordinateVisitor = new IndoorGMLCoordinateGenerateVisitor(project.getIs3DGeometry());
+	    IndoorGMLCoordinateGenerateVisitor coordinateVisitor = new IndoorGMLCoordinateGenerateVisitor(project.getIs3DGeometry());
 		IndoorGMLExportVisitor exportVisitor = new IndoorGMLExportVisitor(project.getIs3DGeometry());
 		
 		IndoorFeatures indoorFeatures = project.getIndoorFeatures();
@@ -135,6 +136,10 @@ public class IndoorGMLExporter {
 
 		marshaller.marshal(je, output);
 		*/
+		
+		// CCTV
+		CCTVExporter cctvExporter = new CCTVExporter(indoorFeatures);
+		cctvExporter.export(output);
 	}
 	
 	public class IndoorGMLNameSpaceMapper extends NamespacePrefixMapper {
