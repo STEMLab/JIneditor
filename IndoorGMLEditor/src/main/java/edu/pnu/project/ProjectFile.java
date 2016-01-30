@@ -3,14 +3,11 @@ package edu.pnu.project;
 import java.awt.image.BufferedImage;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import net.opengis.indoorgml.core.CCTV;
 import net.opengis.indoorgml.core.CCTVOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
-import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
-import net.opengis.indoorgml.core.CellSpaceOnFloor;
 import net.opengis.indoorgml.core.Edges;
 import net.opengis.indoorgml.core.IndoorFeatures;
 import net.opengis.indoorgml.core.InterLayerConnection;
@@ -21,7 +18,6 @@ import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
-import net.opengis.indoorgml.geometry.LineString;
 
 public class ProjectFile implements Serializable {
 	/**
@@ -48,8 +44,6 @@ public class ProjectFile implements Serializable {
 	private Edges currentEdges;
 	private StateOnFloor currentStateOnFloor;
 	private TransitionOnFloor currentTransitionOnFloor;
-	private CellSpaceOnFloor currentCellSpaceOnFloor;
-	private CellSpaceBoundaryOnFloor currentCellSpaceBoundaryOnFloor;
 	private String currentFloor;
 	
 	private IndoorGMLIDRegistry idRegistry;
@@ -240,23 +234,6 @@ public class ProjectFile implements Serializable {
 		this.currentTransitionOnFloor = currentTransitionOnFloor;
 	}
 
-	public CellSpaceOnFloor getCurrentCellSpaceOnFloor() {
-		return currentCellSpaceOnFloor;
-	}
-
-	public void setCurrentCellSpaceOnFloor(CellSpaceOnFloor currentCellSpaceOnFloor) {
-		this.currentCellSpaceOnFloor = currentCellSpaceOnFloor;
-	}
-
-	public CellSpaceBoundaryOnFloor getCurrentCellSpaceBoundaryOnFloor() {
-		return currentCellSpaceBoundaryOnFloor;
-	}
-
-	public void setCurrentCellSpaceBoundaryOnFloor(
-			CellSpaceBoundaryOnFloor currentCellSpaceBoundaryOnFloor) {
-		this.currentCellSpaceBoundaryOnFloor = currentCellSpaceBoundaryOnFloor;
-	}
-	
 	public CCTVOnFloor getCurrentCCTVOnFloor() {
 		return currentCCTVOnFloor;
 	}
@@ -480,73 +457,6 @@ public class ProjectFile implements Serializable {
 	        }
 
                 currentTransitionOnFloor.getTransitionMember().remove(transition);
-	}
-	
-	public void deleteCellSpace(CellSpace cellSpace) {
-		State duality = cellSpace.getDuality();
-		if(duality != null) {
-			duality.setDuality(null);
-		}
-		
-		ArrayList<CellSpaceBoundary> partialBoundedBy = cellSpace.getPartialBoundedBy();
-		for(CellSpaceBoundary boundary : partialBoundedBy) {
-			Transition boundaryDuality = boundary.getDuality();
-			if(boundaryDuality != null) {
-				boundaryDuality.setDuality(null);
-			}
-			
-			if(boundary.getGeometry2D() != null) {
-				if(boundary.getGeometry2D().getxLinkGeometry() == null) {
-					HashMap<LineString, ArrayList<LineString>> xLink2DMap = currentCellSpaceBoundaryOnFloor.getxLink2DMap();
-					if(xLink2DMap.containsKey(boundary.getGeometry2D())) {
-						ArrayList<LineString> references = xLink2DMap.get(boundary.getGeometry2D());
-						xLink2DMap.remove(boundary.getGeometry2D());
-						
-						if(references.size() > 0) {
-							LineString lineString = references.get(0);
-							references.remove(0);
-							lineString.setPoints(boundary.getGeometry2D().getPoints());
-							lineString.setxLinkGeometry(null);
-							lineString.setIsReversed(false);
-							
-							for(LineString element : references) {
-								element.setxLinkGeometry(lineString);
-							}
-							xLink2DMap.put(lineString, references);
-						}
-					}
-				}			
-			}
-			
-			// cellSpace를 구성하는 하나의 lineSegment에 인접하는 boundary들을 저장해놓은 map
-			HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjaccencyBoundaryMap = currentCellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
-			ArrayList<LineString> removedLS = new ArrayList<LineString>();
-			for(LineString ls : lineStringOfAdjaccencyBoundaryMap.keySet()) {
-				ArrayList<CellSpaceBoundary> adjacencyBoundary = lineStringOfAdjaccencyBoundaryMap.get(ls);
-				if(adjacencyBoundary.contains(boundary)) { // 삭제되어야할 boundary가 있으면 인접한 linestring에서 지운다.
-					adjacencyBoundary.remove(boundary);
-				}
-				if(adjacencyBoundary.size() == 0) {
-				    removedLS.add(ls);
-				}
-			}
-			for(LineString remove : removedLS) {
-			    lineStringOfAdjaccencyBoundaryMap.remove(remove);
-			}
-			
-			HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = currentCellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
-			ArrayList<CellSpace> referenceCellSpace = boundaryOfReferenceCellSpaceMap.get(boundary);
-			if(referenceCellSpace != null && referenceCellSpace.size() > 0) {
-        			for(CellSpace reference : referenceCellSpace) {
-        				if(reference.equals(cellSpace)) continue;
-        				reference.getPartialBoundedBy().remove(boundary); // 같은 boundary를 참조하는 인접한 cellspace에서 boundary삭제
-        			}
-			}
-			boundaryOfReferenceCellSpaceMap.remove(boundary);
-			currentCellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember().remove(boundary);
-		}
-		
-		currentCellSpaceOnFloor.getCellSpaceMember().remove(cellSpace);
 	}
 	
 	public void deleteCCTV(CCTV cctv) {

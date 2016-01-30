@@ -46,14 +46,11 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	private Point upperCornerReference;
 
 	public IndoorGMLCoordinateGenerateVisitor(boolean is3DGeometry) {
-		// TODO Auto-generated constructor stub
 		this.is3DGeometry = is3DGeometry;
 	}
 
 	@Override
-	public void visit(IndoorFeatures indoorFeatures) {
-		// TODO Auto-generated method stub
-		
+	public void visit(IndoorFeatures indoorFeatures) {		
 		isMLGHeight = false;
 		visit(indoorFeatures.getPrimalSpaceFeatures());
 		isMLGHeight = true;
@@ -91,8 +88,6 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 
 	@Override
 	public void visit(CellSpace cellSpace) {
-	        if(cellSpace.getGmlID().equalsIgnoreCase("C1"))
-	            System.out.println("C! found");
 		if(is3DGeometry) {
 			visit(cellSpace.getGeometry3D());
 		} else {
@@ -124,6 +119,9 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	}
 	
 	public void visit(CCTVOnFloor cctvOnFloor) {
+		lowerCornerReference = cctvOnFloor.getFloorProperty().getBottomLeftPoint();
+		upperCornerReference = cctvOnFloor.getFloorProperty().getTopRightPoint();
+		floorGroundHeight = cctvOnFloor.getFloorProperty().getGroundHeight();
 		for(CCTV cctv : cctvOnFloor.getCCTVMember()) {
 			visit(cctv);
 		}
@@ -268,9 +266,10 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 		point.setRealX(realX);
 		point.setRealY(realY);
 		//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
-		if(!is3DGeometry || isMLGHeight) {
+		/*if(!is3DGeometry || isMLGHeight) {
 			point.setZ(floorGroundHeight);
-		}
+		}*/
+		point.setZ(floorGroundHeight);
 	}
 	
 	@Override
@@ -319,9 +318,9 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	                */
 		        visit(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
-			if(!is3DGeometry || isMLGHeight) {
+			/*if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
-			}
+			}*/
 		}
 	}
 	
@@ -370,9 +369,9 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
                         */
 		        visit(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
-			if(!is3DGeometry || isMLGHeight) {
+			/*if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
-			}
+			}*/
 		}
 	}
 

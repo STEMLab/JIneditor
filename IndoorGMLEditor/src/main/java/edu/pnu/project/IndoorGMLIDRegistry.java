@@ -2,6 +2,7 @@ package edu.pnu.project;
 
 import java.io.Serializable;
 
+import net.opengis.indoorgml.core.CCTV;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.Edges;
@@ -31,6 +32,7 @@ public class IndoorGMLIDRegistry implements Serializable {
     private int spaceLayersID;
     private int stateID;
     private int transitionID;
+    private int cctvID;
 
     public void saveIndoorGMLID() {
             cellSpaceID = CellSpace.getLabelNumber();
@@ -45,6 +47,7 @@ public class IndoorGMLIDRegistry implements Serializable {
             spaceLayersID = SpaceLayers.getLabelNumber();
             stateID = State.getLabelNumber();
             transitionID = Transition.getLabelNumber();
+            cctvID = CCTV.getLabelNumber();
     }
     
     public void loadIndoorGMLID() {
@@ -60,6 +63,7 @@ public class IndoorGMLIDRegistry implements Serializable {
             SpaceLayers.setLabelNumber(spaceLayersID);
             State.setLabelNumber(stateID);
             Transition.setLabelNumber(transitionID);
+            CCTV.setLabelNumber(cctvID);
     }
 
 }

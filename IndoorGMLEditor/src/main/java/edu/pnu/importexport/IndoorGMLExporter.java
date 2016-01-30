@@ -1,5 +1,6 @@
 package edu.pnu.importexport;
 
+import java.awt.Component;
 import java.io.File;
 
 import javax.swing.JFileChooser;
@@ -27,12 +28,12 @@ import org.w3c.dom.Document;
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
-import edu.pnu.util.CCTVExporter;
 import edu.pnu.visitor.IndoorGMLCoordinateGenerateVisitor;
 import edu.pnu.visitor.IndoorGMLExportVisitor;
 
 public class IndoorGMLExporter {
 	private ProjectFile project;
+	private Component parent;
 
 	public IndoorGMLExporter(ProjectFile project) {
 		// TODO Auto-generated constructor stub
@@ -67,31 +68,47 @@ public class IndoorGMLExporter {
 		FileNameExtensionFilter filter = new FileNameExtensionFilter( "IndoorGML Document", "gml" );
 		save.setFileFilter(filter);
 		int result = save.showSaveDialog(null);
+		/*
 		if( result == JFileChooser.CANCEL_OPTION ) {
 			System.exit(1);
 		}
-		File output = save.getSelectedFile();
-
-		//marshaller.marshal(je, output);
-		
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = null;
-		try {
-			db = dbf.newDocumentBuilder();
-			Document document = db.newDocument();
+		*/
+		if (result == JFileChooser.APPROVE_OPTION) {
+			File output = save.getSelectedFile();
 			
-			marshaller.marshal(je, document);
+			if (!output.getAbsolutePath().endsWith(".gml")) {
+				String filePath = output.getAbsolutePath().concat(
+						".gml");
+				output = new File(filePath);
+			}
+	
+			//marshaller.marshal(je, output);
 			
-			TransformerFactory tf = TransformerFactory.newInstance();
-			Transformer t = tf.newTransformer();
-			t.setOutputProperty(OutputKeys.INDENT,"yes");
-			t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-			DOMSource source = new DOMSource(document);
-			StreamResult streamResult = new StreamResult(output);
-			t.transform(source, streamResult);
-		} catch (TransformerException | ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = null;
+			try {
+				db = dbf.newDocumentBuilder();
+				Document document = db.newDocument();
+				
+				marshaller.marshal(je, document);
+				
+				TransformerFactory tf = TransformerFactory.newInstance();
+				Transformer t = tf.newTransformer();
+				t.setOutputProperty(OutputKeys.INDENT,"yes");
+				t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+				DOMSource source = new DOMSource(document);
+				StreamResult streamResult = new StreamResult(output);
+				t.transform(source, streamResult);
+				
+				// CCTV
+				CCTVExporter cctvExporter = new CCTVExporter(indoorFeatures);
+				String cctvPath = output.getAbsolutePath().replace(".gml", ".txt");
+				File cctvOutput = new File(cctvPath);
+				cctvExporter.export(cctvOutput);
+			} catch (TransformerException | ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		/*
 		project.makeGMLID();
@@ -137,9 +154,6 @@ public class IndoorGMLExporter {
 		marshaller.marshal(je, output);
 		*/
 		
-		// CCTV
-		CCTVExporter cctvExporter = new CCTVExporter(indoorFeatures);
-		cctvExporter.export(output);
 	}
 	
 	public class IndoorGMLNameSpaceMapper extends NamespacePrefixMapper {

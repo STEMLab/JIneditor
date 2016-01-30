@@ -1,4 +1,4 @@
-package edu.pnu.util;
+package edu.pnu.importexport;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,6 +26,7 @@ public class CCTVExporter {
 				for(CCTV cctv : cctvOnFloor.getCCTVMember()) {
 					String line = getCSVLine(cctv);					
 					
+					writer.write(line + "\n");
 				}
 			}
 			

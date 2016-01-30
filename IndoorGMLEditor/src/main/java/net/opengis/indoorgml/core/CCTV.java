@@ -2,6 +2,7 @@ package net.opengis.indoorgml.core;
 
 import java.io.Serializable;
 import java.security.Timestamp;
+import java.util.Calendar;
 
 import net.opengis.indoorgml.geometry.Point;
 
@@ -11,8 +12,9 @@ public class CCTV implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 3841903718698462744L;
+	private static int labelNumber = 1;
 	
-	private Timestamp installationTime;
+	private Calendar installationTime;
 	private String sourceLocation;
 	private double width;
 	private double height;
@@ -26,11 +28,11 @@ public class CCTV implements Serializable {
 	private double orientation;
 	private double fov;
 	private double aspect;
-	private Timestamp time2;
 	
 	private State mappedState;
 
 	public CCTV() {
+		cctvID = "TEMP_" + (labelNumber++);
 		sourceLocation = null;
 		width = 0;
 		height = 0;
@@ -38,19 +40,18 @@ public class CCTV implements Serializable {
 		id = null;
 		password = null;
 		ip = null;
-		cctvID = null;
 		location = null;
 		orientation = 0;
 		fov = 0;
 		aspect = 0;
-		time2 = null;		
+		installationTime = Calendar.getInstance();
 	}
 
-	public Timestamp getInstallationTime() {
+	public Calendar getInstallationTime() {
 		return installationTime;
 	}
 
-	public void setInstallationTime(Timestamp installationTime) {
+	public void setInstallationTime(Calendar installationTime) {
 		this.installationTime = installationTime;
 	}
 
@@ -150,14 +151,6 @@ public class CCTV implements Serializable {
 		this.aspect = aspect;
 	}
 
-	public Timestamp getTime2() {
-		return time2;
-	}
-
-	public void setTime2(Timestamp time2) {
-		this.time2 = time2;
-	}
-
 	public State getMappedState() {
 		return mappedState;
 	}
@@ -166,5 +159,12 @@ public class CCTV implements Serializable {
 		this.mappedState = mappedState;
 	}
 
-	
+	public static int getLabelNumber() {
+		return labelNumber;
+	}
+
+	public static void setLabelNumber(int labelNumber) {
+		CCTV.labelNumber = labelNumber;
+	}
+		
 }

@@ -16,6 +16,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -26,7 +28,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
@@ -42,22 +51,30 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.SpinnerDateModel;
+import javax.swing.SpinnerModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.xml.bind.JAXBException;
+
+import org.apache.commons.lang3.math.NumberUtils;
 
 import net.opengis.indoorgml.core.CCTV;
 import net.opengis.indoorgml.core.CCTVOnFloor;
-import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
-import net.opengis.indoorgml.core.CellSpaceOnFloor;
 import net.opengis.indoorgml.core.Edges;
 import net.opengis.indoorgml.core.IndoorFeatures;
 import net.opengis.indoorgml.core.Nodes;
 import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
-import edu.pnu.importexport.WKTImporter;
+import edu.pnu.importexport.IndoorGMLExporter;
 import edu.pnu.project.EditState;
 import edu.pnu.project.EditWorkState;
 import edu.pnu.project.FloorProperty;
@@ -65,12 +82,7 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
-
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
-
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.ListSelectionModel;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -102,8 +114,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
 	private JMenu mnCreateItem;
 
-	private JMenuItem mntmCellspace;
-
 	private JMenuItem mntmState;
 
 	private JMenuItem mntmTransition;
@@ -132,8 +142,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
 	private JMenu mnSettings;
 
-	private JMenuItem mntmDoorcellspaceboundary;
-
 	private JMenuItem mntmNew;
 
 	private JButton btnInterlayerconnection;
@@ -143,9 +151,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel lblFloor;
 	private JButton btnNone;
 	private JPanel panel_Pallete;
-	private JButton btnImport;
-	private JTextField textField_ID;
-	private JButton btnAa;
 	private JButton btnCctv;
 	private JPanel panel_CCTVProperties;
 	private JLabel lblCctvId;
@@ -170,13 +175,12 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JTextField textField_Fov;
 	private JLabel lblAspect;
 	private JTextField textField_Aspect;
-	private JLabel lblLocation;
-	private JTextField textField_Location;
 	private JLabel lblMappedState;
 	private JTextField textField_MappedState;
 	private JLabel lblInstallatinonTime;
-	private JTextField textField_InstallationTime;
-	private JTable table_CCTV;
+	private JTable table_CCTVList;
+	private JSpinner spinner_DateTime;
+	private JScrollPane scrollPane_CCTVList;
 
 	/**
 	 * Launch the application.
@@ -201,7 +205,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		addComponentListener(this);
 
 		//
-		setTitle("IndoorGML Editor");
+		setTitle("IndoorGML + CCTV Editor");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 800, 800);
 		setJMenuBar(getMenuBar_1());
@@ -231,6 +235,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		EditState state = currentProject.getEditState();
 		EditWorkState workState = currentProject.getEditWorkState();
 
+		// MainFrame에 포커스가 와있을 때의 key event
 		switch (e.getKeyCode()) {
 			case KeyEvent.VK_ESCAPE :
 				if (state == EditState.CREATE_STATE) {
@@ -273,8 +278,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 					} else if (workState == EditWorkState.CREATE_INTERLAYERCONNECTION_SELECTEND2) {
 						workState = EditWorkState.CREATE_INTERLAYERCONNECTION_CREATE;
 						currentProject.setEditWorkState(workState);
-						System.out.println("interlayerconnection_create");
-						//
 						canvasPanel.createInterLayerConnection();
 
 						currentProject.setEditState(EditState.NONE);
@@ -318,14 +321,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
 	@Override
 	public void componentResized(ComponentEvent e) {
-		// contentPane.setBounds(0, getMenuBar_1().getHeight(),
-		// this.getWidth()-20, this.getHeight()-90);
-		// System.out.println("width : " + contentPane.getWidth() + "height : "
-		// + contentPane.getHeight());
-		// getToolBar().setBounds(0, 0, this.getWidth(),
-		// getToolBar().getHeight());
-		// panel.setBounds(0, getToolBar().getHeight(), this.getWidth()-20,
-		// this.getHeight()-90);
 	}
 
 	private JMenuBar getMenuBar_1() {
@@ -355,7 +350,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mntmOpen == null) {
 			mntmOpen = new JMenuItem("Open");
 			mntmOpen.addActionListener(new ActionListener() {
+				// 작업을 내용을 저장한 데이터 파일을 불러오는 이벤트
 				public void actionPerformed(ActionEvent e) {
+					// 불러올 데이터 파일을 선택한다.
 					String filePath;
 					JFileChooser fileChooser = new JFileChooser();
 					FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -369,6 +366,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 						BufferedInputStream bis = null;
 						ObjectInputStream ois = null;
 						try {
+							// 파일로부터 ProjectFile 객체를 읽어온다.
 							fis = new FileInputStream(file);
 							bis = new BufferedInputStream(fis);
 							ois = new ObjectInputStream(bis);
@@ -390,13 +388,12 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 								floorPlan = ImageIO.read(floorPlanFile);
 							}
 							if (floorPlan != null) {
-								System.out.println(currentProject
-										.getCurrentStateOnFloor()
-										.getFloorProperty().getFloorPlanPath());
 								currentProject.setCurrentFloorPlan(floorPlan);
 							}
 
 							canvasPanel.setProject(currentProject);
+							
+							// SpaceLaeyr와 Floor의 콤보박스를 초기화한다.
 							comboBoxFloorRefresh();
 							comboBoxSpaceLayerRefresh();
 							if (floorPlan != null) {
@@ -406,6 +403,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 							}
 							canvasPanel.repaint();
 							scrollPane.repaint();
+							updateCCTVTableModel();
 							repaint();
 							pack();
 						} catch (FileNotFoundException e1) {
@@ -429,6 +427,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mntmSave == null) {
 			mntmSave = new JMenuItem("Save");
 			mntmSave.addActionListener(new ActionListener() {
+				// 작업 중인 내용을 파일로 저장하는 이벤트
 				public void actionPerformed(ActionEvent e) {
 					currentProject.saveIndoorGMLID();
 
@@ -447,10 +446,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 									".dat");
 							file = new File(filePath);
 						}
-
-						System.out.println(file.getPath());
-
-						System.out.println(file.getAbsolutePath());
+						// 저장될 파일의 경로와 같은 위치에 FloorPlan 이미지 파일을 복사한다.
+						copyFloorPlan(file);
 
 						FileOutputStream fos = null;
 						BufferedOutputStream bos = null;
@@ -460,6 +457,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 							bos = new BufferedOutputStream(fos);
 							oos = new ObjectOutputStream(bos);
 
+							// ProjectFile 객체를 파일로 저장한다.
 							oos.writeObject(currentProject);
 
 							oos.close();
@@ -475,6 +473,31 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			});
 		}
 		return mntmSave;
+	}
+	
+	/**
+	 * file과 같은 위치의 경로에 FloorPlan들을 모두 복사한다.
+	 * @param file
+	 */
+	private void copyFloorPlan(File file) {
+		ArrayList<FloorProperty> floorProperties = currentProject.getBuildingProperty().getFloorProperties();
+		
+		for(FloorProperty floorProperty : floorProperties) {
+			int lastIndex = floorProperty.getFloorPlanPath().lastIndexOf('\\');
+			String fromPath = floorProperty.getFloorPlanPath();
+			String toPath = file.getParent() + floorProperty.getFloorPlanPath().substring(lastIndex);
+			
+			Path from = Paths.get(fromPath);
+			Path to = Paths.get(toPath);
+			
+			try {
+				Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING);
+				floorProperty.setFloorPlanPath(toPath);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private JMenu getMnImport() {
@@ -503,28 +526,16 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
 	private JMenuItem getMnExportToIndoorGML() {
 		if (mnExportToIndoorGML == null) {
-			mnExportToIndoorGML = new JMenuItem("IndoorGML");
+			mnExportToIndoorGML = new JMenuItem("IndoorGML + CCTV");
 			mnExportToIndoorGML.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					/*
-					 * if(currentProject.getIs3DGeometry()) { //
-					 * IndoorGML3DGeometryBuilder builder
-					 * IndoorGML3DGeometryBuilder builder = new
-					 * IndoorGML3DGeometryBuilder
-					 * (currentProject.getIndoorFeatures());
-					 * builder.create3DGeometry(); }
-					 * 
-					 * IndoorGMLExporter exporter = new
-					 * IndoorGMLExporter(currentProject); try {
-					 * exporter.export(); } catch (JAXBException e1) { // TODO
-					 * Auto-generated catch block e1.printStackTrace(); }
-					 */
-
-					GeometryExportDialog dialog = new GeometryExportDialog(
-							canvasPanel, currentProject);
-					dialog.setModal(true);
-					dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-					dialog.setVisible(true);
+					IndoorGMLExporter exporter = new IndoorGMLExporter(currentProject);
+					try {
+						exporter.export();
+					} catch (JAXBException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
 			});
 		}
@@ -553,6 +564,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mntmFloor == null) {
 			mntmFloor = new JMenuItem("Floor");
 			mntmFloor.addActionListener(new ActionListener() {
+				// 층 정보를 관리하는 Dialog를 표시하는 이벤트
 				public void actionPerformed(ActionEvent arg0) {
 					FloorListDialog dialog = new FloorListDialog(
 							MainFrame.this, currentProject);
@@ -565,6 +577,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		return mntmFloor;
 	}
 
+	/**
+	 * 층의 이름이 표시되는 콤보박스의 내용을 갱신
+	 */
 	public void comboBoxFloorRefresh() {
 		ArrayList<FloorProperty> floorProperties = currentProject
 				.getBuildingProperty().getFloorProperties();
@@ -577,6 +592,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		comboBox_Floor.setModel(model);
 	}
 
+	/**
+	 * SpaceLayer의 ID가 표시되는 콤보박스의 내용을 갱신
+	 */
 	public void comboBoxSpaceLayerRefresh() {
 		ArrayList<SpaceLayer> spaceLayerMember = currentProject
 				.getCurrentSpaceLayers().getSpaceLayerMember();
@@ -599,8 +617,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JMenu getMnCreateItem() {
 		if (mnCreateItem == null) {
 			mnCreateItem = new JMenu("Create Item");
-			mnCreateItem.add(getMntmCellspace());
-			mnCreateItem.add(getMntmDoorcellspaceboundary());
 			mnCreateItem.add(getMntmState());
 			mnCreateItem.add(getMntmTransition());
 			mnCreateItem.add(getMntmInterlayerconnection());
@@ -608,25 +624,11 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		return mnCreateItem;
 	}
 
-	private JMenuItem getMntmCellspace() {
-		if (mntmCellspace == null) {
-			mntmCellspace = new JMenuItem("CellSpace");
-			mntmCellspace.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					currentProject.setEditState(EditState.CREATE_CELLSPACE);
-					currentProject
-							.setEditWorkState(EditWorkState.CREATE_CELLSPACE_POINT1);
-					setLabel_CurrentEditState("Create CellSpace");
-				}
-			});
-		}
-		return mntmCellspace;
-	}
-
 	private JMenuItem getMntmState() {
 		if (mntmState == null) {
 			mntmState = new JMenuItem("State");
 			mntmState.addActionListener(new ActionListener() {
+				// 작업 상태를 State 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent e) {
 					currentProject.setEditState(EditState.CREATE_STATE);
 					setLabel_CurrentEditState("Create State");
@@ -640,6 +642,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mntmTransition == null) {
 			mntmTransition = new JMenuItem("Transition");
 			mntmTransition.addActionListener(new ActionListener() {
+				// 작업 상태를 Transition 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent e) {
 					currentProject.setEditState(EditState.CREATE_TRANSITION);
 					setLabel_CurrentEditState("Create Transition : Choose two states, and press ESC key");
@@ -661,9 +664,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			toolBar.add(getComboBox_SpaceLayer());
 			toolBar.add(getLblFloor());
 			toolBar.add(getComboBox_Floor());
-			toolBar.add(getBtnImport());
-			toolBar.add(getTextField_ID());
-			toolBar.add(getBtnAa());
 		}
 		return toolBar;
 	}
@@ -675,6 +675,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			btnState.setOpaque(false);
 			btnState.setToolTipText("Create State");
 			btnState.addActionListener(new ActionListener() {
+				// 작업 상태를 State 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent arg0) {
 					currentProject.setEditState(EditState.CREATE_STATE);
 					setLabel_CurrentEditState("Create State");
@@ -691,6 +692,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			btnTransition.setOpaque(false);
 			btnTransition.setToolTipText("Create Transition");
 			btnTransition.addActionListener(new ActionListener() {
+				// 작업 상태를 Transition 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent e) {
 					currentProject.setEditState(EditState.CREATE_TRANSITION);
 					setLabel_CurrentEditState("Create Transition : Choose two states, and press ESC key");
@@ -704,8 +706,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mntmInterlayerconnection == null) {
 			mntmInterlayerconnection = new JMenuItem("InterLayerConnection");
 			mntmInterlayerconnection.addActionListener(new ActionListener() {
+				// 작업 상태를 InterLayerConnection 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent e) {
-					System.out.println("editstate create interlayerconnection");
 					currentProject
 							.setEditState(EditState.CREATE_INTERLAYERCONNECTION);
 					currentProject
@@ -722,6 +724,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			comboBox_Floor = new JComboBox();
 			comboBox_Floor.setPreferredSize(new Dimension(200, 20));
 			comboBox_Floor.addActionListener(new ActionListener() {
+				// 콤보박스의 Item이 선택되면 해당 이름을 가지는 층으로 화면이 변경되도록 하는 이벤트
 				public void actionPerformed(ActionEvent arg0) {
 					refreshFloorPlan((String) comboBox_Floor.getSelectedItem());
 				}
@@ -730,9 +733,12 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		return comboBox_Floor;
 	}
 
+	/**
+	 * 콤보박스에서 선택된 층에 대하여 화면을 변경하는 함수
+	 * @param selectedComboBoxFloor
+	 */
 	private void refreshFloorPlan(String selectedComboBoxFloor) {
-		// SpaceLayer
-		// search stateOnFloor from Nodes
+		// 콤보박스에서 선택된 층의 이름과 같은 층정보를 가지는 StateOnFloor를 검색한다.
 		boolean nodesFound = false;
 		Nodes currentNodes = currentProject.getCurrentNodes();
 		ArrayList<StateOnFloor> stateOnFloor = currentNodes.getStateOnFloors();
@@ -746,7 +752,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			}
 		}
 
-		// search transitionOnFLoor from Edges
+		// 콤보박스에서 선택된 층의 이름과 같은 층정보를 가지는 TransitionOnFloor를 검색한다.
 		boolean edgesFound = false;
 		Edges currentEdges = currentProject.getCurrentEdges();
 		ArrayList<TransitionOnFloor> transitionOnFloor = currentEdges
@@ -762,54 +768,33 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			}
 		}
 
+		// 층정보를 생성하고 처음 콤보박스에서 해당 층을 선택할 경우 검색이 되지 않는다.
+		// 검색되지 않았다면 새로운 StateOnFloor와 TransitionOnFloor를 생성한다.
 		if (!nodesFound && !edgesFound) {
 			FloorProperty floorProperty = currentProject.getBuildingProperty()
 					.getFloorProperty((String) selectedComboBoxFloor);
 			if (floorProperty == null)
 				return;
 
+			// StateOnFloor 생성
 			StateOnFloor tempStateOnFloor = new StateOnFloor();
 			tempStateOnFloor.setFloorProperty(floorProperty);
 
+			// TransitionOnFloor 생성
 			TransitionOnFloor tempTransitionOnFloor = new TransitionOnFloor();
 			tempTransitionOnFloor.setFloorProperty(floorProperty);
 
+			// Nodes와 Edges에 추가한다.
 			currentNodes.getStateOnFloors().add(tempStateOnFloor);
 			currentEdges.getTransitionOnFloors().add(tempTransitionOnFloor);
 
+			// 현재 작업중인 StateOnFloor와 TransitonOnFloor로 설정한다.
 			currentProject.setCurrentStateOnFloor(tempStateOnFloor);
 			currentProject.setCurrentTransitionOnFloor(tempTransitionOnFloor);
 		}
-
-		// search CellSpaceOnFloor, CellSpaceBoundaryOnFloor
-		boolean cellSpaceOnFloorFound = false;
-		ArrayList<CellSpaceOnFloor> cellSpaceOnFloors = currentProject
-				.getPrimalSpacesFeatures().getCellSpaceOnFloors();
-		for (CellSpaceOnFloor cellSpaceOnFloor : cellSpaceOnFloors) {
-			if (cellSpaceOnFloor.getFloorProperty().getLevel()
-					.equals(selectedComboBoxFloor)) {
-				currentProject.setCurrentCellSpaceOnFloor(cellSpaceOnFloor);
-
-				cellSpaceOnFloorFound = true;
-				break;
-			}
-		}
-
-		boolean cellSpaceBoundaryOnFloorFound = false;
-		ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors = currentProject
-				.getPrimalSpacesFeatures().getCellSpaceBoundaryOnFloors();
-		for (CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor : cellSpaceBoundaryOnFloors) {
-			if (cellSpaceBoundaryOnFloor.getFloorProperty().getLevel()
-					.equals(selectedComboBoxFloor)) {
-				currentProject
-						.setCurrentCellSpaceBoundaryOnFloor(cellSpaceBoundaryOnFloor);
-
-				cellSpaceBoundaryOnFloorFound = true;
-				break;
-			}
-		}
 		
 		// CCTV
+		// 콤보박스에서 선택된 층의 이름과 같은 층정보를 가지는 CCTVOnFloor를 검색한다.
 		boolean cctvOnFloorFound = false;
 		ArrayList<CCTVOnFloor> cctvOnFloors = currentProject.getPrimalSpacesFeatures().getCctvOnFloors();
 		for (CCTVOnFloor cctvOnFloor : cctvOnFloors) {
@@ -820,36 +805,23 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 				break;
 			}
 		}
-		//
-
-		if (!cellSpaceOnFloorFound && !cellSpaceBoundaryOnFloorFound && !cctvOnFloorFound) {
+		
+		// 검색되지 않았다면 CCTVOnFloor를 생성한다.
+		if (!cctvOnFloorFound) {
 			FloorProperty floorProperty = currentProject.getBuildingProperty()
 					.getFloorProperty((String) selectedComboBoxFloor);
 			if (floorProperty == null)
 				return;
-
-			CellSpaceOnFloor tempCellSpaceOnFloor = new CellSpaceOnFloor();
-			tempCellSpaceOnFloor.setFloorProperty(floorProperty);
-
-			CellSpaceBoundaryOnFloor tempCellSpaceBoundaryOnFloor = new CellSpaceBoundaryOnFloor();
-			tempCellSpaceBoundaryOnFloor.setFloorProperty(floorProperty);
 			
 			CCTVOnFloor tempCCTVOnFloor = new CCTVOnFloor();
 			tempCCTVOnFloor.setFloorProperty(floorProperty);
 
-			currentProject.getPrimalSpacesFeatures().getCellSpaceOnFloors()
-					.add(tempCellSpaceOnFloor);
-			currentProject.getPrimalSpacesFeatures()
-					.getCellSpaceBoundaryOnFloors()
-					.add(tempCellSpaceBoundaryOnFloor);
 			currentProject.getPrimalSpacesFeatures().getCctvOnFloors().add(tempCCTVOnFloor);
 
-			currentProject.setCurrentCellSpaceOnFloor(tempCellSpaceOnFloor);
-			currentProject
-					.setCurrentCellSpaceBoundaryOnFloor(tempCellSpaceBoundaryOnFloor);
 			currentProject.setCurrentCCTVOnFloor(tempCCTVOnFloor);
 		}
 
+		// 선택된 층에 해당하는 FloorPlan으로 화면을 변경한다.
 		File floorPlanFile = new File(currentProject.getCurrentStateOnFloor()
 				.getFloorProperty().getFloorPlanPath());
 		BufferedImage floorPlan = null;
@@ -862,16 +834,12 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			e.printStackTrace();
 		}
 		currentProject.setCurrentFloorPlan(floorPlan);
+		
+		// 패널의 화면과 CCTV의 목록을 갱신한다.
 		canvasPanel.repaint();
 		scrollPane.repaint();
+		updateCCTVTableModel();
 		if (floorPlan != null) {
-
-			/*
-			 * resizePanelPrefferedDimension( (int) (floorPlan.getWidth() *
-			 * currentProject.getCurrentFloorPlanScale()), (int)
-			 * (floorPlan.getHeight() *
-			 * currentProject.getCurrentFloorPlanScale()));
-			 */
 			resizePanelPrefferedDimension((int) (floorPlan.getWidth()),
 					(int) (floorPlan.getHeight()));
 		}
@@ -884,12 +852,13 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			comboBox_SpaceLayer = new JComboBox();
 			comboBox_SpaceLayer.setPreferredSize(new Dimension(200, 20));
 			comboBox_SpaceLayer.addActionListener(new ActionListener() {
+				// 콤보박스의 Item이 선택되면 해당 ID을 가지는 SpaceLayer로 화면이 변경되도록 하는 이벤트
 				public void actionPerformed(ActionEvent arg0) {
-					boolean spaceLayerFound = false;
 					SpaceLayers currentSpaceLayers = currentProject
 							.getCurrentSpaceLayers();
 					ArrayList<SpaceLayer> spaceLayerMember = currentSpaceLayers
 							.getSpaceLayerMember();
+					
 					for (SpaceLayer spaceLayer : spaceLayerMember) {
 						if (spaceLayer.getGmlID().equals(
 								comboBox_SpaceLayer.getSelectedItem())) {
@@ -899,9 +868,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 							currentProject.setCurrentEdges(spaceLayer
 									.getEdges().get(0));
 
-							System.out.println("spacelayer found");
-
-							spaceLayerFound = true;
+							// 동일한 GMLID를 갖는 SpaceLayer를 찾아 화면을 갱신한다.
 							refreshFloorPlan((String) comboBox_Floor
 									.getSelectedItem());
 
@@ -939,6 +906,11 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		return canvasPanel;
 	}
 
+	/**
+	 * 패널의 크기를 조정한다.
+	 * @param width
+	 * @param height
+	 */
 	public void resizePanelPrefferedDimension(int width, int height) {
 		canvasPanel.setPreferredSize(new Dimension(width, height));
 		scrollPane.setPreferredSize(new Dimension(width + 5, height + 5));
@@ -954,6 +926,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mntmSpaceLayers == null) {
 			mntmSpaceLayers = new JMenuItem("SpaceLayers");
 			mntmSpaceLayers.addActionListener(new ActionListener() {
+				// SpaceLayer를 관리하는 Dialog를 표시하는 이벤트
 				public void actionPerformed(ActionEvent e) {
 					SpaceLayerListDialog dialog = new SpaceLayerListDialog(
 							MainFrame.this, currentProject);
@@ -991,24 +964,11 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		return mnSettings;
 	}
 
-	private JMenuItem getMntmDoorcellspaceboundary() {
-		if (mntmDoorcellspaceboundary == null) {
-			mntmDoorcellspaceboundary = new JMenuItem("Door(CellSpaceBoundary)");
-			mntmDoorcellspaceboundary.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					currentProject
-							.setEditState(EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR);
-					setLabel_CurrentEditState("Create Door(CellSpaceBoundary) : Choose two points on a CellSpaceBoundary");
-				}
-			});
-		}
-		return mntmDoorcellspaceboundary;
-	}
-
 	private JMenuItem getMntmNew() {
 		if (mntmNew == null) {
 			mntmNew = new JMenuItem("New");
 			mntmNew.addActionListener(new ActionListener() {
+				// 새로운 ProjectFile을 생성하는 이벤트
 				public void actionPerformed(ActionEvent e) {
 					currentProject = new ProjectFile();
 					canvasPanel.setProject(currentProject);
@@ -1029,6 +989,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			btnInterlayerconnection
 					.setToolTipText("Create InterLayerConnection");
 			btnInterlayerconnection.addActionListener(new ActionListener() {
+				// 작업 상태를 InterLayerConnection 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent arg0) {
 					currentProject
 							.setEditState(EditState.CREATE_INTERLAYERCONNECTION);
@@ -1087,7 +1048,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (panel_Pallete == null) {
 			panel_Pallete = new JPanel();
 			GridBagLayout gbl_panel_Pallete = new GridBagLayout();
-			gbl_panel_Pallete.columnWidths = new int[]{200, 80};
+			gbl_panel_Pallete.columnWidths = new int[]{200, 40};
 			gbl_panel_Pallete.rowHeights = new int[]{40, 40, 40, 40, 40, 200};
 			gbl_panel_Pallete.columnWeights = new double[]{1.0, 1.0};
 			gbl_panel_Pallete.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
@@ -1124,69 +1085,32 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			gbc_btnCctv.gridy = 4;
 			panel_Pallete.add(getBtnCctv(), gbc_btnCctv);
 			getPanel_CCTVProperties().setLayout(null);
-			GridBagConstraints gbc_table_CCTV = new GridBagConstraints();
-			gbc_table_CCTV.fill = GridBagConstraints.BOTH;
-			gbc_table_CCTV.gridx = 1;
-			gbc_table_CCTV.gridy = 0;
-			gbc_table_CCTV.gridheight = 6;
-			panel_Pallete.add(getTable_CCTV(), gbc_table_CCTV);
+			GridBagConstraints gbc_scrollPane_CCTVList = new GridBagConstraints();
+			gbc_scrollPane_CCTVList.insets = new Insets(0, 0, 5, 0);
+			gbc_scrollPane_CCTVList.fill = GridBagConstraints.BOTH;
+			gbc_scrollPane_CCTVList.gridx = 1;
+			gbc_scrollPane_CCTVList.gridy = 0;
+			gbc_scrollPane_CCTVList.gridheight = 6;
+			panel_Pallete.add(getScrollPane_CCTVList(), gbc_scrollPane_CCTVList);
+			getScrollPane_CCTVList().setViewportView(getTable_CCTVList());
 			GridBagConstraints gbc_panel_CCTVProperties = new GridBagConstraints();
-			gbc_panel_CCTVProperties.gridheight = 2;
+			gbc_panel_CCTVProperties.gridheight = 1;
 			gbc_panel_CCTVProperties.insets = new Insets(0, 0, 5, 5);
 			gbc_panel_CCTVProperties.fill = GridBagConstraints.BOTH;
 			gbc_panel_CCTVProperties.gridx = 0;
 			gbc_panel_CCTVProperties.gridy = 5;
-			panel_Pallete.add(getPanel_CCTVProperties(), gbc_panel_CCTVProperties);
+			panel_Pallete.add(getPanel_CCTVProperties(), gbc_panel_CCTVProperties);			
 		}
 		return panel_Pallete;
-	}
-	private JButton getBtnImport() {
-		if (btnImport == null) {
-			btnImport = new JButton("Import");
-			btnImport.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					WKTImporter wktImporter = new WKTImporter(canvasPanel,
-							currentProject);
-					String filePath;
-					JFileChooser fileChooser = new JFileChooser();
-
-					int returnVal = fileChooser.showOpenDialog(MainFrame.this);
-					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						File file = fileChooser.getSelectedFile();
-						wktImporter.read(file);
-					}
-					canvasPanel.repaint();
-					repaint();
-				}
-			});
-		}
-		// btnImport.setVisible(false);
-		return btnImport;
-	}
-	private JTextField getTextField_ID() {
-		if (textField_ID == null) {
-			textField_ID = new JTextField();
-			textField_ID.setColumns(10);
-		}
-		// textField_ID.setVisible(false);
-		return textField_ID;
-	}
-	private JButton getBtnAa() {
-		if (btnAa == null) {
-			btnAa = new JButton("Test");
-			btnAa.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					canvasPanel.searchByID(textField_ID.getText());
-				}
-			});
-		}
-		// btnAa.setVisible(false);
-		return btnAa;
 	}
 	private JButton getBtnCctv() {
 		if (btnCctv == null) {
 			btnCctv = new JButton("CCTV");
+			btnCctv.setToolTipText("Create CCTV");
+			btnCctv.setBackground(Color.white);
+			btnCctv.setOpaque(false);
 			btnCctv.addActionListener(new ActionListener() {
+				// 작업 상태를 CCTV 생성으로 변환하는 이벤트
 				public void actionPerformed(ActionEvent arg0) {
 					currentProject.setEditState(EditState.CREATE_CCTV);
 					setLabel_CurrentEditState("Create CCTV");
@@ -1220,16 +1144,18 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			panel_CCTVProperties.add(getTextField_Fov());
 			panel_CCTVProperties.add(getLblAspect());
 			panel_CCTVProperties.add(getTextField_Aspect());
-			panel_CCTVProperties.add(getLblLocation());
-			panel_CCTVProperties.add(getTextField_Location());
 			panel_CCTVProperties.add(getLblMappedState());
 			panel_CCTVProperties.add(getTextField_MappedState());
 			panel_CCTVProperties.add(getLblInstallatinonTime());
-			panel_CCTVProperties.add(getTextField_InstallationTime());
+			panel_CCTVProperties.add(getSpinner_DateTime());
 		}
 		//panel_CCTVProperties.setVisible(false);
 		return panel_CCTVProperties;
 	}
+	/**
+	 * CCTV의 속성 정보를 화면에 보이게 할 지의 여부 설정
+	 * @param value
+	 */
 	public void setCCTVPropertiesVisible(boolean value) {
 		panel_CCTVProperties.setVisible(value);
 	}
@@ -1258,6 +1184,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_CCTVID == null) {
 			textField_CCTVID = new JTextField();
 			textField_CCTVID.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 ID가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent arg0) {
 					if(canvasPanel.getSelectedCCTV() != null && textField_CCTVID.getText() != null) {
@@ -1275,6 +1202,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_CCTVIP == null) {
 			textField_CCTVIP = new JTextField();
 			textField_CCTVIP.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 IP가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent arg0) {
 					if(canvasPanel.getSelectedCCTV() != null && textField_CCTVIP.getText() != null) {
@@ -1291,6 +1219,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_SourceLocation == null) {
 			textField_SourceLocation = new JTextField();
 			textField_SourceLocation.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 SourceLocation이 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
 					if(canvasPanel.getSelectedCCTV() != null && textField_SourceLocation.getText() != null) {
@@ -1298,7 +1227,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 					}
 				}
 			});
-			textField_SourceLocation.setBounds(12, 88, 176, 21);
+			textField_SourceLocation.setBounds(59, 88, 129, 21);
 			textField_SourceLocation.setColumns(10);
 		}
 		return textField_SourceLocation;
@@ -1306,7 +1235,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblUrlId() {
 		if (lblUrlId == null) {
 			lblUrlId = new JLabel("ID");
-			lblUrlId.setBounds(12, 153, 57, 15);
+			lblUrlId.setBounds(12, 179, 57, 15);
 		}
 		return lblUrlId;
 	}
@@ -1314,6 +1243,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_URLID == null) {
 			textField_URLID = new JTextField();
 			textField_URLID.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 URL의 ID가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
 					if(canvasPanel.getSelectedCCTV() != null && textField_URLID.getText() != null) {
@@ -1321,7 +1251,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 					}
 				}
 			});
-			textField_URLID.setBounds(81, 150, 107, 21);
+			textField_URLID.setBounds(81, 176, 107, 21);
 			textField_URLID.setColumns(10);
 		}
 		return textField_URLID;
@@ -1329,7 +1259,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblUrlPassword() {
 		if (lblUrlPassword == null) {
 			lblUrlPassword = new JLabel("Password");
-			lblUrlPassword.setBounds(12, 178, 57, 15);
+			lblUrlPassword.setBounds(12, 207, 57, 15);
 		}
 		return lblUrlPassword;
 	}
@@ -1337,6 +1267,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_URLPassword == null) {
 			textField_URLPassword = new JTextField();
 			textField_URLPassword.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 URL Password가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
 					if(canvasPanel.getSelectedCCTV() != null && textField_URLPassword.getText() != null) {
@@ -1344,7 +1275,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 					}
 				}
 			});
-			textField_URLPassword.setBounds(81, 175, 107, 21);
+			textField_URLPassword.setBounds(81, 204, 107, 21);
 			textField_URLPassword.setColumns(10);
 		}
 		return textField_URLPassword;
@@ -1352,7 +1283,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblWidth() {
 		if (lblWidth == null) {
 			lblWidth = new JLabel("Width");
-			lblWidth.setBounds(12, 203, 57, 15);
+			lblWidth.setBounds(12, 232, 57, 15);
 		}
 		return lblWidth;
 	}
@@ -1360,14 +1291,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_Width == null) {
 			textField_Width = new JTextField();
 			textField_Width.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 영상의 Width가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
-					if(canvasPanel.getSelectedCCTV() != null && textField_Width.getText() != null) {
-						canvasPanel.getSelectedCCTV().setWidth(Double.parseDouble(textField_Width.getText()));
+					if(canvasPanel.getSelectedCCTV() != null && !textField_Width.getText().equals("")) {
+						if(isNumeric(textField_Width.getText())) {
+							canvasPanel.getSelectedCCTV().setWidth(Double.parseDouble(textField_Width.getText()));
+						}
 					}
 				}
 			});
-			textField_Width.setBounds(81, 200, 107, 21);
+			textField_Width.setBounds(81, 229, 107, 21);
 			textField_Width.setColumns(10);
 		}
 		return textField_Width;
@@ -1375,7 +1309,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblHeight() {
 		if (lblHeight == null) {
 			lblHeight = new JLabel("Height");
-			lblHeight.setBounds(12, 228, 57, 15);
+			lblHeight.setBounds(12, 257, 57, 15);
 		}
 		return lblHeight;
 	}
@@ -1383,14 +1317,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_Height == null) {
 			textField_Height = new JTextField();
 			textField_Height.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 영상의 Height가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
-					if(canvasPanel.getSelectedCCTV() != null && textField_Height.getText() != null) {
-						canvasPanel.getSelectedCCTV().setHeight(Double.parseDouble(textField_Height.getText()));
+					if(canvasPanel.getSelectedCCTV() != null && !textField_Height.getText().equals("")) {
+						if(isNumeric(textField_Height.getText())) {
+							canvasPanel.getSelectedCCTV().setHeight(Double.parseDouble(textField_Height.getText()));
+						}
 					}
 				}
 			});
-			textField_Height.setBounds(81, 225, 107, 21);
+			textField_Height.setBounds(81, 254, 107, 21);
 			textField_Height.setColumns(10);
 		}
 		return textField_Height;
@@ -1398,7 +1335,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblFramerate() {
 		if (lblFramerate == null) {
 			lblFramerate = new JLabel("Framerate");
-			lblFramerate.setBounds(12, 253, 57, 15);
+			lblFramerate.setBounds(12, 282, 57, 15);
 		}
 		return lblFramerate;
 	}
@@ -1406,14 +1343,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_Framerate == null) {
 			textField_Framerate = new JTextField();
 			textField_Framerate.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 영상의 Frame rate가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
-					if(canvasPanel.getSelectedCCTV() != null && textField_Framerate.getText() != null) {
-						canvasPanel.getSelectedCCTV().setFramerate(Double.parseDouble(textField_Framerate.getText()));
+					if(canvasPanel.getSelectedCCTV() != null && !textField_Framerate.getText().equals("")) {
+						if(isNumeric(textField_Framerate.getText())) {
+							canvasPanel.getSelectedCCTV().setFramerate(Double.parseDouble(textField_Framerate.getText()));
+						}
 					}
 				}
 			});
-			textField_Framerate.setBounds(81, 250, 107, 21);
+			textField_Framerate.setBounds(81, 279, 107, 21);
 			textField_Framerate.setColumns(10);
 		}
 		return textField_Framerate;
@@ -1421,7 +1361,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblOrientation() {
 		if (lblOrientation == null) {
 			lblOrientation = new JLabel("Orientation");
-			lblOrientation.setBounds(12, 278, 67, 15);
+			lblOrientation.setBounds(12, 307, 67, 15);
 		}
 		return lblOrientation;
 	}
@@ -1429,14 +1369,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_Orientation == null) {
 			textField_Orientation = new JTextField();
 			textField_Orientation.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 Orientation이 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
-					if(canvasPanel.getSelectedCCTV() != null && textField_Orientation.getText() != null) {
-						canvasPanel.getSelectedCCTV().setOrientation(Double.parseDouble(textField_Orientation.getText()));
+					if(canvasPanel.getSelectedCCTV() != null && !textField_Orientation.getText().equals("")) {
+						if(isNumeric(textField_Orientation.getText())) {
+							canvasPanel.getSelectedCCTV().setOrientation(Double.parseDouble(textField_Orientation.getText()));
+						}
 					}
 				}
 			});
-			textField_Orientation.setBounds(81, 275, 107, 21);
+			textField_Orientation.setBounds(81, 304, 107, 21);
 			textField_Orientation.setColumns(10);
 		}
 		return textField_Orientation;
@@ -1444,7 +1387,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblFov() {
 		if (lblFov == null) {
 			lblFov = new JLabel("Fov");
-			lblFov.setBounds(12, 303, 57, 15);
+			lblFov.setBounds(12, 332, 57, 15);
 		}
 		return lblFov;
 	}
@@ -1454,12 +1397,15 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			textField_Fov.addFocusListener(new FocusAdapter() {
 				@Override
 				public void focusLost(FocusEvent e) {
-					if(canvasPanel.getSelectedCCTV() != null && textField_Fov.getText() != null) {
-						canvasPanel.getSelectedCCTV().setFov(Double.parseDouble(textField_Fov.getText()));
+					// 선택된 CCTV의 Fov가 변경되었을 때 발생하는 이벤트
+					if(canvasPanel.getSelectedCCTV() != null && !textField_Fov.getText().equals("")) {
+						if(isNumeric(textField_Fov.getText())) {
+							canvasPanel.getSelectedCCTV().setFov(Double.parseDouble(textField_Fov.getText()));
+						}
 					}
 				}
 			});
-			textField_Fov.setBounds(81, 300, 107, 21);
+			textField_Fov.setBounds(81, 329, 107, 21);
 			textField_Fov.setColumns(10);
 		}
 		return textField_Fov;
@@ -1467,7 +1413,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JLabel getLblAspect() {
 		if (lblAspect == null) {
 			lblAspect = new JLabel("Aspect");
-			lblAspect.setBounds(12, 328, 57, 15);
+			lblAspect.setBounds(12, 357, 57, 15);
 		}
 		return lblAspect;
 	}
@@ -1475,38 +1421,25 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_Aspect == null) {
 			textField_Aspect = new JTextField();
 			textField_Aspect.addFocusListener(new FocusAdapter() {
+				// 선택된 CCTV의 영상의 Aspect가 변경되었을 때 발생하는 이벤트
 				@Override
 				public void focusLost(FocusEvent e) {
-					if(canvasPanel.getSelectedCCTV() != null && textField_Aspect.getText() != null) {
-						canvasPanel.getSelectedCCTV().setAspect(Double.parseDouble(textField_Aspect.getText()));
+					if(canvasPanel.getSelectedCCTV() != null && !textField_Aspect.getText().equals("")) {
+						if(isNumeric(textField_Aspect.getText())) {
+							canvasPanel.getSelectedCCTV().setAspect(Double.parseDouble(textField_Aspect.getText()));
+						}
 					}
 				}
 			});
-			textField_Aspect.setBounds(81, 325, 107, 21);
+			textField_Aspect.setBounds(81, 354, 107, 21);
 			textField_Aspect.setColumns(10);
 		}
 		return textField_Aspect;
 	}
-	private JLabel getLblLocation() {
-		if (lblLocation == null) {
-			lblLocation = new JLabel("Location");
-			lblLocation.setBounds(12, 353, 57, 15);
-		}
-		return lblLocation;
-	}
-	private JTextField getTextField_Location() {
-		if (textField_Location == null) {
-			textField_Location = new JTextField();
-			textField_Location.setEditable(false);
-			textField_Location.setBounds(81, 350, 107, 21);
-			textField_Location.setColumns(10);
-		}
-		return textField_Location;
-	}
 	private JLabel getLblMappedState() {
 		if (lblMappedState == null) {
-			lblMappedState = new JLabel("Mapped State");
-			lblMappedState.setBounds(12, 378, 67, 15);
+			lblMappedState = new JLabel("State");
+			lblMappedState.setBounds(12, 382, 67, 15);
 		}
 		return lblMappedState;
 	}
@@ -1514,61 +1447,115 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (textField_MappedState == null) {
 			textField_MappedState = new JTextField();
 			textField_MappedState.setEditable(false);
-			textField_MappedState.setBounds(81, 375, 107, 21);
+			textField_MappedState.setBounds(81, 379, 107, 21);
 			textField_MappedState.setColumns(10);
 		}
 		return textField_MappedState;
 	}
+	/**
+	 * 문자열이 실수인지 판단하는 함수
+	 * @param str
+	 * @return
+	 */
+	private boolean isNumeric(String str) {
+		try {
+			double d = Double.parseDouble(str);
+		} catch(NumberFormatException e) {
+			return false;
+		}
+		return true;
+	}
+	/**
+	 * CCTV의 속성 정보를 표시하는 함수
+	 * @param cctv
+	 */
 	public void setCCTVProperties(CCTV cctv) {
+		textField_CCTVID.setText("");
+		textField_CCTVIP.setText("");
+		textField_SourceLocation.setText("");
+		textField_URLID.setText("");
+		textField_URLPassword.setText("");
+		textField_Width.setText("");
+		textField_Height.setText("");
+		textField_Framerate.setText("");
+		textField_Orientation.setText("");
+		textField_Aspect.setText("");
+		textField_Fov.setText("");
+		textField_MappedState.setText("");
+		
 		textField_CCTVID.setText(cctv.getCctvID());
 		textField_CCTVIP.setText(cctv.getIp());
 		textField_SourceLocation.setText(cctv.getSourceLocation());
 		textField_URLID.setText(cctv.getId());
 		textField_URLPassword.setText(cctv.getPassword());
-		textField_Width.setText(String.valueOf(cctv.getWidth()));
-		textField_Height.setText(String.valueOf(cctv.getHeight()));
-		textField_Framerate.setText(String.valueOf(cctv.getFramerate()));
-		textField_Orientation.setText(String.valueOf(cctv.getOrientation()));
-		textField_Aspect.setText(String.valueOf(cctv.getAspect()));
-		textField_Fov.setText(String.valueOf(cctv.getFov()));
-		textField_Location.setText(cctv.getLocation().getPanelX() + ", " + cctv.getLocation().getPanelY());
+		if (cctv.getWidth() != 0) {
+			textField_Width.setText(String.valueOf(cctv.getWidth()));
+		}
+		if (cctv.getHeight() != 0) {
+			textField_Height.setText(String.valueOf(cctv.getHeight()));
+		}
+		if (cctv.getFramerate() != 0) {
+			textField_Framerate.setText(String.valueOf(cctv.getFramerate()));			
+		}
+		if (cctv.getOrientation() != 0) {
+			textField_Orientation.setText(String.valueOf(cctv.getOrientation()));
+		}
+		if (cctv.getAspect() != 0) {
+			textField_Aspect.setText(String.valueOf(cctv.getAspect()));
+		}
+		if (cctv.getFov() != 0) {
+			textField_Fov.setText(String.valueOf(cctv.getFov()));
+		}
 		if (cctv.getMappedState() != null) {
 			textField_MappedState.setText(cctv.getMappedState().getGmlID());
 		}
+		((SpinnerDateModel) spinner_DateTime.getModel()).setValue(cctv.getInstallationTime().getTime());
 		
 		panel_CCTVProperties.setVisible(true);
 	}
 	private JLabel getLblInstallatinonTime() {
 		if (lblInstallatinonTime == null) {
 			lblInstallatinonTime = new JLabel("Installatinon Time");
-			lblInstallatinonTime.setBounds(12, 119, 57, 15);
+			lblInstallatinonTime.setBounds(12, 119, 107, 15);
 		}
 		return lblInstallatinonTime;
 	}
-	private JTextField getTextField_InstallationTime() {
-		if (textField_InstallationTime == null) {
-			textField_InstallationTime = new JTextField();
-			textField_InstallationTime.setBounds(81, 119, 107, 21);
-			textField_InstallationTime.setColumns(10);
+	private JSpinner getSpinner_DateTime() {
+		if (spinner_DateTime == null) {
+			SpinnerModel model = new SpinnerDateModel();
+			spinner_DateTime = new JSpinner(new SpinnerDateModel(new Date(1453788930252L), new Date(1390716930252L), null, Calendar.DAY_OF_MONTH));
+			spinner_DateTime.addChangeListener(new ChangeListener() {
+				// 선택된 CCTV의 Installation Time이 변경되었을 때 발생하는 이벤트
+				public void stateChanged(ChangeEvent arg0) {
+					SpinnerDateModel model = (SpinnerDateModel) spinner_DateTime.getModel();
+					canvasPanel.getSelectedCCTV().getInstallationTime().setTime(model.getDate());
+				}
+			});
+			spinner_DateTime.setBounds(59, 144, 129, 22);
 		}
-		return textField_InstallationTime;
+		return spinner_DateTime;
 	}
-	private JTable getTable_CCTV() {
-		if (table_CCTV == null) {
-			table_CCTV = new JTable();
-			table_CCTV.addMouseListener(new MouseAdapter() {
+	private JTable getTable_CCTVList() {
+		if (table_CCTVList == null) {
+			table_CCTVList = new JTable();
+			table_CCTVList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			table_CCTVList.addMouseListener(new MouseAdapter() {
+				// CCTV의 목록에서 CCTV가 선택되었을 때 발생하는 이벤트
 				@Override
 				public void mouseClicked(MouseEvent arg0) {
-					int selectedRow = table_CCTV.getSelectedRow();
-					CCTV selectedCCTV = searchCCTVByID((String) table_CCTV.getValueAt(selectedRow, 0));
-					if(selectedCCTV != null) {
-						canvasPanel.setSelectedCCTV(selectedCCTV);
-				        setCCTVProperties(selectedCCTV);
-						canvasPanel.repaint();
+					int selectedRow = table_CCTVList.getSelectedRow();
+					if(selectedRow >= 0 && selectedRow < table_CCTVList.getRowCount()) {
+						// 목록의 CCTV 이름과 동일한 CCTV를 찾는다.
+						CCTV selectedCCTV = searchCCTVByID((String) table_CCTVList.getValueAt(selectedRow, 0));
+						if(selectedCCTV != null) {
+							canvasPanel.setSelectedCCTV(selectedCCTV);
+					        setCCTVProperties(selectedCCTV);
+							canvasPanel.repaint();
+						}
 					}
 				}
 			});
-			table_CCTV.setModel(new DefaultTableModel(
+			table_CCTVList.setModel(new DefaultTableModel(
 				new Object[][] {
 				},
 				new String[] {
@@ -1581,10 +1568,20 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 				public Class getColumnClass(int columnIndex) {
 					return columnTypes[columnIndex];
 				}
+				@Override
+				public boolean isCellEditable(int row, int column) {
+					return false;
+				}
 			});
+			
 		}
-		return table_CCTV;
+		return table_CCTVList;
 	}
+	/**
+	 * 현재 층의 CCTVOnFloor에서 동일한 CCTV ID를 가지는 CCTV를 검색한다.
+	 * @param cctvID
+	 * @return
+	 */
 	private CCTV searchCCTVByID(String cctvID) {
 		ArrayList<CCTV> cctvList = currentProject.getCurrentCCTVOnFloor().getCCTVMember();
 		for(CCTV cctv : cctvList) {
@@ -1595,8 +1592,11 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		
 		return null;
 	}
+	/**
+	 * CCTV의 ID를 표시하는 Tale의 목록을 갱신한다.
+	 */
 	public void updateCCTVTableModel() {
-		DefaultTableModel model = (DefaultTableModel) table_CCTV.getModel();
+		DefaultTableModel model = (DefaultTableModel) table_CCTVList.getModel();
 		
 		int rowCount = model.getRowCount();
 		for(int i = 0; i < rowCount; i++) {
@@ -1608,5 +1608,12 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			model.addRow(new Object[]{cctv.getCctvID()});
 		}
 	}
-	
+	private JScrollPane getScrollPane_CCTVList() {
+		if (scrollPane_CCTVList == null) {
+			scrollPane_CCTVList = new JScrollPane();
+			scrollPane_CCTVList.setWheelScrollingEnabled(true);
+			scrollPane_CCTVList.setPreferredSize(new Dimension(80, 200));
+		}
+		return scrollPane_CCTVList;
+	}
 }
