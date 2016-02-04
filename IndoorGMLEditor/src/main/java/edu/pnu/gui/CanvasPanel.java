@@ -932,6 +932,13 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     	double orientation = cctv.getOrientation();
     	double fov = cctv.getFov();
     	
+    	double displayOrientation = 0;
+    	if(orientation >= 0 && orientation <= 90) { // for IngC Engine RotateFOV
+    		displayOrientation = -orientation + 90;
+    	} else {
+    		displayOrientation = 360 - orientation + 90;
+    	}
+    	
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setStroke(new BasicStroke(2));
@@ -939,7 +946,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         
         g2.fill(new Ellipse2D.Double(x - 5, y - 5, 10, 10));
         g2.setColor(color);
-        g2.fill(new Arc2D.Double(x - 25, y - 25, 50, 50, orientation - (fov / 2), fov, Arc2D.PIE));
+        
+        g2.fill(new Arc2D.Double(x - 25, y - 25, 50, 50, displayOrientation - (fov / 2), fov, Arc2D.PIE));
     }
 
     public boolean hasInterLayerConnection(State state) {
