@@ -3,6 +3,7 @@ package edu.pnu.importexport;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import net.opengis.indoorgml.core.CCTV;
@@ -26,7 +27,7 @@ public class CCTVExporter {
 				for(CCTV cctv : cctvOnFloor.getCCTVMember()) {
 					String line = getCSVLine(cctv);					
 					
-					writer.write(line + "\n");
+					writer.println(line);
 				}
 			}
 			
@@ -54,6 +55,14 @@ public class CCTVExporter {
 		
 		if(cctv.getSourceLocation() != null) {
 			builder.append(cctv.getSourceLocation() + ",");
+		} else {
+			builder.append(" ,");
+		}
+		
+		if(cctv.getInstallationTime() != null) {
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			String timeString = format.format(cctv.getInstallationTime().getTime());
+			builder.append(timeString + ", ");
 		} else {
 			builder.append(" ,");
 		}

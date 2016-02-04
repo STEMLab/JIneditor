@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -55,6 +54,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerModel;
 import javax.swing.border.EmptyBorder;
@@ -64,8 +64,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.lang3.math.NumberUtils;
-
 import net.opengis.indoorgml.core.CCTV;
 import net.opengis.indoorgml.core.CCTVOnFloor;
 import net.opengis.indoorgml.core.Edges;
@@ -74,6 +72,14 @@ import net.opengis.indoorgml.core.Nodes;
 import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
 import edu.pnu.importexport.IndoorGMLExporter;
 import edu.pnu.project.EditState;
 import edu.pnu.project.EditWorkState;
@@ -82,7 +88,6 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
-import javax.swing.ListSelectionModel;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -181,6 +186,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JTable table_CCTVList;
 	private JSpinner spinner_DateTime;
 	private JScrollPane scrollPane_CCTVList;
+	private JMenuItem mntmPost;
 
 	/**
 	 * Launch the application.
@@ -520,6 +526,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		if (mnExport == null) {
 			mnExport = new JMenu("Export");
 			mnExport.add(getMnExportToIndoorGML());
+			mnExport.add(getMntmPost());
 		}
 		return mnExport;
 	}
@@ -1099,7 +1106,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			gbc_panel_CCTVProperties.fill = GridBagConstraints.BOTH;
 			gbc_panel_CCTVProperties.gridx = 0;
 			gbc_panel_CCTVProperties.gridy = 5;
-			panel_Pallete.add(getPanel_CCTVProperties(), gbc_panel_CCTVProperties);			
+			panel_Pallete.add(getPanel_CCTVProperties(), gbc_panel_CCTVProperties);
 		}
 		return panel_Pallete;
 	}
@@ -1615,5 +1622,42 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			scrollPane_CCTVList.setPreferredSize(new Dimension(80, 200));
 		}
 		return scrollPane_CCTVList;
+	}
+	private JMenuItem getMntmPost() {
+		if (mntmPost == null) {
+			mntmPost = new JMenuItem("Upload to Server");
+			mntmPost.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					String targetHost = "localhost";
+					HttpPost httpPost = new HttpPost(targetHost + "/IngCServer/api/example/uploadnetworkfile");
+					httpPost.addHeader("Accept", "application/json");
+					httpPost.addHeader("Content-type", "multipart/form-data");
+					
+					File networkFile = new File("C:\\Users\\Donguk\\Documents\\igml_cctv_sample.gml");
+					File cctvFile = new File("C:\\Users\\Donguk\\Documents\\igml_cctv_sample.txt");
+					String building_id = "4cd1ddd3-af63-4b98-bd0d-6a80a01c7d6b";
+					
+					MultipartEntityBuilder meb = MultipartEntityBuilder.create();
+					meb.addTextBody("building_id", building_id);
+					meb.addBinaryBody("uploadNetworkFile", networkFile);
+					
+					httpPost.setEntity(meb.build());
+					CloseableHttpClient httpClient = null;
+					try {
+						httpClient = HttpClients.createDefault();
+						CloseableHttpResponse reponse = httpClient.execute(httpPost);
+						httpClient.close();
+					} catch (ClientProtocolException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+				}
+			});
+		}
+		return mntmPost;
 	}
 }
