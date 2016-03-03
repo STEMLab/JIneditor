@@ -43,8 +43,6 @@ public class FloorPropertyDialog extends JDialog {
 	private JTextField textField_FloorPlanPath;
 	private JLabel lblCeilingheight;
 	private JTextField textField_CeilingHeight;
-	private JLabel lblDoorheight;
-	private JTextField textField_DoorHeight;
 
 	/**
 	 * Launch the application.
@@ -191,67 +189,48 @@ public class FloorPropertyDialog extends JDialog {
 			textField_CeilingHeight.setColumns(10);
 		}
 		{
-			lblDoorheight = new JLabel("DoorHeight");
-			GridBagConstraints gbc_lblDoorheight = new GridBagConstraints();
-			gbc_lblDoorheight.anchor = GridBagConstraints.EAST;
-			gbc_lblDoorheight.insets = new Insets(0, 0, 5, 5);
-			gbc_lblDoorheight.gridx = 0;
-			gbc_lblDoorheight.gridy = 5;
-			contentPanel.add(lblDoorheight, gbc_lblDoorheight);
-		}
-		{
-			textField_DoorHeight = new JTextField();
-			GridBagConstraints gbc_textField_DoorHeight = new GridBagConstraints();
-			gbc_textField_DoorHeight.insets = new Insets(0, 0, 5, 5);
-			gbc_textField_DoorHeight.fill = GridBagConstraints.HORIZONTAL;
-			gbc_textField_DoorHeight.gridx = 1;
-			gbc_textField_DoorHeight.gridy = 5;
-			contentPanel.add(textField_DoorHeight, gbc_textField_DoorHeight);
-			textField_DoorHeight.setColumns(10);
-		}
-		{
 			JLabel lblFloorPlan = new JLabel("Floor Plan");
 			GridBagConstraints gbc_lblFloorPlan = new GridBagConstraints();
 			gbc_lblFloorPlan.anchor = GridBagConstraints.EAST;
-			gbc_lblFloorPlan.insets = new Insets(0, 0, 0, 5);
+			gbc_lblFloorPlan.insets = new Insets(0, 0, 5, 5);
 			gbc_lblFloorPlan.gridx = 0;
-			gbc_lblFloorPlan.gridy = 6;
+			gbc_lblFloorPlan.gridy = 5;
 			contentPanel.add(lblFloorPlan, gbc_lblFloorPlan);
 		}
 		{
-			textField_FloorPlanPath = new JTextField();
-			GridBagConstraints gbc_textField_FloorPlanPath = new GridBagConstraints();
-			gbc_textField_FloorPlanPath.insets = new Insets(0, 0, 0, 5);
-			gbc_textField_FloorPlanPath.fill = GridBagConstraints.HORIZONTAL;
-			gbc_textField_FloorPlanPath.gridx = 1;
-			gbc_textField_FloorPlanPath.gridy = 6;
-			contentPanel.add(textField_FloorPlanPath, gbc_textField_FloorPlanPath);
-			textField_FloorPlanPath.setColumns(10);
+			{
+				textField_FloorPlanPath = new JTextField();
+				GridBagConstraints gbc_textField_FloorPlanPath = new GridBagConstraints();
+				gbc_textField_FloorPlanPath.insets = new Insets(0, 0, 5, 5);
+				gbc_textField_FloorPlanPath.fill = GridBagConstraints.HORIZONTAL;
+				gbc_textField_FloorPlanPath.gridx = 1;
+				gbc_textField_FloorPlanPath.gridy = 5;
+				contentPanel.add(textField_FloorPlanPath, gbc_textField_FloorPlanPath);
+				textField_FloorPlanPath.setColumns(10);
+			}
 		}
-		{
-			JButton btnOpenFile = new JButton("Open File");
-			btnOpenFile.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					JFileChooser fileChooser = new JFileChooser();
-					FileNameExtensionFilter filter = new FileNameExtensionFilter("image", "jpg", "png", "gif");
-			        fileChooser.setFileFilter(filter);
-			        
-			        int returnVal = fileChooser.showOpenDialog(FloorPropertyDialog.this);
+		JButton btnOpenFile = new JButton("Open File");
+		btnOpenFile.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fileChooser = new JFileChooser();
+				FileNameExtensionFilter filter = new FileNameExtensionFilter("image", "jpg", "png", "gif");
+		        fileChooser.setFileFilter(filter);
+		        
+		        int returnVal = fileChooser.showOpenDialog(FloorPropertyDialog.this);
 		            if( returnVal == JFileChooser.APPROVE_OPTION)
 		            {
 		                File file = fileChooser.getSelectedFile();
 		                textField_FloorPlanPath.setText(file.toString());
 		            }
-				}
-			});
-			
-			GridBagConstraints gbc_btnOpenFile = new GridBagConstraints();
-			gbc_btnOpenFile.anchor = GridBagConstraints.WEST;
-			gbc_btnOpenFile.insets = new Insets(0, 0, 0, 5);
-			gbc_btnOpenFile.gridx = 2;
-			gbc_btnOpenFile.gridy = 6;
-			contentPanel.add(btnOpenFile, gbc_btnOpenFile);
-		}
+			}
+		});
+		
+		GridBagConstraints gbc_btnOpenFile = new GridBagConstraints();
+		gbc_btnOpenFile.anchor = GridBagConstraints.WEST;
+		gbc_btnOpenFile.insets = new Insets(0, 0, 5, 5);
+		gbc_btnOpenFile.gridx = 2;
+		gbc_btnOpenFile.gridy = 5;
+		contentPanel.add(btnOpenFile, gbc_btnOpenFile);
 		
 		if(floorProperty != null) {
 			textField_Level.setText(String.valueOf(floorProperty.getLevel()));
@@ -261,7 +240,7 @@ public class FloorPropertyDialog extends JDialog {
 			textField_TopRightPointY.setText(String.valueOf(floorProperty.getTopRightPoint().getPanelY()));			
 			textField_GroundHeight.setText(String.valueOf(floorProperty.getGroundHeight()));
 			textField_CeilingHeight.setText(String.valueOf(floorProperty.getCeilingHeight()));
-			textField_DoorHeight.setText(String.valueOf(floorProperty.getDoorHeight()));
+			//textField_DoorHeight.setText(String.valueOf(floorProperty.getDoorHeight()));
 			textField_FloorPlanPath.setText(String.valueOf(floorProperty.getFloorPlanPath()));
 		}
 		
@@ -286,7 +265,7 @@ public class FloorPropertyDialog extends JDialog {
 										textField_CeilingHeight.getText());
 						double groundHeight = Double.parseDouble(textField_GroundHeight.getText());
 						double ceilingHeight = Double.parseDouble(textField_CeilingHeight.getText());
-						double doorHeight = Double.parseDouble(textField_DoorHeight.getText());
+						//double doorHeight = Double.parseDouble(textField_DoorHeight.getText());
 						String floorPlanPath = textField_FloorPlanPath.getText();
 						
 						if(floorProperty != null){
@@ -295,7 +274,7 @@ public class FloorPropertyDialog extends JDialog {
 							floorProperty.setTopRightPoint(topRight);
 							floorProperty.setGroundHeight(groundHeight);
 							floorProperty.setCeilingHeight(ceilingHeight);
-							floorProperty.setDoorHeight(doorHeight);
+							//floorProperty.setDoorHeight(doorHeight);
 							floorProperty.setFloorPlanPath(floorPlanPath);
 							
 							parent.comboBoxFloorRefresh();
@@ -319,7 +298,7 @@ public class FloorPropertyDialog extends JDialog {
 						floorProperty.setTopRightPoint(topRight);
 						floorProperty.setGroundHeight(groundHeight);
 						floorProperty.setCeilingHeight(ceilingHeight);
-						floorProperty.setDoorHeight(doorHeight);
+						//floorProperty.setDoorHeight(doorHeight);
 						floorProperty.setFloorPlanPath(floorPlanPath);
 						
 						project.addFloorProperty(floorProperty);

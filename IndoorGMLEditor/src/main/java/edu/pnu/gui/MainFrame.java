@@ -28,10 +28,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -57,10 +59,13 @@ import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerModel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.bind.JAXBException;
 
@@ -87,7 +92,7 @@ import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
-import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
+import edu.pnu.util.IndoorGMLIDGenerater;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -187,6 +192,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 	private JSpinner spinner_DateTime;
 	private JScrollPane scrollPane_CCTVList;
 	private JMenuItem mntmPost;
+	private JMenuItem mntmCctv;
 
 	/**
 	 * Launch the application.
@@ -195,6 +201,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					//UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+					UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
@@ -385,6 +394,14 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 							if (currentProject.getCurrentFloorPlanScale() == 0) {
 								currentProject.setCurrentFloorPlanScale(1.0);
 							}
+							
+							String dirPath = file.getParent();
+							ArrayList<FloorProperty> floorProperties = currentProject.getBuildingProperty().getFloorProperties();
+							for(FloorProperty floorProperty : floorProperties) {
+								int lastIndex = floorProperty.getFloorPlanPath().lastIndexOf('\\');
+								String newPath = dirPath + floorProperty.getFloorPlanPath().substring(lastIndex);
+								floorProperty.setFloorPlanPath(newPath);
+							}
 
 							File floorPlanFile = new File(currentProject
 									.getCurrentStateOnFloor()
@@ -538,7 +555,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 				public void actionPerformed(ActionEvent e) {
 					IndoorGMLExporter exporter = new IndoorGMLExporter(currentProject);
 					try {
-						exporter.export();
+						exporter.export(null);
 					} catch (JAXBException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -626,7 +643,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			mnCreateItem = new JMenu("Create Item");
 			mnCreateItem.add(getMntmState());
 			mnCreateItem.add(getMntmTransition());
-			mnCreateItem.add(getMntmInterlayerconnection());
+			mnCreateItem.add(getMntmCctv());
+			//mnCreateItem.add(getMntmInterlayerconnection());
 		}
 		return mnCreateItem;
 	}
@@ -657,6 +675,19 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			});
 		}
 		return mntmTransition;
+	}	
+
+	private JMenuItem getMntmCctv() {
+		if (mntmCctv == null) {
+			mntmCctv = new JMenuItem("CCTV");
+			mntmCctv.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					currentProject.setEditState(EditState.CREATE_CCTV);
+					setLabel_CurrentEditState("Create CCTV");
+				}
+			});
+		}
+		return mntmCctv;
 	}
 
 	private JToolBar getToolBar() {
@@ -951,11 +982,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			btnGenerateGmlid = new JButton("Generate GMLID");
 			btnGenerateGmlid.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					IndoorGMLIDGenerateVisitor visitor = new IndoorGMLIDGenerateVisitor(
-							currentProject.getIs3DGeometry());
-					IndoorFeatures indoorFeatures = currentProject
-							.getIndoorFeatures();
-					indoorFeatures.accept(visitor);
+					IndoorGMLIDGenerater idGenerator = new IndoorGMLIDGenerater(
+							currentProject.getIndoorFeatures(), currentProject.getIs3DGeometry());
+					idGenerator.generateGMLID();
 
 					comboBoxSpaceLayerRefresh();
 				}
@@ -1078,22 +1107,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			gbc_btnTransition.gridx = 0;
 			gbc_btnTransition.gridy = 2;
 			panel_Pallete.add(getBtnTransition(), gbc_btnTransition);
-			GridBagConstraints gbc_btnInterlayerconnection = new GridBagConstraints();
-			gbc_btnInterlayerconnection.insets = new Insets(0, 0, 5, 5);
-			gbc_btnInterlayerconnection.fill = GridBagConstraints.BOTH;
-			gbc_btnInterlayerconnection.gridx = 0;
-			gbc_btnInterlayerconnection.gridy = 3;
-			panel_Pallete.add(getBtnInterlayerconnection(),
-					gbc_btnInterlayerconnection);
-			GridBagConstraints gbc_btnCctv = new GridBagConstraints();
-			gbc_btnCctv.insets = new Insets(0, 0, 5, 5);
-			gbc_btnCctv.fill = GridBagConstraints.BOTH;
-			gbc_btnCctv.gridx = 0;
-			gbc_btnCctv.gridy = 4;
-			panel_Pallete.add(getBtnCctv(), gbc_btnCctv);
 			getPanel_CCTVProperties().setLayout(null);
 			GridBagConstraints gbc_scrollPane_CCTVList = new GridBagConstraints();
-			gbc_scrollPane_CCTVList.insets = new Insets(0, 0, 5, 0);
 			gbc_scrollPane_CCTVList.fill = GridBagConstraints.BOTH;
 			gbc_scrollPane_CCTVList.gridx = 1;
 			gbc_scrollPane_CCTVList.gridy = 0;
@@ -1107,6 +1122,21 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			gbc_panel_CCTVProperties.gridx = 0;
 			gbc_panel_CCTVProperties.gridy = 5;
 			panel_Pallete.add(getPanel_CCTVProperties(), gbc_panel_CCTVProperties);
+			GridBagConstraints gbc_btnCctv = new GridBagConstraints();
+			gbc_btnCctv.insets = new Insets(0, 0, 5, 5);
+			gbc_btnCctv.fill = GridBagConstraints.BOTH;
+			gbc_btnCctv.gridx = 0;
+			gbc_btnCctv.gridy = 3;
+			panel_Pallete.add(getBtnCctv(), gbc_btnCctv);
+			/*
+			GridBagConstraints gbc_btnInterlayerconnection = new GridBagConstraints();
+			gbc_btnInterlayerconnection.insets = new Insets(0, 0, 5, 5);
+			gbc_btnInterlayerconnection.fill = GridBagConstraints.BOTH;
+			gbc_btnInterlayerconnection.gridx = 0;
+			gbc_btnInterlayerconnection.gridy = 4;
+			panel_Pallete.add(getBtnInterlayerconnection(),
+					gbc_btnInterlayerconnection);
+					*/
 		}
 		return panel_Pallete;
 	}
@@ -1156,7 +1186,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			panel_CCTVProperties.add(getLblInstallatinonTime());
 			panel_CCTVProperties.add(getSpinner_DateTime());
 		}
-		//panel_CCTVProperties.setVisible(false);
+		panel_CCTVProperties.setVisible(false);
 		return panel_CCTVProperties;
 	}
 	/**
@@ -1628,36 +1658,56 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			mntmPost = new JMenuItem("Upload to Server");
 			mntmPost.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					String targetHost = "localhost";
-					HttpPost httpPost = new HttpPost(targetHost + "/IngCServer/api/example/uploadnetworkfile");
-					httpPost.addHeader("Accept", "application/json");
-					httpPost.addHeader("Content-type", "multipart/form-data");
-					
-					File networkFile = new File("C:\\Users\\Donguk\\Documents\\igml_cctv_sample.gml");
-					File cctvFile = new File("C:\\Users\\Donguk\\Documents\\igml_cctv_sample.txt");
-					String building_id = "4cd1ddd3-af63-4b98-bd0d-6a80a01c7d6b";
-					
-					MultipartEntityBuilder meb = MultipartEntityBuilder.create();
-					meb.addTextBody("building_id", building_id);
-					meb.addBinaryBody("uploadNetworkFile", networkFile);
-					
-					httpPost.setEntity(meb.build());
-					CloseableHttpClient httpClient = null;
-					try {
-						httpClient = HttpClients.createDefault();
-						CloseableHttpResponse reponse = httpClient.execute(httpPost);
-						httpClient.close();
-					} catch (ClientProtocolException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					String targetDirectoryPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath() + "\\IndoorGML_CCTVData";
+					File targetDirectory = new File(targetDirectoryPath);
+					if(!targetDirectory.exists()) {
+						targetDirectory.mkdirs();
 					}
 					
+					IndoorGMLExporter exporter = new IndoorGMLExporter(currentProject);
+					try {
+						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+						Calendar cal = Calendar.getInstance();
+						String targetFilePath = targetDirectoryPath + "\\post_indoorgml_" + dateFormat.format(cal.getTime()) + ".gml";
+						exporter.export(targetFilePath);
+						String building_id = "4cd1ddd3-af63-4b98-bd0d-6a80a01c7d6b";
+						File networkFile = new File(targetFilePath);
+						File cctvFile = new File(targetFilePath.replace(".gml", ".txt"));
+
+						String targetHost = "http://192.168.10.195:8080";
+						HttpPost httpPost = new HttpPost(targetHost + "/IngCServer/api/example/uploadnetworkfile");
+						sendPostByMultipart(httpPost, building_id, "uploadNetworkFile", networkFile);
+						
+						//httpPost.setURI(URI.create(targetHost + "/IngCServer/api/example/uploadcctvfile"));
+						//sendPostByMultipart(httpPost, building_id, "uploadCCTVFile", cctvFile);
+					} catch (JAXBException e) {
+						e.printStackTrace();
+						//System.out.println(e.getMessage());
+					}
 				}
 			});
 		}
 		return mntmPost;
+	}
+	private boolean sendPostByMultipart(HttpPost httpPost, String building_id, String bodyName, File file) {
+		MultipartEntityBuilder meb = MultipartEntityBuilder.create();
+		meb.addTextBody("building_id", building_id);
+		meb.addBinaryBody(bodyName, file);
+		
+		httpPost.setEntity(meb.build());
+		CloseableHttpClient httpClient = null;
+		try {
+			httpClient = HttpClients.createDefault();
+			CloseableHttpResponse reponse = httpClient.execute(httpPost);
+			httpClient.close();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
 	}
 }

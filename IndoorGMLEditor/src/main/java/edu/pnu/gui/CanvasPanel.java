@@ -820,6 +820,17 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
         }
 
+        // display CCTV
+        if (project.getCurrentCCTVOnFloor() != null) {
+            floorPlan = project.getCurrentFloorPlan();
+            floorPlanScale = project.getCurrentFloorPlanScale();
+
+            ArrayList<CCTV> cctvList = project.getCurrentCCTVOnFloor().getCCTVMember();
+            for (CCTV cctv : cctvList) {
+            	displayCCTV(g2, cctv, Color.LIGHT_GRAY, floorPlanWidth, floorPlanHeight, floorPlanScale);
+            }
+        }
+        
         // display transition
         if (project.getCurrentTransitionOnFloor() != null) {
             ArrayList<Transition> transitionMember = project.getCurrentTransitionOnFloor()
@@ -842,18 +853,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             }
         }
 
-        // display CCTV
-        if (project.getCurrentCCTVOnFloor() != null) {
-            floorPlan = project.getCurrentFloorPlan();
-            floorPlanScale = project.getCurrentFloorPlanScale();
-
-            // display cctv
-
-            ArrayList<CCTV> cctvList = project.getCurrentCCTVOnFloor().getCCTVMember();
-            for (CCTV cctv : cctvList) {
-            	displayCCTV(g2, cctv, Color.GREEN, floorPlanWidth, floorPlanHeight, floorPlanScale);
-            }
-        }
+        
         
         if (!selectedStateMap.isEmpty()) {
             for (State state : selectedStateMap.keySet()) {
@@ -942,12 +942,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setStroke(new BasicStroke(2));
-        g2.setColor(Color.GREEN);
         
-        g2.fill(new Ellipse2D.Double(x - 5, y - 5, 10, 10));
-        g2.setColor(color);
-        
+        g2.setColor(color);        
         g2.fill(new Arc2D.Double(x - 25, y - 25, 50, 50, displayOrientation - (fov / 2), fov, Arc2D.PIE));
+        
+        g2.setColor(Color.GREEN);
+        g2.fill(new Ellipse2D.Double(x - 5, y - 5, 10, 10));
     }
 
     public boolean hasInterLayerConnection(State state) {
@@ -1199,7 +1199,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private JPopupMenu getPopupMenu_State() {
         if (popupMenu_State == null) {
             popupMenu_State = new JPopupMenu();
-            popupMenu_State.add(getMntmStateDuality());
+            //popupMenu_State.add(getMntmStateDuality());
             popupMenu_State.add(getMntmStateProperties());
         }
         return popupMenu_State;
@@ -1253,7 +1253,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private JPopupMenu getPopupMenu_Transition() {
         if (popupMenu_Transition == null) {
             popupMenu_Transition = new JPopupMenu();
-            popupMenu_Transition.add(getMntmTransitionDuality());
+            //popupMenu_Transition.add(getMntmTransitionDuality());
             popupMenu_Transition.add(getMntmTransitionProperties());
         }
         return popupMenu_Transition;

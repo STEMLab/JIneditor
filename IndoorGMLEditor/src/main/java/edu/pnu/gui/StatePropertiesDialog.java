@@ -76,11 +76,11 @@ public class StatePropertiesDialog extends JDialog {
         contentPanel.add(getLblId());
         contentPanel.add(getLblName());
         contentPanel.add(getLblDescription());
-        contentPanel.add(getLblDuality());
+        //contentPanel.add(getLblDuality());
         contentPanel.add(getTextField_ID());
         contentPanel.add(getTextField_Name());
         contentPanel.add(getTextField_Description());
-        contentPanel.add(getTextField_Duality());
+        //contentPanel.add(getTextField_Duality());
         {
             JPanel buttonPane = new JPanel();
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));

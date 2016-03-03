@@ -28,8 +28,8 @@ import org.w3c.dom.Document;
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
-import edu.pnu.visitor.IndoorGMLCoordinateGenerateVisitor;
-import edu.pnu.visitor.IndoorGMLExportVisitor;
+import edu.pnu.util.IndoorCoordinateGenerater;
+import edu.pnu.util.IndoorGMLJAXBConvertor;
 
 public class IndoorGMLExporter {
 	private ProjectFile project;
@@ -40,14 +40,29 @@ public class IndoorGMLExporter {
 		this.project = project;
 	}
 	
-	public void export() throws JAXBException{
-		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
-	    IndoorGMLCoordinateGenerateVisitor coordinateVisitor = new IndoorGMLCoordinateGenerateVisitor(project.getIs3DGeometry());
-		IndoorGMLExportVisitor exportVisitor = new IndoorGMLExportVisitor(project.getIs3DGeometry());
-		
-		IndoorFeatures indoorFeatures = project.getIndoorFeatures();
-		indoorFeatures.accept(coordinateVisitor);
-		indoorFeatures.accept(exportVisitor);
+	public void export(String filePath) throws JAXBException{		
+		File output = null;
+		if(filePath == null) {
+			JFileChooser save = new JFileChooser();
+			FileNameExtensionFilter filter = new FileNameExtensionFilter( "IndoorGML Document", "gml" );
+			save.setFileFilter(filter);
+			int result = save.showSaveDialog(null);
+	
+			if (result == JFileChooser.APPROVE_OPTION) {
+				output = save.getSelectedFile();
+				
+				if (!output.getAbsolutePath().endsWith(".gml")) {
+					filePath = output.getAbsolutePath().concat(
+							".gml");
+					output = new File(filePath);
+				}
+			}
+		} else {
+			if (!filePath.endsWith(".gml")) {
+				filePath = filePath.concat(".gml");
+			}
+			output = new File(filePath);
+		}
 		
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("net.opengis.indoorgml.core.v_1_0"
@@ -60,55 +75,39 @@ public class IndoorGMLExporter {
 			marshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new IndoorGMLNameSpaceMapper());
 		} catch(PropertyException e){
 			e.printStackTrace();
-		}
+		}		
+		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
+	    IndoorCoordinateGenerater coordinateGenerator = new IndoorCoordinateGenerater(project.getIndoorFeatures(), project.getIs3DGeometry());
+		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(project.getIndoorFeatures(), project.getIs3DGeometry());
 		
-		JAXBElement<IndoorFeaturesType> je = exportVisitor.getJAXBElement();
+		coordinateGenerator.generate();		
+		JAXBElement<IndoorFeaturesType> je = jaxbConvertor.getJAXBElement();
 		
-		JFileChooser save = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter( "IndoorGML Document", "gml" );
-		save.setFileFilter(filter);
-		int result = save.showSaveDialog(null);
-		/*
-		if( result == JFileChooser.CANCEL_OPTION ) {
-			System.exit(1);
-		}
-		*/
-		if (result == JFileChooser.APPROVE_OPTION) {
-			File output = save.getSelectedFile();
+		
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = null;
+		try {
+			db = dbf.newDocumentBuilder();
+			Document document = db.newDocument();
 			
-			if (!output.getAbsolutePath().endsWith(".gml")) {
-				String filePath = output.getAbsolutePath().concat(
-						".gml");
-				output = new File(filePath);
-			}
-	
-			//marshaller.marshal(je, output);
+			marshaller.marshal(je, document);
 			
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = null;
-			try {
-				db = dbf.newDocumentBuilder();
-				Document document = db.newDocument();
-				
-				marshaller.marshal(je, document);
-				
-				TransformerFactory tf = TransformerFactory.newInstance();
-				Transformer t = tf.newTransformer();
-				t.setOutputProperty(OutputKeys.INDENT,"yes");
-				t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-				DOMSource source = new DOMSource(document);
-				StreamResult streamResult = new StreamResult(output);
-				t.transform(source, streamResult);
-				
-				// CCTV
-				CCTVExporter cctvExporter = new CCTVExporter(indoorFeatures);
-				String cctvPath = output.getAbsolutePath().replace(".gml", ".txt");
-				File cctvOutput = new File(cctvPath);
-				cctvExporter.export(cctvOutput);
-			} catch (TransformerException | ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			TransformerFactory tf = TransformerFactory.newInstance();
+			Transformer t = tf.newTransformer();
+			t.setOutputProperty(OutputKeys.INDENT,"yes");
+			t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+			DOMSource source = new DOMSource(document);
+			StreamResult streamResult = new StreamResult(output);
+			t.transform(source, streamResult);
+			
+			// CCTV
+			CCTVExporter cctvExporter = new CCTVExporter(project.getIndoorFeatures());
+			String cctvPath = output.getAbsolutePath().replace(".gml", ".txt");
+			File cctvOutput = new File(cctvPath);
+			cctvExporter.export(cctvOutput);
+		} catch (TransformerException | ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		/*
 		project.makeGMLID();

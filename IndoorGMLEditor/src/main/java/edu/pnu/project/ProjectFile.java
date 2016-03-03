@@ -235,6 +235,12 @@ public class ProjectFile implements Serializable {
 	}
 
 	public CCTVOnFloor getCurrentCCTVOnFloor() {
+		if(currentCCTVOnFloor == null) {
+			ArrayList<CCTVOnFloor> cctvOnFloors = getPrimalSpacesFeatures().getCctvOnFloors();
+			if(cctvOnFloors.size() > 0) {
+				currentCCTVOnFloor = cctvOnFloors.get(0);
+			}
+		}
 		return currentCCTVOnFloor;
 	}
 	
@@ -446,17 +452,16 @@ public class ProjectFile implements Serializable {
 	}
 	
 	public void deleteTransition(Transition transition) {
-	        State[] states = transition.getStates();
-	        
-	        for(State state : states)
-	            states[0].getTransitionReference().remove(transition);
-	        
-	        CellSpaceBoundary duality = transition.getDuality();
-	        if(duality != null) {
-	            duality.setDuality(null);
-	        }
-
-                currentTransitionOnFloor.getTransitionMember().remove(transition);
+        State[] states = transition.getStates();
+        
+        for(State state : states)
+            states[0].getTransitionReference().remove(transition);
+        
+        CellSpaceBoundary duality = transition.getDuality();
+        if(duality != null) {
+            duality.setDuality(null);
+        }
+        currentTransitionOnFloor.getTransitionMember().remove(transition);
 	}
 	
 	public void deleteCCTV(CCTV cctv) {
