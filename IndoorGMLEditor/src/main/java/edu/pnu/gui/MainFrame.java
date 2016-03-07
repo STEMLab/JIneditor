@@ -61,7 +61,7 @@ import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
-import edu.pnu.visitor.IndoorGMLIDGenerateVisitor;
+import edu.pnu.util.IndoorGMLIDGenerator;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -896,10 +896,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             btnGenerateGmlid = new JButton("Generate GMLID");
             btnGenerateGmlid.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    IndoorGMLIDGenerateVisitor visitor = new IndoorGMLIDGenerateVisitor(
+                    IndoorGMLIDGenerator generator = new IndoorGMLIDGenerator(currentProject.getIndoorFeatures(),
                             currentProject.getIs3DGeometry());
-                    IndoorFeatures indoorFeatures = currentProject.getIndoorFeatures();
-                    indoorFeatures.accept(visitor);
+                    generator.generateGMLID();
 
                     comboBoxSpaceLayerRefresh();
                 }

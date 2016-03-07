@@ -1,4 +1,4 @@
-package edu.pnu.visitor;
+package edu.pnu.util;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -34,187 +34,170 @@ import com.vividsolutions.jts.geom.util.AffineTransformationBuilder;
 
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
-import edu.pnu.util.JTSUtil;
 
-public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisitor {
+public class IndoorCoordinateGenerator {
 	private boolean is3DGeometry;
 	private boolean isMLGHeight;
 	private double floorGroundHeight;
 	private Point lowerCornerReference;
 	private Point upperCornerReference;
+	private IndoorFeatures indoorFeatures;
 
-	public IndoorGMLCoordinateGenerateVisitor(boolean is3DGeometry) {
-		// TODO Auto-generated constructor stub
+	public IndoorCoordinateGenerator(IndoorFeatures indoorFeatures, boolean is3DGeometry) {
+		this.indoorFeatures = indoorFeatures;
 		this.is3DGeometry = is3DGeometry;
 	}
-
-	@Override
-	public void visit(IndoorFeatures indoorFeatures) {
-		// TODO Auto-generated method stub
-		
-		isMLGHeight = false;
-		visit(indoorFeatures.getPrimalSpaceFeatures());
-		isMLGHeight = true;
-		visit(indoorFeatures.getMultiLayeredGraph());
+	
+	public void generate() {
+		traverseIndoorFeatures(indoorFeatures);
 	}
 
-	@Override
-	public void visit(PrimalSpaceFeatures primalSpaceFeatures) {		
+	public void traverseIndoorFeatures(IndoorFeatures indoorFeatures) {		
+		isMLGHeight = false;
+		traversePrimalSpaceFeatures(indoorFeatures.getPrimalSpaceFeatures());
+		isMLGHeight = true;
+		traverseMultiLayeredGraph(indoorFeatures.getMultiLayeredGraph());
+	}
+
+	public void traversePrimalSpaceFeatures(PrimalSpaceFeatures primalSpaceFeatures) {		
 		ArrayList<CellSpaceOnFloor> cellSpaceOnFloors = primalSpaceFeatures.getCellSpaceOnFloors();
 		for(CellSpaceOnFloor cellSpaceOnFloor : cellSpaceOnFloors) {
-			visit(cellSpaceOnFloor);
+			traverseCellSpaceOnFloor(cellSpaceOnFloor);
 		}
 		
 		ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors = primalSpaceFeatures.getCellSpaceBoundaryOnFloors();
 		for(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor : cellSpaceBoundaryOnFloors) {
-			visit(cellSpaceBoundaryOnFloor);
+			traverseCellSpaceBoundaryOnFloor(cellSpaceBoundaryOnFloor);
 		}
+		
 	}
 
-	@Override
-	public void visit(CellSpaceOnFloor cellSpaceOnFloor) {		
+	public void traverseCellSpaceOnFloor(CellSpaceOnFloor cellSpaceOnFloor) {		
 		lowerCornerReference = cellSpaceOnFloor.getFloorProperty().getBottomLeftPoint();
 		upperCornerReference = cellSpaceOnFloor.getFloorProperty().getTopRightPoint();
 		floorGroundHeight = cellSpaceOnFloor.getFloorProperty().getGroundHeight();
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		for(CellSpace cellSpace : cellSpaceMember) {
-			visit(cellSpace);
+			traverseCellSpace(cellSpace);
 		}
 	}
 
-	@Override
-	public void visit(CellSpace cellSpace) {
-	        if(cellSpace.getGmlID().equalsIgnoreCase("C1"))
-	            System.out.println("C! found");
+	public void traverseCellSpace(CellSpace cellSpace) {
 		if(is3DGeometry) {
-			visit(cellSpace.getGeometry3D());
+			generateSolidCoordinate(cellSpace.getGeometry3D());
 		} else {
-			visit(cellSpace.getGeometry2D());
+			generatePolygonCoordinate(cellSpace.getGeometry2D());
 		}
 	}
 	
-	@Override
-	public void visit(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
+	public void traverseCellSpaceBoundaryOnFloor(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
 		lowerCornerReference = cellSpaceBoundaryOnFloor.getFloorProperty().getBottomLeftPoint();
 		upperCornerReference = cellSpaceBoundaryOnFloor.getFloorProperty().getTopRightPoint();
 		floorGroundHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getGroundHeight();
 		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
 		for(CellSpaceBoundary cellSpaceBoundary : cellSpaceBoundaryMember) {
-			visit(cellSpaceBoundary);
+			traverseCellSpaceBoundary(cellSpaceBoundary);
 		}
 	}
 	
-	@Override
-	public void visit(CellSpaceBoundary cellSpaceBoundary) {
+	public void traverseCellSpaceBoundary(CellSpaceBoundary cellSpaceBoundary) {
 		// TODO Auto-generated method stub
 		if(is3DGeometry) {
 			if(cellSpaceBoundary.getGeometry3D() == null) return;
-			visit(cellSpaceBoundary.getGeometry3D());
+			generatePolygonCoordinate(cellSpaceBoundary.getGeometry3D());
 		} else {
 			if(cellSpaceBoundary.getGeometry2D() == null) return;
-			visit(cellSpaceBoundary.getGeometry2D());
+			generateLineStringCoordinate(cellSpaceBoundary.getGeometry2D());
 		}
 	}
 
-	@Override
-	public void visit(MultiLayeredGraph multiLayeredGraph) {		
+	public void traverseMultiLayeredGraph(MultiLayeredGraph multiLayeredGraph) {		
 		ArrayList<SpaceLayers> spaceLayersList = multiLayeredGraph.getSpaceLayers();
 		for(SpaceLayers spaceLayers : spaceLayersList) {
-			visit(spaceLayers);
+			traverseSpaceLayers(spaceLayers);
 		}
 		
 		ArrayList<InterEdges> interEdgesList = multiLayeredGraph.getInterEdges();
 		for(InterEdges interEdges : interEdgesList) {
-			visit(interEdges);
+			traverseInterEdges(interEdges);
 		}
 	}
 
-	@Override
-	public void visit(SpaceLayers spaceLayers) {		
+	public void traverseSpaceLayers(SpaceLayers spaceLayers) {		
 		ArrayList<SpaceLayer> spaceLayerList = spaceLayers.getSpaceLayerMember();
 		for(SpaceLayer spaceLayer : spaceLayerList) {
-			visit(spaceLayer);
+			traverseSpaceLayer(spaceLayer);
 		}
 		
 	}
 
-	@Override
-	public void visit(SpaceLayer spaceLayer) {
+	public void traverseSpaceLayer(SpaceLayer spaceLayer) {
 		ArrayList<Nodes> nodesList = spaceLayer.getNodes();
 		for(Nodes nodes : nodesList) {
-			visit(nodes);
+			traverseNodes(nodes);
 		}
 		
 		ArrayList<Edges> edgesList = spaceLayer.getEdges();
 		for(Edges edges : edgesList) {
-			visit(edges);
+			traverseEdges(edges);
 		}
 	}
 
-	@Override
-	public void visit(Nodes nodes) {
+	public void traverseNodes(Nodes nodes) {
 		ArrayList<StateOnFloor> stateOnFloorList = nodes.getStateOnFloors();
 		for(StateOnFloor stateOnFloor : stateOnFloorList) {
-			visit(stateOnFloor);
+			traverseStateOnFloor(stateOnFloor);
 		}
 	}
 
-	@Override
-	public void visit(StateOnFloor stateOnFloor) {
-		ArrayList<State> stateList = stateOnFloor.getStateMember();
-		
+	public void traverseStateOnFloor(StateOnFloor stateOnFloor) {
 		lowerCornerReference = stateOnFloor.getFloorProperty().getBottomLeftPoint();
 		upperCornerReference = stateOnFloor.getFloorProperty().getTopRightPoint();
 		floorGroundHeight = stateOnFloor.getFloorProperty().getGroundHeight();
+		
+		ArrayList<State> stateList = stateOnFloor.getStateMember();
 		for(State state : stateList) {
-			visit(state);
+			traverseState(state);
 		}
 	}
 
-	@Override
-	public void visit(State state) {		
-		visit(state.getPosition());
+	public void traverseState(State state) {		
+		generatePointCoordinate(state.getPosition());
 	}
 
-	@Override
-	public void visit(Edges edges) {		
+	public void traverseEdges(Edges edges) {		
 		ArrayList<TransitionOnFloor> transitionOnFloorList = edges.getTransitionOnFloors();
 		for(TransitionOnFloor transitionOnFloor : transitionOnFloorList) {
-			visit(transitionOnFloor);
+			traverseTransitionOnFloor(transitionOnFloor);
 		}
 	}
 
-	@Override
-	public void visit(TransitionOnFloor transitionOnFloor) {
-		ArrayList<Transition> transitionList = transitionOnFloor.getTransitionMember();
-		
+	public void traverseTransitionOnFloor(TransitionOnFloor transitionOnFloor) {		
 		lowerCornerReference = transitionOnFloor.getFloorProperty().getBottomLeftPoint();
 		upperCornerReference = transitionOnFloor.getFloorProperty().getTopRightPoint();
 		floorGroundHeight = transitionOnFloor.getFloorProperty().getGroundHeight();
+
+		ArrayList<Transition> transitionList = transitionOnFloor.getTransitionMember();
 		for(Transition transition : transitionList) {
-			visit(transition);
+			traverseTransition(transition);
 		}
 	}
 
-	@Override
-	public void visit(Transition transition) {		
-		visit(transition.getPath());
+	public void traverseTransition(Transition transition) {		
+		generateLineStringCoordinate(transition.getPath());
 	}
 	
-	@Override
-	public void visit(InterEdges interEdges) {		
+	public void traverseInterEdges(InterEdges interEdges) {		
 		ArrayList<InterLayerConnection> interLayerConnectionList = interEdges.getInterLayerConnectionMember();
 		for(InterLayerConnection interLayerConnection : interLayerConnectionList) {
-			visit(interLayerConnection);
+			traverseInterLayerConnection(interLayerConnection);
 		}
 	}
 
-	@Override
-	public void visit(InterLayerConnection interLayerConnection) {
+	public void traverseInterLayerConnection(InterLayerConnection interLayerConnection) {
 	}
 
-	@Override
-	public void visit(Point point) {
+	public void generatePointCoordinate(Point point) {
 	        // AffineTransformation
 	        /*
                 Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
@@ -256,8 +239,7 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 		}
 	}
 	
-	@Override
-	public void visit(LineString lineString) {
+	public void generateLineStringCoordinate(LineString lineString) {
 		//if(lineString.getxLinkGeometry() != null) return;
 		if(lineString.getPoints().size() == 0) return;
 		
@@ -300,7 +282,7 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 	                point.setRealX(realX);
 	                point.setRealY(realY);
 	                */
-		        visit(point);
+			generatePointCoordinate(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
@@ -308,8 +290,7 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 		}
 	}
 	
-	@Override
-	public void visit(LinearRing linearRing) {
+	public void generateLinearRingCoordinate(LinearRing linearRing) {
 		ArrayList<Point> points = linearRing.getPoints();
 		for(Point point : points) {
 		        // AffineTransformation
@@ -351,7 +332,7 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
                         point.setRealX(realX);
                         point.setRealY(realY);
                         */
-		        visit(point);
+			generatePointCoordinate(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
@@ -359,33 +340,30 @@ public class IndoorGMLCoordinateGenerateVisitor implements IndoorGMLElementVisit
 		}
 	}
 
-	@Override
-	public void visit(Polygon polygon) {
+	public void generatePolygonCoordinate(Polygon polygon) {
 		if(polygon.getxLinkGeometry() != null) return;
 		
-		visit(polygon.getExteriorRing());
+		generateLinearRingCoordinate(polygon.getExteriorRing());
 		
 		ArrayList<LinearRing> interiorRing = polygon.getInteriorRing();
 		for(LinearRing interior : interiorRing) {
-			visit(interior);
+			generateLinearRingCoordinate(interior);
 		}
 	}
 
-	@Override
-	public void visit(Shell shell) {
+	public void generateShellCoordinate(Shell shell) {
 		ArrayList<Polygon> surfaceMember = shell.getSurfaceMember();
 		for(Polygon polygon : surfaceMember) {
-			visit(polygon);
+			generatePolygonCoordinate(polygon);
 		}
 	}
 
-	@Override
-	public void visit(Solid solid) {		
-		visit(solid.getExteriorShell());
+	public void generateSolidCoordinate(Solid solid) {		
+		generateShellCoordinate(solid.getExteriorShell());
 		
 		ArrayList<Shell> interiorShell = solid.getInteriorShell();
 		for(Shell interior : interiorShell) {
-			visit(interior);
+			generateShellCoordinate(interior);
 		}
 	}
 	
