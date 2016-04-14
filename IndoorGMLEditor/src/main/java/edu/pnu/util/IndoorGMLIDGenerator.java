@@ -59,7 +59,7 @@ public class IndoorGMLIDGenerator {
 		Transition.setLabelNumber(1);
 		InterEdges.setLabelNumber(1);
 		InterLayerConnection.setLabelNumber(1);
-		Point.setLebelNumber(1);
+		Point.setLabelNumber(1);
 		LineString.setLabelNumber(1);
 		Polygon.setLabelNumber(1);
 		Solid.setLabelNumber(1);
@@ -241,8 +241,8 @@ public class IndoorGMLIDGenerator {
 	}
 
 	public void traversePoint(Point point) {
-		point.setGMLID("P" + Point.getLebelNumber());
-		Point.setLebelNumber(Point.getLebelNumber() + 1);
+		point.setGMLID("P" + Point.getLabelNumber());
+		Point.setLabelNumber(Point.getLabelNumber() + 1);
 		
 		point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
 		point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));

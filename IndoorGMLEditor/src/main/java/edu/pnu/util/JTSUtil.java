@@ -49,7 +49,7 @@ public class JTSUtil {
 		return snapPoint;
 	}
 	public static Point convertJTSPoint(net.opengis.indoorgml.geometry.Point p) {
-		Coordinate coord = new Coordinate(p.getPanelRatioX(), p.getPanelRatioY());
+		Coordinate coord = new Coordinate(p.getPanelX(), p.getPanelY());
 		
 		Point point = gf.createPoint(coord);
 		

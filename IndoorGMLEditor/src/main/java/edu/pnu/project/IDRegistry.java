@@ -14,24 +14,32 @@ import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
+import net.opengis.indoorgml.geometry.LineString;
+import net.opengis.indoorgml.geometry.Point;
+import net.opengis.indoorgml.geometry.Polygon;
+import net.opengis.indoorgml.geometry.Solid;
 
-/* Previous version */
-public class IndoorGMLIDRegistry implements Serializable {
+public class IDRegistry implements Serializable {
     /** serialVersionUID */
     private static final long serialVersionUID = -482775087720705728L;
-    
+
+    private int primalSpaceFeaturesID;
     private int cellSpaceID;
     private int cellSpaceBoundaryID;
+    private int multiLayeredGraphID;
+    private int spaceLayersID;
+    private int spaceLayerID;
+    private int nodesID;
+    private int stateID;
     private int edgesID;
+    private int transitionID;
     private int interEdgesID;
     private int interLayerConnectionID;
-    private int multiLayeredGraphID;
-    private int nodesID;
-    private int primalSpaceFeaturesID;
-    private int spaceLayerID;
-    private int spaceLayersID;
-    private int stateID;
-    private int transitionID;
+    
+    private int pointID;
+    private int lineStringID;
+    private int polygonID;
+    private int solidID;
 
     public void saveIndoorGMLID() {
             cellSpaceID = CellSpace.getLabelNumber();
@@ -46,6 +54,11 @@ public class IndoorGMLIDRegistry implements Serializable {
             spaceLayersID = SpaceLayers.getLabelNumber();
             stateID = State.getLabelNumber();
             transitionID = Transition.getLabelNumber();
+            
+            pointID = Point.getLabelNumber();
+            lineStringID = LineString.getLabelNumber();
+            polygonID = Polygon.getLabelNumber();
+            solidID = Solid.getLabelNumber();
     }
     
     public void loadIndoorGMLID() {
@@ -61,6 +74,11 @@ public class IndoorGMLIDRegistry implements Serializable {
             SpaceLayers.setLabelNumber(spaceLayersID);
             State.setLabelNumber(stateID);
             Transition.setLabelNumber(transitionID);
+            
+            Point.setLabelNumber(pointID);
+            LineString.setLabelNumber(lineStringID);
+            Polygon.setLabelNumber(polygonID);
+            Solid.setLabelNumber(solidID);
     }
 
 	public int getCellSpaceID() {
@@ -157,6 +175,38 @@ public class IndoorGMLIDRegistry implements Serializable {
 
 	public void setTransitionID(int transitionID) {
 		this.transitionID = transitionID;
+	}
+
+	public int getPointID() {
+		return pointID;
+	}
+
+	public void setPointID(int pointID) {
+		this.pointID = pointID;
+	}
+
+	public int getLineStringID() {
+		return lineStringID;
+	}
+
+	public void setLineStringID(int lineStringID) {
+		this.lineStringID = lineStringID;
+	}
+
+	public int getPolygonID() {
+		return polygonID;
+	}
+
+	public void setPolygonID(int polygonID) {
+		this.polygonID = polygonID;
+	}
+
+	public int getSolidID() {
+		return solidID;
+	}
+
+	public void setSolidID(int solidID) {
+		this.solidID = solidID;
 	}
 
 }

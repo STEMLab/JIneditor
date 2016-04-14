@@ -21,14 +21,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -45,23 +46,40 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
 import net.opengis.indoorgml.core.CellSpaceOnFloor;
 import net.opengis.indoorgml.core.Edges;
 import net.opengis.indoorgml.core.IndoorFeatures;
+import net.opengis.indoorgml.core.InterLayerConnection;
 import net.opengis.indoorgml.core.Nodes;
+import net.opengis.indoorgml.core.PrimalSpaceFeatures;
 import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
+
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+import edu.pnu.importexport.ProjectMetaDataExporter;
+import edu.pnu.importexport.ProjectMetaDataImporter;
 import edu.pnu.importexport.WKTImporter;
 import edu.pnu.project.EditState;
 import edu.pnu.project.EditWorkState;
 import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
+import edu.pnu.project.ProjectMetaData;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.IndoorGMLIDGenerator;
+import edu.pnu.util.InterLayerConnectionGenerator;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -141,6 +159,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JButton btnImport;
     private JTextField textField_ID;
     private JButton btnAa;
+    private JMenu mnAssist;
+    private JMenuItem mntmGenerateInterlayerconnection;
 
     /**
      * Launch the application.
@@ -294,6 +314,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             menuBar.add(getMnFile());
             menuBar.add(getMnEdit());
             menuBar.add(getMnSettings());
+            menuBar.add(getMnAssist());
         }
         return menuBar;
     }
@@ -324,6 +345,18 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
                     int returnVal = fileChooser.showOpenDialog(MainFrame.this);
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    	/* Load Test */
+                    	try {
+							ProjectMetaDataImporter importer = new ProjectMetaDataImporter("result.xml");
+							ProjectMetaData metaData = importer.getProjectMetaData();
+							
+						} catch (ParserConfigurationException | SAXException
+								| IOException e2) {
+							// TODO Auto-generated catch block
+							e2.printStackTrace();
+						}
+                    	/* */
+                    	
                         File file = fileChooser.getSelectedFile();
                         FileInputStream fis = null;
                         BufferedInputStream bis = null;
@@ -395,6 +428,26 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
                     int returnVal = fileChooser.showSaveDialog(MainFrame.this);
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    	/* Save Test */
+                    	ProjectMetaDataExporter metaDataExporter = new ProjectMetaDataExporter(currentProject, currentProject.getIndoorFeatures());
+                    	try {
+							Document document = metaDataExporter.createDocument();
+							TransformerFactory transformerFactory = TransformerFactory.newInstance();
+							transformerFactory.setAttribute("indent-number", new Integer(4));
+							Transformer transformer = transformerFactory.newTransformer();
+							transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+							transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
+							transformer.setOutputProperty(OutputKeys.INDENT, "yes");	
+							DOMSource source = new DOMSource(document);
+							FileWriter fw = new FileWriter("result.xml");
+							StreamResult result = new StreamResult(fw);
+							transformer.transform(source, result);
+						} catch (ParserConfigurationException | IOException | TransformerException e2) {
+							// TODO Auto-generated catch block
+							e2.printStackTrace();
+						}                    	
+                    	/**/
+                    	
                         File file = fileChooser.getSelectedFile();
                         if (!file.getAbsolutePath().substring(file.getAbsolutePath().length() - 4)
                                 .equals(".dat")) {
@@ -805,7 +858,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             /*resizePanelPrefferedDimension(
                     (int) (floorPlan.getWidth() * currentProject.getCurrentFloorPlanScale()),
                     (int) (floorPlan.getHeight() * currentProject.getCurrentFloorPlanScale()));*/
-            resizePanelPrefferedDimension((int) (floorPlan.getWidth()), (int) (floorPlan.getHeight()));
+            //resizePanelPrefferedDimension((int) (floorPlan.getWidth()), (int) (floorPlan.getHeight()));
         }
         pack();
         repaint();
@@ -867,7 +920,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     public void resizePanelPrefferedDimension(int width, int height) {
         panel.setPreferredSize(new Dimension(width, height));
         scrollPane.setPreferredSize(new Dimension(width + 5, height + 5));
-        labelEditState.setPreferredSize(new Dimension(width, 15));        
+        labelEditState.setPreferredSize(new Dimension(width, 15));
         //pack();
     }
     
@@ -1072,17 +1125,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	btnImport = new JButton("Import");
         	btnImport.addActionListener(new ActionListener() {
         	    public void actionPerformed(ActionEvent arg0) {
-        	            WKTImporter wktImporter = new WKTImporter(panel, currentProject);
-        	            String filePath;
-                            JFileChooser fileChooser = new JFileChooser();
+    	            WKTImporter wktImporter = new WKTImporter(panel, currentProject);
+    	            String filePath;
+                    JFileChooser fileChooser = new JFileChooser();
 
-                            int returnVal = fileChooser.showOpenDialog(MainFrame.this);
-                            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                                File file = fileChooser.getSelectedFile();
-                                wktImporter.read(file);
-                            }
-                            panel.repaint();
-                            repaint();
+                    int returnVal = fileChooser.showOpenDialog(MainFrame.this);
+                    if (returnVal == JFileChooser.APPROVE_OPTION) {
+                        File file = fileChooser.getSelectedFile();
+                        wktImporter.read(file);
+                    }
+                    panel.repaint();
+                    repaint();
         	    }
         	});
         }
@@ -1099,7 +1152,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     }
     private JButton getBtnAa() {
         if (btnAa == null) {
-        	btnAa = new JButton("Test");
+        	btnAa = new JButton("Search CellSpace");
         	btnAa.addActionListener(new ActionListener() {
         	    public void actionPerformed(ActionEvent arg0) {
         	            panel.searchByID(textField_ID.getText());
@@ -1109,4 +1162,33 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         //btnAa.setVisible(false);
         return btnAa;
     }
+	private JMenu getMnAssist() {
+		if (mnAssist == null) {
+			mnAssist = new JMenu("Assist");
+			mnAssist.add(getMntmGenerateInterlayerconnection());
+		}
+		return mnAssist;
+	}
+	private JMenuItem getMntmGenerateInterlayerconnection() {
+		if (mntmGenerateInterlayerconnection == null) {
+			mntmGenerateInterlayerconnection = new JMenuItem("Generate InterLayerConnection");
+			mntmGenerateInterlayerconnection.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					IndoorFeatures indoorFeatures = currentProject.getIndoorFeatures();
+					PrimalSpaceFeatures primalSpace = indoorFeatures.getPrimalSpaceFeatures();
+					ArrayList<SpaceLayer> spaceLayerMember = indoorFeatures.getMultiLayeredGraph().getSpaceLayers().get(0).getSpaceLayerMember();
+					
+					if(spaceLayerMember.size() > 1) {
+						SpaceLayer target1 = spaceLayerMember.get(0);
+						SpaceLayer target2 = spaceLayerMember.get(1);
+						InterLayerConnectionGenerator ilcGenerator = new InterLayerConnectionGenerator(primalSpace, target1, target2);
+						List<InterLayerConnection> ilcMember = ilcGenerator.getInterLayerConnections();
+						indoorFeatures.getMultiLayeredGraph().getInterEdges().get(0).getInterLayerConnectionMember().addAll(ilcMember);
+						panel.repaint();
+					}
+				}
+			});
+		}
+		return mntmGenerateInterlayerconnection;
+	}
 }

@@ -15,6 +15,14 @@ public class GeometryUtil {
         private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
         public static final GeometryFactory jtsFactory = new GeometryFactory(pm); 
 	// use JTS
+        
+    public static boolean isContainsPolygon(Polygon poly, Point p) {
+    	com.vividsolutions.jts.geom.Polygon polygon = JTSUtil.convertJTSPolygon(poly);
+    	com.vividsolutions.jts.geom.Point point = JTSUtil.convertJTSPoint(p);
+    	
+    	return polygon.contains(point);
+    }
+        
 	public static boolean isContainsLineString(LineString ls1, LineString ls2) {
 		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
 		com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
@@ -181,4 +189,6 @@ public class GeometryUtil {
 	        
 	        return JTSUtil.convertPolygon(jtsPolygon);
 	}
+	
+	
 }

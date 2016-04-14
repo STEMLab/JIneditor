@@ -60,12 +60,12 @@ public class Point extends AbstractGeometry implements Serializable, IndoorGMLEl
 		this.realY = realY;
 	}
 
-	public static int getLebelNumber() {
+	public static int getLabelNumber() {
 		return labelNumber;
 	}
 
-	public static void setLebelNumber(int lebelNumber) {
-		Point.labelNumber = lebelNumber;
+	public static void setLabelNumber(int labelNumber) {
+		Point.labelNumber = labelNumber;
 	}
 
 	@Override

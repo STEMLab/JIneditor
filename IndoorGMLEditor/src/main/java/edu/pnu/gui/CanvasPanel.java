@@ -600,13 +600,21 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     project.setEditState(EditState.SELECT_STATE);
                     isSelected = true;
                     
-                    String selectedStateIDs = "";
+                    String selectedStateIDs = "";                    
                     for(State selected : selectedStateMap.keySet()) {
                         selectedStateIDs += selected.getGmlID() + ", ";
                         //System.out.println("State : " + selected.getGmlID() + ", " + selected.getPosition().getPanelRatioX() + " " + (1 - selected.getPosition().getPanelRatioY()));
                     }
                     selectedStateIDs = selectedStateIDs.substring(0, selectedStateIDs.length() - 2);
-                    mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs );
+                    if(selectedStateMap.size() > 1) {
+                    	mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs);
+                    } else if(selectedStateMap.size() == 1) {
+                    	String dualityID = null;
+                    	if(selectedState.getDuality() != null) {
+                    		dualityID = selectedState.getDuality().getGmlID();
+                    	}
+                    	mainFrame.setLabel_CurrentEditState("Selected State : " + selectedStateIDs + " duality : " + dualityID);
+                    }
                 }
 
                 if (!isSelected) {
@@ -2704,10 +2712,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     
     public void searchByID(String ID) {
         ArrayList<CellSpace> cellSpaces = project.getCurrentCellSpaceOnFloor().getCellSpaceMember();
-        selectedCellSpaceMap.clear();
+        //selectedCellSpaceMap.clear();
         for(CellSpace cellSpace : cellSpaces) {
                 if(cellSpace.getGmlID().equalsIgnoreCase(ID)) {
-                        selectedCellSpaceMap.put(cellSpace, Color.yellow);
+                        project.setEditState(EditState.SELECT_CELLSPACE);
+                		selectedCellSpaceMap.put(cellSpace, Color.yellow);
                         System.out.println("searched");
                 }
         }

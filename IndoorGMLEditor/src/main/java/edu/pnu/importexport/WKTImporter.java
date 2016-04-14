@@ -51,6 +51,8 @@ import edu.pnu.util.JTSUtil;
 public class WKTImporter {
     private CanvasPanel panel;
     private ProjectFile project;
+    private ArrayList<Coordinate> panelRefs;
+    private ArrayList<Coordinate> actualRefs;
 
     /**
      * 
@@ -58,6 +60,24 @@ public class WKTImporter {
     public WKTImporter(CanvasPanel panel, ProjectFile project) {
             this.panel = panel;
             this.project = project;
+            
+            panelRefs = new ArrayList<Coordinate>();
+            actualRefs = new ArrayList<Coordinate>();
+            
+            generateReferencePoints(project);
+    }
+    
+    public void generateReferencePoints(ProjectFile project) {
+    		panelRefs.add(new Coordinate(0,0));
+    		panelRefs.add(new Coordinate(1,0));
+    		panelRefs.add(new Coordinate(1,1));
+    		
+    		Point bottomLeft = project.getCurrentStateOnFloor().getFloorProperty().getBottomLeftPoint();
+    		Point topRight = project.getCurrentStateOnFloor().getFloorProperty().getTopRightPoint();
+    		
+    		actualRefs.add(new Coordinate(bottomLeft.getPanelX(), bottomLeft.getPanelY()));
+    		actualRefs.add(new Coordinate(topRight.getPanelX(), bottomLeft.getPanelY()));
+    		actualRefs.add(new Coordinate(topRight.getPanelX(), topRight.getPanelY()));
     }
     
     public void read(File wktFile) {
@@ -168,12 +188,19 @@ public class WKTImporter {
         Coordinate coord5 = new Coordinate(1, 0);
         Coordinate coord6 = new Coordinate(1, 1);*/
         
-        Coordinate coord1 = new Coordinate(-228.47898, -112.37083);
+        /*Coordinate coord1 = new Coordinate(-228.47898, -112.37083);
         Coordinate coord2 = new Coordinate(-182.98152, -104.58745);
         Coordinate coord3 = new Coordinate(-102.19993, 18.71582);
         Coordinate coord4 = new Coordinate(0.1444723618090452, 0.05510752688172038);
         Coordinate coord5 = new Coordinate(0.44597989949748745, 0.11021505376344087);
-        Coordinate coord6 = new Coordinate(0.9861809045226131, 0.9905913978494624);
+        Coordinate coord6 = new Coordinate(0.9861809045226131, 0.9905913978494624);*/
+    	
+    	Coordinate coord1 = actualRefs.get(0);
+    	Coordinate coord2 = actualRefs.get(1);
+    	Coordinate coord3 = actualRefs.get(2);
+    	Coordinate coord4 = panelRefs.get(0);
+    	Coordinate coord5 = panelRefs.get(1);
+    	Coordinate coord6 = panelRefs.get(2);
         
         AffineTransformation affine = new AffineTransformationBuilder(coord1, coord2, coord3, coord4, coord5, coord6).getTransformation();
         com.vividsolutions.jts.geom.Geometry geom = affine.transform(geometry);

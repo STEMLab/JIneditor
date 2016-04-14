@@ -75,6 +75,8 @@ public class FloorListDialog extends JDialog {
 					model.removeRow(selectedRow);
 					project.deleteFloorProperty(floorProperty);
 					
+					// 층 정보를 삭제하면 해당 층에 있는 모든 Cell, boundary, state, transition 삭제 필요
+					
 					updateTableModel();
 					parent.comboBoxFloorRefresh();
 				}

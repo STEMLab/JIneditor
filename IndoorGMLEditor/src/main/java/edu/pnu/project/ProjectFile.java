@@ -39,6 +39,7 @@ public class ProjectFile implements Serializable {
 
 	private transient BufferedImage currentFloorPlan;
 	private double currentFloorPlanScale;
+	private String currentFloor;	
 	
 	private SpaceLayers currentSpaceLayers;
 	private SpaceLayer currentSpaceLayer;
@@ -48,7 +49,6 @@ public class ProjectFile implements Serializable {
 	private TransitionOnFloor currentTransitionOnFloor;
 	private CellSpaceOnFloor currentCellSpaceOnFloor;
 	private CellSpaceBoundaryOnFloor currentCellSpaceBoundaryOnFloor;
-	private String currentFloor;
 	
 	private IndoorGMLIDRegistry idRegistry;
 	
@@ -281,6 +281,14 @@ public class ProjectFile implements Serializable {
 
 	public void computeGMLCoordinate() {
 
+	}
+	
+	public IndoorGMLIDRegistry getIdRegistry() {
+		return idRegistry;
+	}
+
+	public void setIdRegistry(IndoorGMLIDRegistry idRegistry) {
+		this.idRegistry = idRegistry;
 	}
 	
 	public void saveIndoorGMLID() {
