@@ -96,6 +96,11 @@ public class WKTImporter {
                     
                     //com.vividsolutions.jts.geom.MultiPolygon multiPolygon = (com.vividsolutions.jts.geom.MultiPolygon) wktReader.read(line);
                     com.vividsolutions.jts.geom.Polygon polygon = (com.vividsolutions.jts.geom.Polygon) wktReader.read(line);
+                    double counterClockwised = JTSUtil.Orientation2D_Polygon(polygon.getCoordinates().length, polygon.getExteriorRing().getCoordinateSequence());
+        	        if(counterClockwised >= 0) {
+        	        	polygon = (com.vividsolutions.jts.geom.Polygon) polygon.reverse();
+        	        }
+        	        
                     com.vividsolutions.jts.geom.Polygon transformation = (com.vividsolutions.jts.geom.Polygon) transformation(polygon);
                     Polygon geometry2D = getIndoorGMLGeometry(transformation);
                     geometry2D = removeDuplicatePoint(geometry2D);

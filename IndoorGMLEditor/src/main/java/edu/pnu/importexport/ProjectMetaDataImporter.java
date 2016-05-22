@@ -86,7 +86,7 @@ public class ProjectMetaDataImporter {
 			target = new IndoorGMLIDRegistry();
 		}
 		
-		Element indoorFeatures = (Element) element.getElementsByTagName(XMLTag.TAG_IDREGISTRY_INDOORFEATURES);
+		Element indoorFeatures = (Element) element.getElementsByTagName(XMLTag.TAG_IDREGISTRY_INDOORFEATURES).item(0);
 		if(indoorFeatures != null) {
 		}
 		
@@ -216,6 +216,7 @@ public class ProjectMetaDataImporter {
 			target = new ArrayList<Mapping>();
 		}
 		
+		System.out.println("parsing start");
 		NodeList nodeList = element.getElementsByTagName(XMLTag.TAG_MAPPINGS_MAPPING);
 		for(int i = 0; i < nodeList.getLength(); i++) {
 			Element child = (Element) nodeList.item(i);
@@ -232,17 +233,17 @@ public class ProjectMetaDataImporter {
 			
 			Mapping mapping = mappingMap.get(level);
 			String type = child.getAttribute(XMLTag.TAG_MAPPINGS_MAPPING_TYPE);
-			Node mappedNode = element.getFirstChild();
+			NodeList mappedNodes = element.getElementsByTagName(type);
 			
-			do {
+			for(int j = 0; j < mappedNodes.getLength(); j++) {
+				Node mappedNode = mappedNodes.item(j);
 				String id = getNodeValuebyName(XMLTag.TAG_MAPPINGS_MAPPING_ID, (Element) mappedNode);
-				mapping.addMappedElement(type, id);
-				
-				mappedNode = mappedNode.getNextSibling();
-			} while(mappedNode != null);
+				mapping.addMappedElement(type, id); 
+			}			
 		}
 		
 		target.addAll(mappingMap.values());
+		System.out.println("parsing end");
 		
 		return target;
 	}

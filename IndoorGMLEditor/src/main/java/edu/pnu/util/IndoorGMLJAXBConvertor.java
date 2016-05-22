@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import javax.xml.bind.JAXBElement;
 
+import net.opengis.gml.v_3_2_1.AbstractFeatureType;
 import net.opengis.gml.v_3_2_1.AbstractRingPropertyType;
 import net.opengis.gml.v_3_2_1.CodeType;
 import net.opengis.gml.v_3_2_1.CurvePropertyType;
@@ -12,7 +13,6 @@ import net.opengis.gml.v_3_2_1.FeaturePropertyType;
 import net.opengis.gml.v_3_2_1.LineStringType;
 import net.opengis.gml.v_3_2_1.LinearRingType;
 import net.opengis.gml.v_3_2_1.OrientableCurveType;
-import net.opengis.gml.v_3_2_1.OrientableSurfaceType;
 import net.opengis.gml.v_3_2_1.PointPropertyType;
 import net.opengis.gml.v_3_2_1.PointType;
 import net.opengis.gml.v_3_2_1.PolygonType;
@@ -38,10 +38,8 @@ import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
-import net.opengis.indoorgml.core.v_1_0.CellSpaceBoundaryMemberType;
 import net.opengis.indoorgml.core.v_1_0.CellSpaceBoundaryPropertyType;
 import net.opengis.indoorgml.core.v_1_0.CellSpaceBoundaryType;
-import net.opengis.indoorgml.core.v_1_0.CellSpaceMemberType;
 import net.opengis.indoorgml.core.v_1_0.CellSpacePropertyType;
 import net.opengis.indoorgml.core.v_1_0.CellSpaceType;
 import net.opengis.indoorgml.core.v_1_0.EdgesType;
@@ -594,17 +592,17 @@ public class IndoorGMLJAXBConvertor {
                 polygon = new Polygon();
                 Polygon xlinkGeometry = (Polygon) _polygon.getxLinkGeometry();
                 if(!_polygon.getIsReversed()) {
-	                        ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
-                            ArrayList<Point> newPoints = new ArrayList<Point>();
-                            for(int i = 0; i < points.size(); i++) {
-                                    Point newPoint = points.get(i).clone();
-                                    newPoint.setRealX(points.get(i).getRealX());
-                                    newPoint.setRealY(points.get(i).getRealY());
-                                    newPoints.add(newPoint);
-                            }
-                            LinearRing linearRing = new LinearRing();
-                            linearRing.setPoints(newPoints);
-                            polygon.setExteriorRing(linearRing);
+	                    ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
+                        ArrayList<Point> newPoints = new ArrayList<Point>();
+                        for(int i = 0; i < points.size(); i++) {
+                                Point newPoint = points.get(i).clone();
+                                newPoint.setRealX(points.get(i).getRealX());
+                                newPoint.setRealY(points.get(i).getRealY());
+                                newPoints.add(newPoint);
+                        }
+                        LinearRing linearRing = new LinearRing();
+                        linearRing.setPoints(newPoints);
+                        polygon.setExteriorRing(linearRing);
                 } else {
                         ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
                         ArrayList<Point> newPoints = new ArrayList<Point>();
@@ -743,4 +741,7 @@ public class IndoorGMLJAXBConvertor {
         return target;
 	}
 
+	private void setDescription(AbstractFeatureType target, String description) {
+		
+	}
 }

@@ -348,7 +348,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                     	/* Load Test */
                     	try {
 							ProjectMetaDataImporter importer = new ProjectMetaDataImporter("result.xml");
-							ProjectMetaData metaData = importer.getProjectMetaData();
+							//ProjectMetaData metaData = importer.getProjectMetaData();
 							
 						} catch (ParserConfigurationException | SAXException
 								| IOException e2) {
