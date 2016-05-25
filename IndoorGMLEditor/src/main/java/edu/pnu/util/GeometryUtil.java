@@ -103,19 +103,19 @@ public class GeometryUtil {
 	    Coordinate coord1 = new Coordinate(x1, y1);
 	    Coordinate coord2 = new Coordinate(x2, y2);
 	    Coordinate coord3 = new Coordinate(x, y);
-            com.vividsolutions.jts.geom.Point p = jtsFactory.createPoint(coord3);
-            
-            com.vividsolutions.jts.geom.LineString ls = jtsFactory.createLineString(new Coordinate[]{coord1, coord2});
-            
-            com.vividsolutions.jts.geom.Point snapPoint = JTSUtil.snapPointToLineString(ls, p);
-            Point snap = null;
-            if(snapPoint != null) {
-                snap = new Point();
-                snap.setPanelX(snapPoint.getX());
-                snap.setPanelY(snapPoint.getY());
-            }
-            return snap;
+        com.vividsolutions.jts.geom.Point p = jtsFactory.createPoint(coord3);
+        
+        com.vividsolutions.jts.geom.LineString ls = jtsFactory.createLineString(new Coordinate[]{coord1, coord2});
+        
+        com.vividsolutions.jts.geom.Point snapPoint = JTSUtil.snapPointToLineStringByLIL(ls, p);
+        Point snap = null;
+        if(snapPoint != null) {
+            snap = new Point();
+            snap.setPanelX(snapPoint.getX());
+            snap.setPanelY(snapPoint.getY());
         }
+        return snap;
+    }
 	
 	public static Point getSnapPointToLineString(LineString ls, double x, double y) {
 		Point p = new Point();

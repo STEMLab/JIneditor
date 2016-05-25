@@ -14,6 +14,8 @@ import net.opengis.indoorgml.core.CellSpace;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 public class CellSpacePropertiesDialog extends JDialog {
 
@@ -30,6 +32,8 @@ public class CellSpacePropertiesDialog extends JDialog {
     private JTextField textField_Ceiling;
 
     private CellSpace cellSpace;
+    private JLabel lblUsage;
+    private JComboBox comboBox_Usage;
     /**
      * Launch the application.
      */
@@ -50,7 +54,7 @@ public class CellSpacePropertiesDialog extends JDialog {
         this.cellSpace = cellSpace;
         
         setTitle("Properties");
-        setBounds(100, 100, 261, 211);
+        setBounds(100, 100, 261, 234);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -65,6 +69,8 @@ public class CellSpacePropertiesDialog extends JDialog {
         contentPanel.add(getTextField_Duality());
         contentPanel.add(getLblCeilingHeight());
         contentPanel.add(getTextField_Ceiling());
+        contentPanel.add(getLblUsage());
+        contentPanel.add(getComboBox_Usage());
         {
             JPanel buttonPane = new JPanel();
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -85,6 +91,7 @@ public class CellSpacePropertiesDialog extends JDialog {
                         if(textField_Ceiling.getText() != null) {
                             cellSpace.setCeilingHeight(Double.parseDouble(textField_Ceiling.getText()));
                         }
+                        cellSpace.setDescription("Usage", (String) comboBox_Usage.getSelectedItem());
                         dispose();
                     }
                 });
@@ -151,7 +158,7 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_Description.setBounds(112, 57, 116, 21);
         	textField_Description.setColumns(10);
         }
-        textField_Description.setText(cellSpace.getDescription());
+        textField_Description.setText(cellSpace.getDescription("Description"));
         return textField_Description;
     }
     private JTextField getTextField_Duality() {
@@ -182,4 +189,28 @@ public class CellSpacePropertiesDialog extends JDialog {
         textField_Ceiling.setText(String.valueOf(cellSpace.getCeilingHeight()));
         return textField_Ceiling;
     }
+	private JLabel getLblUsage() {
+		if (lblUsage == null) {
+			lblUsage = new JLabel("Usage");
+			lblUsage.setBounds(12, 135, 57, 15);
+		}
+		return lblUsage;
+	}
+	private JComboBox getComboBox_Usage() {
+		if (comboBox_Usage == null) {
+			comboBox_Usage = new JComboBox();
+			comboBox_Usage.setModel(new DefaultComboBoxModel(new String[] {"Room", "Corridor", "Stair", "Elevator"}));
+			comboBox_Usage.setBounds(113, 132, 120, 21);
+		}
+		for (int i = 0; i < comboBox_Usage.getItemCount(); i++) {
+			String item = (String) comboBox_Usage.getItemAt(i);
+			
+			if (cellSpace.getDescription("Usage") != null && 
+					item.equals(cellSpace.getDescription("Usage"))) {
+				comboBox_Usage.setSelectedIndex(i);
+				break;
+			}
+		}
+		return comboBox_Usage;
+	}
 }

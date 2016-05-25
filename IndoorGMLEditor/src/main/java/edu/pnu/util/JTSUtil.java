@@ -11,36 +11,88 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.linearref.LinearLocation;
+import com.vividsolutions.jts.linearref.LocationIndexedLine;
 
 public class JTSUtil {
-        private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
+    private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
 	private static final GeometryFactory gf = new GeometryFactory(pm); 
 	
+	public static Point snapPointToLineStringByLIL(LineString line, Point point) {
+		LocationIndexedLine lil = new LocationIndexedLine(line);
+		LinearLocation here = lil.project(point.getCoordinate());
+		Coordinate coord = lil.extractPoint(here);
+		Point p = gf.createPoint(coord);
+		
+		System.out.println("LIL isContains : " + line.contains(p));
+		System.out.println("point : " + point.toText());
+		System.out.println("extracted poitn : " + p.toText());
+		
+		return p;
+	}
+	
+	public static Point snapPointToLineStringByEquation(LineString line, Point point) {
+		Point startPoint = line.getStartPoint();
+        Point endPoint = line.getEndPoint();
+		double x1 = startPoint.getX();
+		double y1 = startPoint.getY();
+		double x2 = endPoint.getX();
+        double y2 = endPoint.getY();
+        double p1 = point.getX();
+        double q1 = point.getY();
+        double p2;
+        double q2;
+        
+        if (y1 == y2) {
+        	p2 = p1;
+        	q2 = y1;
+        } else if (x1 == x2) {
+        	p2 = x1;
+        	q2 = q1;
+        } else {
+	        double m1 = (y2 - y1) / (x2 - x1);
+	        double n1 = y1 - (m1 * x1);
+	        double m2 = -1 * 1 / m1;
+	        double n2 = q1 - (m2 * p1);
+	        
+	        p2 = (n2 - n1) / (m1 - m2);
+	        q2 = m1 * p2 + n1;
+        }
+        
+        Coordinate coord = new Coordinate(p2, q2);
+        Point p = gf.createPoint(coord);
+        
+        System.out.println("isContains : " + line.contains(p));
+        
+        return p;
+	}
+	
 	public static Point snapPointToLineString(LineString line, Point point) {
-	        Point startPoint = line.getStartPoint();
-	        Point endPoint = line.getEndPoint();
+        Point startPoint = line.getStartPoint();
+        Point endPoint = line.getEndPoint();
 		double startX = startPoint.getX();
 		double startY = startPoint.getY();
 		double endX = endPoint.getX();
-                double endY = endPoint.getY();
-                double offsetX = endX - startX;
-                double offsetY = endY - startY;
+        double endY = endPoint.getY();
+        double offsetX = endX - startX;
+        double offsetY = endY - startY;
 		
 		double minDistance = 15;
 		Point snapPoint = null;
-		
-		for(int i = 0; i < 3000; i++) {
-		        double dx = startX + offsetX * ((double) i) / 3000;
-		        double dy = startY + offsetY * ((double) i) / 3000;
-			//Coordinate coord = new Coordinate(minX + envelope.getWidth() * ((double) i) / 1000, minY + envelope.getHeight() * ((double)i) / 1000);
+		int devider = 10000;
+		for(int i = 0; i < devider; i++) {
+		        double dx = startX + offsetX * ((double) i) / devider;
+		        double dy = startY + offsetY * ((double) i) / devider;
+				//Coordinate coord = new Coordinate(minX + envelope.getWidth() * ((double) i) / 1000, minY + envelope.getHeight() * ((double)i) / 1000);
 		        Coordinate coord = new Coordinate(dx, dy);
-                        Point p = gf.createPoint(coord);
-                        
-                        if(line.contains(p) && point.distance(p) < minDistance) {
-                                snapPoint = p;
-                                minDistance = point.distance(p);
-                                //System.out.println("distance changed : line contains point");
-                        }
+                Point p = gf.createPoint(coord);
+                
+                if(line.contains(p) && point.distance(p) < minDistance) {
+                //if (line.contains(p)) {
+                        snapPoint = p;
+                        minDistance = point.distance(p);
+                        //System.out.println("distance changed : line contains point");
+                }
 		}
 		
 		if(snapPoint != null && line.contains(snapPoint)) {

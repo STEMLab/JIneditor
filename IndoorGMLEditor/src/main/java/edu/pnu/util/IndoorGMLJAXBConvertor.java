@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import javax.xml.bind.JAXBElement;
 
-import net.opengis.gml.v_3_2_1.AbstractFeatureType;
 import net.opengis.gml.v_3_2_1.AbstractRingPropertyType;
 import net.opengis.gml.v_3_2_1.CodeType;
 import net.opengis.gml.v_3_2_1.CurvePropertyType;
@@ -23,6 +22,7 @@ import net.opengis.gml.v_3_2_1.SolidPropertyType;
 import net.opengis.gml.v_3_2_1.SolidType;
 import net.opengis.gml.v_3_2_1.StringOrRefType;
 import net.opengis.gml.v_3_2_1.SurfacePropertyType;
+import net.opengis.indoorgml.core.AbstractFeature;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
@@ -135,6 +135,7 @@ public class IndoorGMLJAXBConvertor {
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		for(CellSpace cellSpace : cellSpaceMember) {
 			//cellSpaceMemberType = IGMLFactory.createCellSpaceMemberType();
+			setFloorDescription(cellSpace, cellSpaceOnFloor.getFloorProperty().getLevel());
 			CellSpaceType cellSpaceType = createCellSpaceType(null, cellSpace);
 			
 			//cellSpaceMemberType.setCellSpace(cellSpaceType);
@@ -196,6 +197,7 @@ public class IndoorGMLJAXBConvertor {
 			if(is3DGeometry && cellSpaceBoundary.getGeometry3D() == null) continue;
 			else if(!is3DGeometry && cellSpaceBoundary.getGeometry2D() == null) continue;
 			
+			setFloorDescription(cellSpaceBoundary, cellSpaceBoundaryOnFloor.getFloorProperty().getLevel());
 			CellSpaceBoundaryType cellSpaceBoundaryType = createCellSpaceBoundaryType(null, cellSpaceBoundary);
 						
 			//cellSpaceBoundaryMemberType.setCellSpaceBoundary(cellSpaceBoundaryType);
@@ -324,6 +326,7 @@ public class IndoorGMLJAXBConvertor {
 	private NodesType createStateType(NodesType target, StateOnFloor stateOnFloor) {
 		ArrayList<State> stateList = stateOnFloor.getStateMember();
 		for(State state : stateList) {
+			setFloorDescription(state, stateOnFloor.getFloorProperty().getLevel());
 			StateMemberType stateMemberType = IGMLFactory.createStateMemberType();
 			StateType stateType = createStateType(null, state);
 			
@@ -394,6 +397,7 @@ public class IndoorGMLJAXBConvertor {
 		ArrayList<Transition> transitionList = transitionOnFloor.getTransitionMember();
 		
 		for(Transition transition : transitionList) {
+			setFloorDescription(transition, transitionOnFloor.getFloorProperty().getLevel());
 			TransitionMemberType transitionMemberType = IGMLFactory.createTransitionMemberType();
 			TransitionType transitionType = createTransitionType(null, transition);
 			
@@ -741,7 +745,7 @@ public class IndoorGMLJAXBConvertor {
         return target;
 	}
 
-	private void setDescription(AbstractFeatureType target, String description) {
-		
+	private void setFloorDescription(AbstractFeature target, String floor) {
+		target.setDescription("Floor", floor);
 	}
 }

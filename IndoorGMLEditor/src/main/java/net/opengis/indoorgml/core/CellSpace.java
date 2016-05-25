@@ -32,6 +32,8 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 		super.setGmlID( "C" + (labelNumber++) );
 		partialBoundedBy = new ArrayList<CellSpaceBoundary>();
 		isDefaultCeiling = true;
+		
+		setDescription("Usage", "Room");
 	}
 	
 	public static int getLabelNumber() {

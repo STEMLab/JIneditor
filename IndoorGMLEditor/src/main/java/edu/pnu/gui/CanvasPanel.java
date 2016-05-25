@@ -1516,7 +1516,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     snapPoint.setPanelRatioY(p2.getPanelRatioY());
 
                     System.out.println("snap point");
-                }
+                } 
 
                 double distance = GeometryUtil.getDistancePointToLineString(ls, e.getX(), e.getY());
                 if (distance < minDistance) {
@@ -1526,6 +1526,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             }
 
             if (minLS != null && snapPoint == null) {
+            	if (cellSpace.getGmlID().equals("C117")) {
+            		System.out.println("C117");
+            	}
                 Point p1 = minLS.getPoints().get(0);
                 Point p2 = minLS.getPoints().get(1);
                 setPanelXYForCurrentScale(p1);
