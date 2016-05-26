@@ -15,10 +15,12 @@ import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
 
 public class JTSUtil {
-    private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
+    private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FIXED);
 	private static final GeometryFactory gf = new GeometryFactory(pm); 
 	
 	public static Point snapPointToLineStringByLIL(LineString line, Point point) {
+		//new PrecisionModel(
+		System.out.println("scale " + pm.getScale());
 		LocationIndexedLine lil = new LocationIndexedLine(line);
 		LinearLocation here = lil.project(point.getCoordinate());
 		Coordinate coord = lil.extractPoint(here);
@@ -189,6 +191,66 @@ public class JTSUtil {
 	        
 	        return poly;
 	}
+	
+	public static int isSimilarOrientation(LineString line1, LineString line2) {
+		Point p1 = line1.getStartPoint();
+		Point q1 = line1.getEndPoint();
+		Point p2 = line2.getStartPoint();
+		Point q2 = line2.getEndPoint();
+		
+		int dx1;
+		int dy1;
+		int dx2;
+		int dy2;
+		
+		double epsilon = 0.005;
+		
+		double value = p1.getX() - q1.getX(); 
+		if (Math.abs(value) < epsilon) {
+			dx1 = 0;
+		} else if (value > 0) {
+			dx1 = 1;
+		} else {
+			dx1 = -1;
+		}
+		
+		value = p1.getY() - q1.getY();
+		if (Math.abs(value) < epsilon) {
+			dy1 = 0;
+		} else if (value > 0) {
+			dy1 = 1;
+		} else {
+			dy1 = -1;
+		}
+		
+		value = p2.getX() - q2.getX(); 
+		if (Math.abs(value) < epsilon) {
+			dx2 = 0;
+		} else if (value > 0) {
+			dx2 = 1;
+		} else {
+			dx2 = -1;
+		}
+		
+		value = p2.getY() - q2.getY();
+		if (Math.abs(value) < epsilon) {
+			dy2 = 0;
+		} else if (value > 0) {
+			dy2 = 1;
+		} else {
+			dy2 = -1;
+		}
+		
+		int result = 0;
+		if (dx1 == dx2 && dy1 == dy2) {
+			result = 1;
+		} else if ((dx1 == dx2 && dy1 == -dy2) ||
+				(dx1 == -dx2 && dy1 == dy2)) {
+			result = -1;
+		}
+		
+		return result;
+	}
 
 	public static ArrayList<net.opengis.indoorgml.geometry.LineString> splitLineString(net.opengis.indoorgml.geometry.LineString ls1, net.opengis.indoorgml.geometry.LineString ls2) {
 		ls2 = ls2.clone();
@@ -196,6 +258,36 @@ public class JTSUtil {
 		LineString line1 = convertJTSLineString(ls1);
 		LineString line2 = convertJTSLineString(ls2);
 		
+		if (isSimilarOrientation(line1, line2) == -1) {
+			line2.reverse();
+		} else if (isSimilarOrientation(line1, line2) == 0) {
+			System.out.println("not similar orientation between lines");
+		}
+		ArrayList<Point> points = new ArrayList<Point>();
+		points.add(line1.getStartPoint());
+		points.add(line2.getStartPoint());
+		if (line1.getStartPoint().equals(line2.getStartPoint())) {
+			points.remove(1);
+		}
+		points.add(line2.getEndPoint());
+		points.add(line1.getEndPoint());
+		if (line2.getEndPoint().equals(line1.getEndPoint())) {
+			points.remove(3);
+		}
+		
+		for (int i = 0; i < points.size() - 1; i++) {
+			Coordinate coord1 = points.get(i).getCoordinate();
+			Coordinate coord2 = points.get(i + 1).getCoordinate();
+			
+			LineString line = gf.createLineString(new Coordinate[]{coord1, coord2});
+			net.opengis.indoorgml.geometry.LineString newLS = convertLineString(line);
+
+			splited.add(newLS);
+		}
+		
+		return splited;
+		
+		/*
 		Geometry difference = line1.difference(line2);
 		if(difference.getGeometryType().equalsIgnoreCase("MultiLineString")) {
 			for(int i = 0; i < difference.getNumGeometries(); i++) {
@@ -233,6 +325,7 @@ public class JTSUtil {
 		}
 		
 		return splited;
+		*/
 	}
 	
 	public static double IsLeft(Coordinate P0, Coordinate P1, Coordinate P2)

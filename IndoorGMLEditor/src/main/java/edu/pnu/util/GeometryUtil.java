@@ -107,7 +107,7 @@ public class GeometryUtil {
         
         com.vividsolutions.jts.geom.LineString ls = jtsFactory.createLineString(new Coordinate[]{coord1, coord2});
         
-        com.vividsolutions.jts.geom.Point snapPoint = JTSUtil.snapPointToLineStringByLIL(ls, p);
+        com.vividsolutions.jts.geom.Point snapPoint = JTSUtil.snapPointToLineStringByEquation(ls, p);
         Point snap = null;
         if(snapPoint != null) {
             snap = new Point();

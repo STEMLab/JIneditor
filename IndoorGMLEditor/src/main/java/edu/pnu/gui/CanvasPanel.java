@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JDialog;
 import javax.swing.JMenuItem;
@@ -99,6 +100,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
     // for creating door
     private ArrayList<Point> doorPointList = new ArrayList<Point>();
+    private LineString baseDoorLine = null;
 
     private BufferedImage floorPlan = null;
 
@@ -555,16 +557,26 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
             } else if (currentEditState == EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR) {
                 // Point snapPoint = searchSnapPointToCellSpaceBoundary(e);
-                Point snapPoint = searchSnapPointToCellSpace(e);
+            	Map<String, Object> map = searchSnapPointToCellSpace(e, null);
+                Point snapPoint = (Point) map.get("Point");
+            	LineString baseDoorLine2 = (LineString) map.get("BaseLine");
+                
                 if (snapPoint != null) {
                     double doorHeight = project.getCurrentCellSpaceBoundaryOnFloor()
                             .getFloorProperty().getDoorHeight();
                     snapPoint.setZ(doorHeight);
-                    doorPointList.add(snapPoint);
+                    if (doorPointList.size() == 0) {
+                        doorPointList.add(snapPoint);
+                        baseDoorLine = baseDoorLine2;
+                    } else if (doorPointList.size() == 1 && baseDoorLine.equals(baseDoorLine2)) {
+                    	doorPointList.add(snapPoint);
+                    }
+                    
                     if (doorPointList.size() == 2) {
-                        createCellSpaceBoundaryAsDoor();
+                        createCellSpaceBoundaryAsDoor(baseDoorLine);
 
                         doorPointList.clear();
+                        baseDoorLine = null;
                         project.setEditState(EditState.NONE);
                         mainFrame.setLabel_CurrentEditState("");
                     }
@@ -1107,7 +1119,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         return cellSpace;
     }
 
-    public void createCellSpaceBoundaryAsDoor() {
+    public void createCellSpaceBoundaryAsDoor(LineString baseDoorLine) {
         HashMap<LineString, ArrayList<LineString>> xLink2DMap = project
                 .getCurrentCellSpaceBoundaryOnFloor().getxLink2DMap();
 
@@ -1127,9 +1139,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
             for (int i = 0; i < lineStringElements.size(); i++) {
                 LineString ls = lineStringElements.get(i);
+                /*
                 if (GeometryUtil.isContainsLineString(ls, doorLineString)
                         || GeometryUtil.isContainsLineString(doorLineString, ls)
                         || GeometryUtil.isOverlapsLineString(ls, doorLineString)) {
+                        */
+                if (ls.equals(baseDoorLine)) {
                     // 일단 기하를 나눈다.
 
                     ArrayList<LineString> splitedLS = GeometryUtil.splitLineString(ls,
@@ -1490,8 +1505,16 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         return foundSnapPoint;
     }
-
+    
     public Point searchSnapPointToCellSpace(MouseEvent e) {
+    	Map<String, Point> map = searchSnapPointToCellSpace(e, null);
+    	Point p = map.get("Point");
+    	
+    	return p;
+    }
+
+    public Map searchSnapPointToCellSpace(MouseEvent e, LineString baseLine) {
+    	Map map = new HashMap<String, Object>();
         Point snapPoint = null;
         CellSpaceOnFloor cellSpaceOnFloor = project.getCurrentCellSpaceOnFloor();
         ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
@@ -1508,12 +1531,16 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     snapPoint = new Point();
                     snapPoint.setPanelRatioX(p1.getPanelRatioX());
                     snapPoint.setPanelRatioY(p1.getPanelRatioY());
+                    map.put("Point", snapPoint);
+                    map.put("BaseLine", ls);
 
                     System.out.println("snap point");
                 } else if (isAdjacencyPointToPoint(p2, e.getX(), e.getY())) {
                     snapPoint = new Point();
                     snapPoint.setPanelRatioX(p2.getPanelRatioX());
                     snapPoint.setPanelRatioY(p2.getPanelRatioY());
+                    map.put("Point", snapPoint);
+                    map.put("BaseLine", ls);
 
                     System.out.println("snap point");
                 } 
@@ -1526,9 +1553,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             }
 
             if (minLS != null && snapPoint == null) {
-            	if (cellSpace.getGmlID().equals("C117")) {
-            		System.out.println("C117");
-            	}
                 Point p1 = minLS.getPoints().get(0);
                 Point p2 = minLS.getPoints().get(1);
                 setPanelXYForCurrentScale(p1);
@@ -1546,12 +1570,16 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 if (snapPoint != null) {
                     System.out.println("snapPointfound");
                     setPanelRatioXY(snapPoint);
-                    return snapPoint;
+                    baseLine = minLS;
+                    
+                    map.put("BaseLine", baseLine);
+                    map.put("Point", snapPoint);
+                    return map;
                 }
             }
         }
 
-        return snapPoint;
+        return map;
     }
 
     public Point searchSnapPointToCellSpaceBoundary(MouseEvent e) {
