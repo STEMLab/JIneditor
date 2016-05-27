@@ -932,8 +932,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                             CellSpaceBoundary newBoundary = new CellSpaceBoundary(); // 1. 다른 방과 붙어 있어 벽에 대한 boundary가 있는 경우. 이 때는 여기 조건에 포함되지 않음
                             LineString geometry2D = new LineString();
                             if (GeometryUtil.isEqualsLineString(ls, otherLS)) { // 인접한 기하와 equals 관계라면 기존에 있는 LineString을 xlink로 참조하고 방향을 표시한다.
-                                geometry2D
-                                        .setPoints((ArrayList<Point>) otherLS.getPoints().clone());
+                                geometry2D.setPoints((ArrayList<Point>) otherLS.getPoints().clone());
                                 geometry2D.setxLinkGeometry(otherLS); // 2. 다른 방과 붙어있지 않지만 외부로 향하는 문이 있는 경우
                                 ls.setxLinkGeometry(otherLS); // 그게 아니라면 다른 방의 기하와 붙어 있지 않은 lineString이다.
                                 ls.setIsReversed(false);
@@ -1168,7 +1167,22 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                          * lineStringElements.get((i + 2) % lineStringElements.size()).getPoints().get(0).setZ(doorPointList.get(0).getZ()); }
                          */
 
-                        if (doorPointList.containsAll(split.getPoints())) {
+                        boolean isEquals = true;
+                        for (Point doorPoint : doorPointList) {
+                        	boolean check = false;
+                        	for (Point splitPoint : splitPoints) {
+                        		if (doorPoint.equals(splitPoint)) {
+                        			check = true;
+                        			break;
+                        		}
+                        	}
+                        	
+                        	if (!check) {
+                        		isEquals = false;
+                        		break;
+                        	}
+                        }
+                        if (isEquals) {
                             doorInThisCellSpace = split;
                         }
                         lineStringElements.add(i + j + 1, split);
@@ -1519,7 +1533,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         CellSpaceOnFloor cellSpaceOnFloor = project.getCurrentCellSpaceOnFloor();
         ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 
-        double minDistance = 999;
+        double minDistance = 10;
         LineString minLS = null;
         CellSpace minCS = null;
         for (CellSpace cellSpace : cellSpaceMember) {
@@ -2136,7 +2150,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setStroke(new BasicStroke(2));
+        g2.setStroke(new BasicStroke(5));
         g2.setColor(color);
 
         LineString lineString = null;

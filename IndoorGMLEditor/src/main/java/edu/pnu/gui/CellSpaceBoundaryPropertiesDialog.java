@@ -163,7 +163,7 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
             textField_Description.setBounds(112, 57, 116, 21);
             textField_Description.setColumns(10);
         }
-        textField_Description.setText(cellSpaceBoundary.getDescription());
+        textField_Description.setText(cellSpaceBoundary.getDescription("Description"));
         return textField_Description;
     }
 

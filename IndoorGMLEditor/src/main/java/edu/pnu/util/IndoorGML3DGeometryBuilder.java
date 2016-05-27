@@ -209,10 +209,12 @@ public class IndoorGML3DGeometryBuilder {
 			
 		double groundHeight = floorProperty.getGroundHeight();
 		double doorHeight = floorProperty.getDoorHeight();
-                double ceilingHeight = floorProperty.getCeilingHeight();
-		if(!cellSpace.getIsDefaultCeiling()) {
-		        ceilingHeight = cellSpace.getCeilingHeight();
-		}
+        double ceilingHeight = floorProperty.getCeilingHeight();
+        
+		//if(!cellSpace.getIsDefaultCeiling()) {
+		//        ceilingHeight = cellSpace.getCeilingHeight();
+		//}
+		
 		
 		Polygon originPolygon = cellSpace.getGeometry2D();
 		Polygon counterClockwisedPolygon = GeometryUtil.getCouterClockwisedPolygon(originPolygon);

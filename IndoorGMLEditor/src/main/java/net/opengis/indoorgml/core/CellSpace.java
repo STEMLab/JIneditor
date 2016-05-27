@@ -96,18 +96,18 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
             return ceilingHeight;
         }
     
-        public void setCeilingHeight(double ceilingHeight) {
-            this.ceilingHeight = ceilingHeight;
-            setIsDefaultCeiling(false);
-        }
+    public void setCeilingHeight(double ceilingHeight) {
+        this.ceilingHeight = ceilingHeight;
+        setIsDefaultCeiling(false);
+    }
 
-        public boolean getIsDefaultCeiling() {
-            return isDefaultCeiling;
-        }
+    public boolean getIsDefaultCeiling() {
+        return isDefaultCeiling;
+    }
 
-        public void setIsDefaultCeiling(boolean isDefaultCeiling) {
-            this.isDefaultCeiling = isDefaultCeiling;
-        }
+    public void setIsDefaultCeiling(boolean isDefaultCeiling) {
+        this.isDefaultCeiling = isDefaultCeiling;
+    }
 
         @Override
 	public void accept(IndoorGMLElementVisitor visitor) {

@@ -3,12 +3,12 @@
     <IDRegistry>
         <IndoorFeatures>1</IndoorFeatures>
         <PrimalSpaceFeatures>2</PrimalSpaceFeatures>
-        <CellSpace>1</CellSpace>
-        <CellSpaceBoundary>1</CellSpaceBoundary>
+        <CellSpace>3</CellSpace>
+        <CellSpaceBoundary>2</CellSpaceBoundary>
         <SpaceLayers>2</SpaceLayers>
         <SpaceLayer>2</SpaceLayer>
         <Nodes>2</Nodes>
-        <State>1</State>
+        <State>3</State>
         <Edges>2</Edges>
         <Transition>1</Transition>
     </IDRegistry>
@@ -26,5 +26,27 @@
     <CurrentFloor>
         <scale>1.0</scale>
     </CurrentFloor>
-    <Mappings/>
+    <Mappings>
+        <Mapping level="1F" type="CellSpace">
+            <CellSpace>
+                <id>C1</id>
+            </CellSpace>
+            <CellSpace>
+                <id>C2</id>
+            </CellSpace>
+        </Mapping>
+        <Mapping level="1F" type="CellSpaceBoundary">
+            <CellSpaceBoundary>
+                <id>CB1</id>
+            </CellSpaceBoundary>
+        </Mapping>
+        <Mapping level="1F" type="State">
+            <State>
+                <id>R1</id>
+            </State>
+            <State>
+                <id>R2</id>
+            </State>
+        </Mapping>
+    </Mappings>
 </Properties>

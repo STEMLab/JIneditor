@@ -154,7 +154,7 @@ public class TransitionPropertiesDialog extends JDialog {
             textField_Description.setBounds(91, 57, 116, 21);
             textField_Description.setColumns(10);
         }
-        textField_Description.setText(transition.getDescription());
+        textField_Description.setText(transition.getDescription("Description"));
         return textField_Description;
     }
 

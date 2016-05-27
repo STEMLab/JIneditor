@@ -12,9 +12,10 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
 public class GeometryUtil {
-        private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
-        public static final GeometryFactory jtsFactory = new GeometryFactory(pm); 
+    private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
+    private static final GeometryFactory jtsFactory = new GeometryFactory(pm); 
 	// use JTS
+    private static final double epsilon = 0.05;
         
     public static boolean isContainsPolygon(Polygon poly, Point p) {
     	com.vividsolutions.jts.geom.Polygon polygon = JTSUtil.convertJTSPolygon(poly);
@@ -27,7 +28,18 @@ public class GeometryUtil {
 		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
 		com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
 		
-		return line1.contains(line2);
+		if (line1.contains(line2)) {
+			return true;
+		}
+		
+		com.vividsolutions.jts.geom.Envelope envelope1 = line1.getEnvelopeInternal();
+		com.vividsolutions.jts.geom.Envelope envelope2 = line2.getEnvelopeInternal();
+		if (Math.abs(JTSUtil.isSimilarOrientation(line1, line2)) == 1 &&
+				line1.distance(line2) < epsilon && envelope1.contains(envelope2)) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static boolean isWithinLineString(LineString ls1, LineString ls2) {		
@@ -38,14 +50,37 @@ public class GeometryUtil {
 		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
 		com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
 		
-		return line1.overlaps(line2);
+		if (line1.overlaps(line2)) {
+			return true;
+		}
+		
+		com.vividsolutions.jts.geom.Envelope envelope1 = line1.getEnvelopeInternal();
+		com.vividsolutions.jts.geom.Envelope envelope2 = line2.getEnvelopeInternal();
+		if (Math.abs(JTSUtil.isSimilarOrientation(line1, line2)) == 1 &&
+				line1.distance(line2) > 0 && line1.distance(line2) < epsilon &&
+				envelope1.overlaps(envelope2)) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static boolean isCoversLineString(LineString ls1, LineString ls2) {
 		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
 		com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
 		
-		return line1.covers(line2);
+		if (line1.covers(line2)) {
+			return true;
+		}
+		
+		com.vividsolutions.jts.geom.Envelope envelope1 = line1.getEnvelopeInternal();
+		com.vividsolutions.jts.geom.Envelope envelope2 = line2.getEnvelopeInternal();
+		if (Math.abs(JTSUtil.isSimilarOrientation(line1, line2)) == 1 &&
+				line1.distance(line2) < epsilon && envelope1.covers(envelope2)) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static boolean isCoveredByLineString(LineString ls1, LineString ls2) {
@@ -87,7 +122,9 @@ public class GeometryUtil {
 	public static LineString getIntersectionLineString(LineString ls1, LineString ls2) {
 	        com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
 	        com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
-	        com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) line1.intersection(line2);
+	        com.vividsolutions.jts.geom.Geometry geom = line1.intersection(line2);
+	        com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) geom;
+	        //com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) line1.intersection(line2);
 	        
 	        return JTSUtil.convertLineString(intersection);
 	}

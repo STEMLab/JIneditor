@@ -186,7 +186,12 @@ public class CellSpacePropertiesDialog extends JDialog {
         	textField_Ceiling.setBounds(112, 82, 116, 21);
         	textField_Ceiling.setColumns(10);
         }
-        textField_Ceiling.setText(String.valueOf(cellSpace.getCeilingHeight()));
+        double ceilingHeight = cellSpace.getCeilingHeight();
+        if (ceilingHeight > 0) {
+        	textField_Ceiling.setText(String.valueOf(ceilingHeight));
+        } else {
+        	textField_Ceiling.setText("");
+        }
         return textField_Ceiling;
     }
 	private JLabel getLblUsage() {

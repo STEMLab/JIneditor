@@ -241,12 +241,12 @@ public class JTSUtil {
 			dy2 = -1;
 		}
 		
-		int result = 0;
+		int result = 0; // not similar
 		if (dx1 == dx2 && dy1 == dy2) {
-			result = 1;
+			result = 1; // similar
 		} else if ((dx1 == dx2 && dy1 == -dy2) ||
 				(dx1 == -dx2 && dy1 == dy2)) {
-			result = -1;
+			result = -1; // similar, but orientation is reversed.
 		}
 		
 		return result;
@@ -259,9 +259,10 @@ public class JTSUtil {
 		LineString line2 = convertJTSLineString(ls2);
 		
 		if (isSimilarOrientation(line1, line2) == -1) {
-			line2.reverse();
+			line2 = (LineString) line2.reverse();
 		} else if (isSimilarOrientation(line1, line2) == 0) {
 			System.out.println("not similar orientation between lines");
+			return null;
 		}
 		ArrayList<Point> points = new ArrayList<Point>();
 		points.add(line1.getStartPoint());

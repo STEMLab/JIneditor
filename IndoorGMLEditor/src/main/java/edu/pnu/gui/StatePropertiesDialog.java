@@ -164,7 +164,7 @@ public class StatePropertiesDialog extends JDialog {
         	textField_Description.setBounds(91, 57, 116, 21);
         	textField_Description.setColumns(10);
         }
-        textField_Description.setText(state.getDescription());
+        textField_Description.setText(state.getDescription("Description"));
         return textField_Description;
     }
     private JTextField getTextField_Duality() {
