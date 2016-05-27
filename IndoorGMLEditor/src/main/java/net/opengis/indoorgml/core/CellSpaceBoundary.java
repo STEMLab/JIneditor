@@ -29,8 +29,6 @@ public class CellSpaceBoundary extends AbstractFeature implements Serializable, 
 	public CellSpaceBoundary() {
 		super.setGmlID( "CB" + (labelNumber++) );
 		isDefaultDoorHeight = true;
-		
-		setDescription("Usage", "Door");
 	}
 
 	public static int getLabelNumber() {
@@ -79,6 +77,10 @@ public class CellSpaceBoundary extends AbstractFeature implements Serializable, 
 
 	public void setBoundaryType(BoundaryType boundaryType) {
 		this.boundaryType = boundaryType;
+		
+		if (this.boundaryType == BoundaryType.Door) {
+			setDescription("Usage", "Door");			
+		}
 	}
 
 	public double getDoorHeight() {

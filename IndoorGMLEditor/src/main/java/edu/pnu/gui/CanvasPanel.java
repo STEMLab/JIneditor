@@ -1518,11 +1518,13 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         Point snapPoint = null;
         CellSpaceOnFloor cellSpaceOnFloor = project.getCurrentCellSpaceOnFloor();
         ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
+
+        double minDistance = 999;
+        LineString minLS = null;
+        CellSpace minCS = null;
         for (CellSpace cellSpace : cellSpaceMember) {
             double d = GeometryUtil.getDistancePointToPolygon(cellSpace.getGeometry2D(), e.getX(), e.getY());
             if(d > 100) continue;
-            double minDistance = 999;
-            LineString minLS = null;
             for (LineString ls : cellSpace.getLineStringElements()) {
                 Point p1 = ls.getPoints().get(0);
                 Point p2 = ls.getPoints().get(1);
@@ -1533,6 +1535,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     snapPoint.setPanelRatioY(p1.getPanelRatioY());
                     map.put("Point", snapPoint);
                     map.put("BaseLine", ls);
+                    map.put("CellSpace", cellSpace);
 
                     System.out.println("snap point");
                 } else if (isAdjacencyPointToPoint(p2, e.getX(), e.getY())) {
@@ -1541,6 +1544,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     snapPoint.setPanelRatioY(p2.getPanelRatioY());
                     map.put("Point", snapPoint);
                     map.put("BaseLine", ls);
+                    map.put("CellSpace", cellSpace);
 
                     System.out.println("snap point");
                 } 
@@ -1549,33 +1553,35 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 if (distance < minDistance) {
                     minDistance = distance;
                     minLS = ls;
+                    minCS = cellSpace;
                 }
             }
+        }
+        
+        if (minCS != null && minLS != null && snapPoint == null) {
+            Point p1 = minLS.getPoints().get(0);
+            Point p2 = minLS.getPoints().get(1);
+            setPanelXYForCurrentScale(p1);
+            setPanelXYForCurrentScale(p2);
+            double x1 = p1.getPanelX();
+            double y1 = p1.getPanelY();
+            double x2 = p2.getPanelX();
+            double y2 = p2.getPanelY();
+            // double x = ((double) e.getX() / floorPlanWidth * floorPlanScale);
+            // double y = ((double) e.getY() / floorPlanHeight * floorPlanScale);
 
-            if (minLS != null && snapPoint == null) {
-                Point p1 = minLS.getPoints().get(0);
-                Point p2 = minLS.getPoints().get(1);
-                setPanelXYForCurrentScale(p1);
-                setPanelXYForCurrentScale(p2);
-                double x1 = p1.getPanelX();
-                double y1 = p1.getPanelY();
-                double x2 = p2.getPanelX();
-                double y2 = p2.getPanelY();
-                // double x = ((double) e.getX() / floorPlanWidth * floorPlanScale);
-                // double y = ((double) e.getY() / floorPlanHeight * floorPlanScale);
-
-                // snapPoint = getSnapPointToLineString(x1, y1, x2, y2, e.getX(), e.getY());
-                snapPoint = GeometryUtil.getSnapPointToLineString(x1, y1, x2, y2, e.getX(),
-                        e.getY());
-                if (snapPoint != null) {
-                    System.out.println("snapPointfound");
-                    setPanelRatioXY(snapPoint);
-                    baseLine = minLS;
-                    
-                    map.put("BaseLine", baseLine);
-                    map.put("Point", snapPoint);
-                    return map;
-                }
+            // snapPoint = getSnapPointToLineString(x1, y1, x2, y2, e.getX(), e.getY());
+            snapPoint = GeometryUtil.getSnapPointToLineString(x1, y1, x2, y2, e.getX(),
+                    e.getY());
+            if (snapPoint != null) {
+                System.out.println("snapPointfound");
+                setPanelRatioXY(snapPoint);
+                baseLine = minLS;
+                
+                map.put("BaseLine", baseLine);
+                map.put("Point", snapPoint);
+                map.put("CellSpace", minCS);
+                return map;
             }
         }
 
