@@ -22,11 +22,13 @@ public class CellSpaceBoundary extends AbstractFeature implements Serializable, 
 	
 	// for door
 	private BoundaryType boundaryType;
-	private double ceilingHeight;
+	// for 3D
+	private double doorHeight;
+	private boolean isDefaultDoorHeight;
 	
 	public CellSpaceBoundary() {
 		super.setGmlID( "CB" + (labelNumber++) );
-		// TODO Auto-generated constructor stub
+		isDefaultDoorHeight = true;
 	}
 
 	public static int getLabelNumber() {
@@ -75,20 +77,33 @@ public class CellSpaceBoundary extends AbstractFeature implements Serializable, 
 
 	public void setBoundaryType(BoundaryType boundaryType) {
 		this.boundaryType = boundaryType;
+		
+		if (this.boundaryType == BoundaryType.Door) {
+			setDescription("Usage", "Door");			
+		}
 	}
 
-	public double getCeilingHeight() {
-		return ceilingHeight;
+	public double getDoorHeight() {
+		return doorHeight;
 	}
 
-	public void setCeilingHeight(double ceilingHeight) {
-		this.ceilingHeight = ceilingHeight;
+	public void setDoorHeight(double doorgHeight) {
+		this.doorHeight = doorgHeight;
+		setIsDefaultDoor(false);
 	}
 
-	@Override
+	public boolean getIsDefaultDoor() {
+                return isDefaultDoorHeight;
+        }
+    
+        public void setIsDefaultDoor(boolean isDefaultDoor) {
+                this.isDefaultDoorHeight = isDefaultDoor;
+        }
+
+    @Override
 	public void accept(IndoorGMLElementVisitor visitor) {
 		// TODO Auto-generated method stub
-		
+	        visitor.visit(this);
 	}
 
 }

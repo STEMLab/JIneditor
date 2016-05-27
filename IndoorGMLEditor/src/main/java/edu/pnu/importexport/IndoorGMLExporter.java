@@ -27,8 +27,8 @@ import org.w3c.dom.Document;
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
-import edu.pnu.visitor.IndoorGMLExportVisitor;
-import edu.pnu.visitor.IndoorGMLIDCoordinateGenerateVisitor;
+import edu.pnu.util.IndoorCoordinateGenerator;
+import edu.pnu.util.IndoorGMLJAXBConvertor;
 
 public class IndoorGMLExporter {
 	private ProjectFile project;
@@ -39,13 +39,10 @@ public class IndoorGMLExporter {
 	}
 	
 	public void export() throws JAXBException{
-		IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
-		IndoorGMLExportVisitor exportVisitor = new IndoorGMLExportVisitor(project.getIs3DGeometry());
-		
-		IndoorFeatures indoorFeatures = project.getIndoorFeatures();
-		indoorFeatures.accept(idCoordinateVisitor);
-		indoorFeatures.accept(exportVisitor);
-		
+		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
+	        IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
+		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(project.getIndoorFeatures(), project.getIs3DGeometry());
+		coordinateGenerator.generate();				
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("net.opengis.indoorgml.core.v_1_0"
             + ":net.opengis.gml.v_3_2_1");
@@ -59,7 +56,7 @@ public class IndoorGMLExporter {
 			e.printStackTrace();
 		}
 		
-		JAXBElement<IndoorFeaturesType> je = exportVisitor.getJAXBElement();
+		JAXBElement<IndoorFeaturesType> je = jaxbConvertor.getJAXBElement();
 		
 		JFileChooser save = new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter( "IndoorGML Document", "gml" );

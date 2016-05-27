@@ -1,6 +1,7 @@
 package net.opengis.indoorgml.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import net.opengis.indoorgml.geometry.LineString;
 import edu.pnu.visitor.IndoorGMLElement;
@@ -21,6 +22,11 @@ public class Transition extends AbstractFeature implements Serializable,
 	private CellSpaceBoundary duality;
 	private LineString path;
 
+	public Transition() {
+            super.setGmlID("T" + (labelNumber++));
+            connects = new State[2];
+        }
+	
 	public double getWeight() {
 		return weight;
 	}

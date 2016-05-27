@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Properties>
+    <IDRegistry>
+        <IndoorFeatures>1</IndoorFeatures>
+        <PrimalSpaceFeatures>2</PrimalSpaceFeatures>
+        <CellSpace>1</CellSpace>
+        <CellSpaceBoundary>1</CellSpaceBoundary>
+        <SpaceLayers>2</SpaceLayers>
+        <SpaceLayer>2</SpaceLayer>
+        <Nodes>2</Nodes>
+        <State>1</State>
+        <Edges>2</Edges>
+        <Transition>1</Transition>
+    </IDRegistry>
+    <BuildingProperty>
+        <FloorProperty>
+            <level>1F</level>
+            <lowerCorner>(0.0, 0.0, 30.0)</lowerCorner>
+            <upperCorner>(100.0, 100.0, 30.0)0.030.020.0</upperCorner>
+            <groundHeight/>
+            <ceilingHeight/>
+            <doorHeight/>
+            <floorPlanPath>C:\Users\Public\Pictures\Sample Pictures\Desert.jpg</floorPlanPath>
+        </FloorProperty>
+    </BuildingProperty>
+    <CurrentFloor>
+        <scale>1.0</scale>
+    </CurrentFloor>
+    <Mappings/>
+</Properties>
