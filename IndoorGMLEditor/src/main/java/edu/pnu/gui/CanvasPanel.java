@@ -573,7 +573,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     }
                     
                     if (doorPointList.size() == 2) {
-                        createCellSpaceBoundaryAsDoor(baseDoorLine);
+                        createCellSpaceBoundaryAsDoor(map);
 
                         doorPointList.clear();
                         baseDoorLine = null;
@@ -914,7 +914,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         // create CellSpace
         CellSpace cellSpace = new CellSpace();
         ArrayList<Point> exteriorPoints = new ArrayList<Point>();
-        for (int i = 0; i < lineStringElements.size() - 1; i++) {
+        for (int i = 0; i < lineStringElements.size(); i++) {
             LineString ls = lineStringElements.get(i);
             // Point p1 = ls.getPoints().get(0);
             // Point p2 = ls.getPoints().get(1);
@@ -929,149 +929,39 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                             || GeometryUtil.isOverlapsLineString(ls, otherLS)) { // ls가 otherLS를 포함하면 otherLS의 기하를 가지는 boundary생성
                         System.out.println("overlaped boundary checked");
                         if (!lineStringOfAdjacencyBoundaryMap.containsKey(otherLS)) { // 해당 lineString을 가지는 CellSpaceBoundary가 있을 경우의 수는
-                            CellSpaceBoundary newBoundary = new CellSpaceBoundary(); // 1. 다른 방과 붙어 있어 벽에 대한 boundary가 있는 경우. 이 때는 여기 조건에 포함되지 않음
-                            LineString geometry2D = new LineString();
-                            if (GeometryUtil.isEqualsLineString(ls, otherLS)) { // 인접한 기하와 equals 관계라면 기존에 있는 LineString을 xlink로 참조하고 방향을 표시한다.
-                                geometry2D.setPoints((ArrayList<Point>) otherLS.getPoints().clone());
-                                geometry2D.setxLinkGeometry(otherLS); // 2. 다른 방과 붙어있지 않지만 외부로 향하는 문이 있는 경우
-                                ls.setxLinkGeometry(otherLS); // 그게 아니라면 다른 방의 기하와 붙어 있지 않은 lineString이다.
-                                ls.setIsReversed(false);
-                            } else if (GeometryUtil.isEqualsIgnoreReverseLineString(ls, otherLS)) {
-                                geometry2D.setPoints((ArrayList<Point>) ls.getPoints().clone());
-                                geometry2D.setxLinkGeometry(otherLS);
-                                ls.setxLinkGeometry(otherLS);
-                                ls.setIsReversed(true);
-                            } else if (GeometryUtil.isContainsLineString(ls, otherLS)) {
-                                geometry2D
-                                        .setPoints((ArrayList<Point>) otherLS.getPoints().clone());
-                                geometry2D.setxLinkGeometry(otherLS);
-                                geometry2D.setIsReversed(false);
-                            } else if (GeometryUtil.isContainsLineString(otherLS, ls)) {
-                                geometry2D.setPoints((ArrayList<Point>) ls.getPoints().clone());
-                                geometry2D.setxLinkGeometry(ls);
-                                geometry2D.setIsReversed(false);
-                            } else if (GeometryUtil.isOverlapsLineString(ls, otherLS)) {
-                                // geometry2d of boundary will be a intersection between ls and otherLS.
-                                LineString intersection = GeometryUtil.getIntersectionLineString(
-                                        ls, otherLS);
-                                geometry2D.setPoints((ArrayList<Point>) intersection.getPoints()
-                                        .clone());
-                                geometry2D.setxLinkGeometry(ls);
-                                geometry2D.setIsReversed(false);
-                            }
-                            newBoundary.setGeometry2D(geometry2D);
-
-                            newBoundary.setBoundaryType(BoundaryType.CellSpaceBoundary);
-                            cellSpace.getPartialBoundedBy().add(newBoundary);
-                            otherCellSpace.getPartialBoundedBy().add(newBoundary);
-
-                            if (!lineStringOfAdjacencyBoundaryMap.containsKey(ls)) {
-                                lineStringOfAdjacencyBoundaryMap.put(ls,
-                                        new ArrayList<CellSpaceBoundary>());
-                            }
-                            if (!lineStringOfAdjacencyBoundaryMap.containsKey(otherLS)) {
-                                lineStringOfAdjacencyBoundaryMap.put(otherLS,
-                                        new ArrayList<CellSpaceBoundary>());
-                            }
-                            lineStringOfAdjacencyBoundaryMap.get(ls).add(newBoundary);
-                            lineStringOfAdjacencyBoundaryMap.get(otherLS).add(newBoundary);
-
-                            if (!boundaryOfReferenceCellSpaceMap.containsKey(newBoundary)) {
-                                boundaryOfReferenceCellSpaceMap.put(newBoundary,
-                                        new ArrayList<CellSpace>());
-                            }
-                            boundaryOfReferenceCellSpaceMap.get(newBoundary).add(cellSpace);
-                            boundaryOfReferenceCellSpaceMap.get(newBoundary).add(otherCellSpace);
-
-                            project.getCurrentCellSpaceBoundaryOnFloor()
-                                    .getCellSpaceBoundaryMember().add(newBoundary);
+                        	createCellSpaceBoundary(ls, otherLS, cellSpace, otherCellSpace); 
                         } else { // 이미 boundary가 존재할 경우에만 else로 넘어온다.
                             // 벽의 일부씩만 겹쳤을 때 intersection으로 boundary 생성해주는 부분 추가해야한다.
                             // 지금은 새로 만들어지는 벽이 기존에 있는 문을 포함할 경우만 해놓음.
                             ArrayList<CellSpaceBoundary> adjacencyBoundaryList = lineStringOfAdjacencyBoundaryMap
                                     .get(otherLS);
-                            CellSpaceBoundary doorBoundary = adjacencyBoundaryList.get(0);
-                            if (doorBoundary.getBoundaryType() == BoundaryType.Door) {
-                                ArrayList<LineString> splitedLS = GeometryUtil.splitLineString(ls,
-                                        otherLS);
-                                for(LineString splited : splitedLS) {
-                                    for(Point p : splited.getPoints()) {
-                                            setPanelRatioXY(p);
-                                    }
-                                }
-                                LineString doorInThisCellSpace = null;
-                                int insertCount = 0;
-                                for (int j = 0; j < splitedLS.size(); j++) {
-                                    LineString split = splitedLS.get(j);
-                                    ArrayList<Point> splitPoints = split.getPoints();
-                                    if (splitPoints.get(0).equalsPanelRatioXY(splitPoints.get(1))) {
-                                        if (j == 0) {
-                                            int tempi = i;
-                                            if (i == 0) {
-                                                tempi = lineStringElements.size() - 1;
-                                            } else
-                                                tempi = i - 1;
-                                            lineStringElements.get(tempi).getPoints().get(1)
-                                                    .setZ(otherLS.getPoints().get(0).getZ());
-                                        } else if (j == 1) {
-                                            lineStringElements
-                                                    .get((i + 2) % lineStringElements.size())
-                                                    .getPoints().get(0)
-                                                    .setZ(otherLS.getPoints().get(0).getZ());
-                                        }
-                                        // 분할했을 경우 문이 벽의 끝에 있다면 끝점이 동일하므로 제외한다.
-                                    } else {
-                                        if (otherLS.getPoints().containsAll(split.getPoints())) {
-                                            doorInThisCellSpace = split;
-                                        }
-                                        lineStringElements.add(i + insertCount + 1, split);
-                                        insertCount++;
-                                    }
-                                }
-                                i = i + insertCount - 1;
-
-                                cellSpace.getPartialBoundedBy().add(doorBoundary);
-
-                                if (!lineStringOfAdjacencyBoundaryMap
-                                        .containsKey(doorInThisCellSpace)) {
-                                    lineStringOfAdjacencyBoundaryMap.put(doorInThisCellSpace,
-                                            new ArrayList<CellSpaceBoundary>());
-                                }
-                                lineStringOfAdjacencyBoundaryMap.get(doorInThisCellSpace).add(
-                                        doorBoundary);
-                                if (!boundaryOfReferenceCellSpaceMap.containsKey(doorBoundary)) {
-                                    boundaryOfReferenceCellSpaceMap.put(doorBoundary,
-                                            new ArrayList<CellSpace>());
-                                }
-                                boundaryOfReferenceCellSpaceMap.get(doorBoundary).add(cellSpace);
-                                
-                                ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember();
-                                if(!cellSpaceBoundaryMember.contains(doorBoundary)) {
-                                        cellSpaceBoundaryMember.add(doorBoundary);
-                                }
+                            
+                            CellSpaceBoundary targetBoundary = null;
+                            for (CellSpaceBoundary existBoundary : adjacencyBoundaryList) {
+                            	LineString existLS = existBoundary.getGeometry2D();
+                            	if (GeometryUtil.isContainsLineString(ls, existLS)
+                                        || GeometryUtil.isContainsLineString(existLS, ls)
+                                        || GeometryUtil.isOverlapsLineString(ls, existLS)) {
+                            		targetBoundary = existBoundary;
+                            	}
                             }
+                            
+                            if (targetBoundary != null) {
+                            	// Cell의 Line에 Boundary는 있지만 Cell과 붙어있지 않은 경우
+                            	// 외부로 향하는 문으로 만들어놨는데 Cell이 붙는 경우
+                            	// 문이 1개인 경우는 간단하지만 문이 한쪽 벽에 여러개 있을 때
+                            	// 여기에 추가로 Cell이 생성되면 여러개의 문에 대한 Line 분할 필요
+                            	System.out.println("targetBoundary is not null");
+                            } else {
+                            	createCellSpaceBoundary(ls, otherLS, cellSpace, otherCellSpace);
+                            }
+                            
+                           
                         }
                     }
                 }
             }
 
-            // 변경 전
-            /*
-             * CellSpaceBoundary boundary = new CellSpaceBoundary(); boundary.setBoundaryType(BoundaryType.CellSpaceBoundary);
-             * 
-             * // create CellSpaceBoundary for(LineString lineString : xLink2DMap.keySet()) { ArrayList<Point> lsPoints = lineString.getPoints();
-             * if(lsPoints.size() != 2) continue;
-             * 
-             * if(lsPoints.get(0).equals(p1) && lsPoints.get(1).equals(p2)) { ls.getPoints().clear(); ls.setxLinkGeometry(lineString);
-             * ls.setIsReversed(false); }else if(lsPoints.get(1).equals(p1) && lsPoints.get(0).equals(p2)) { ls.getPoints().clear();
-             * ls.setxLinkGeometry(lineString); ls.setIsReversed(true); } }
-             * 
-             * boundary.setGeometry2D(ls); if(ls.getPoints().size() == 0) { // xlink로 참조할 경우 if(!xLink2DMap.containsKey(ls.getxLinkGeometry())) {
-             * xLink2DMap.put((LineString) ls.getxLinkGeometry(), new ArrayList<LineString>()); } xLink2DMap.get(ls.getxLinkGeometry()).add(ls); }
-             * 
-             * lineStringOfBoundaryMap.put(ls, boundary); cellSpace.getPartialBoundedBy().add(boundary); boundaryOfCellSpaceMap.put(boundary,
-             * cellSpace); project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember().add(boundary);
-             */
         }
         cellSpace.setLineStringElements((ArrayList<LineString>) lineStringElements.clone());
         for (LineString ls : cellSpace.getLineStringElements()) {
@@ -1116,6 +1006,172 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
          */
 
         return cellSpace;
+    }
+    
+    public CellSpaceBoundary createCellSpaceBoundary(LineString geometry2D) {
+    	CellSpaceBoundary newBoundary = new CellSpaceBoundary(); // 1. 다른 방과 붙어 있어 벽에 대한 boundary가 있는 경우. 이 때는 여기 조건에 포함되지 않음
+        
+        ArrayList<Point> newPoints = geometry2D.getPoints();
+        for (Point p : newPoints) {
+        	setPanelRatioXY(p);
+        }
+        geometry2D.setPoints(newPoints);
+        
+        geometry2D.setIsReversed(false);
+        newBoundary.setGeometry2D(geometry2D);
+        newBoundary.setBoundaryType(BoundaryType.CellSpaceBoundary);
+        
+        return newBoundary;
+    }
+    
+    public void createCellSpaceBoundary(LineString ls, LineString otherLS, CellSpace c1, CellSpace c2) {
+    	HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjacencyBoundaryMap = project
+                .getCurrentCellSpaceBoundaryOnFloor().getLineStringOfAdjacencyBoundaryMap();
+        HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = project
+                .getCurrentCellSpaceBoundaryOnFloor().getBoundaryOfReferenceCellSpaceMap();
+                
+        // geometry2d of boundary will be a intersection between ls and otherLS.
+        LineString intersection = GeometryUtil.getIntersectionLineString(
+                ls, otherLS);
+        CellSpaceBoundary newBoundary = createCellSpaceBoundary(intersection.clone());
+        
+        c1.getPartialBoundedBy().add(newBoundary);
+        c2.getPartialBoundedBy().add(newBoundary);
+
+        if (!lineStringOfAdjacencyBoundaryMap.containsKey(ls)) {
+            lineStringOfAdjacencyBoundaryMap.put(ls,
+                    new ArrayList<CellSpaceBoundary>());
+        }
+        if (!lineStringOfAdjacencyBoundaryMap.containsKey(otherLS)) {
+            lineStringOfAdjacencyBoundaryMap.put(otherLS,
+                    new ArrayList<CellSpaceBoundary>());
+        }
+        lineStringOfAdjacencyBoundaryMap.get(ls).add(newBoundary);
+        lineStringOfAdjacencyBoundaryMap.get(otherLS).add(newBoundary);
+
+        if (!boundaryOfReferenceCellSpaceMap.containsKey(newBoundary)) {
+            boundaryOfReferenceCellSpaceMap.put(newBoundary,
+                    new ArrayList<CellSpace>());
+        }
+        boundaryOfReferenceCellSpaceMap.get(newBoundary).add(c1);
+        boundaryOfReferenceCellSpaceMap.get(newBoundary).add(c2);
+
+        project.getCurrentCellSpaceBoundaryOnFloor()
+                .getCellSpaceBoundaryMember().add(newBoundary);
+    }
+    
+    public void createCellSpaceBoundaryAsDoor(Map<String, Object> map) {
+    	HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjacencyBoundaryMap = project
+                .getCurrentCellSpaceBoundaryOnFloor().getLineStringOfAdjacencyBoundaryMap();
+        HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = project
+                .getCurrentCellSpaceBoundaryOnFloor().getBoundaryOfReferenceCellSpaceMap();
+        
+        LineString doorLineString = new LineString();
+        doorLineString.setPoints((ArrayList<Point>) doorPointList.clone());
+        
+        CellSpace baseCellSpace = (CellSpace) map.get("CellSpace");
+        LineString baseLine = (LineString) map.get("BaseLine");
+        
+        if (baseCellSpace == null) {
+        	System.out.println("Base CellSpace is null");
+        }
+        if (baseLine == null) {
+        	System.out.println("Base Door Line is null");
+        }
+        
+        ArrayList<CellSpaceBoundary> adjacencyBoundaryList = lineStringOfAdjacencyBoundaryMap.get(baseLine);
+        
+        if (!lineStringOfAdjacencyBoundaryMap.containsKey(baseLine) || adjacencyBoundaryList.size() == 0) {
+        	CellSpaceBoundary doorBoundary = createCellSpaceBoundary(doorLineString);
+        	doorBoundary.setBoundaryType(BoundaryType.Door);
+        	baseCellSpace.getPartialBoundedBy().add(doorBoundary);
+
+            if (!lineStringOfAdjacencyBoundaryMap.containsKey(baseLine)) {
+                lineStringOfAdjacencyBoundaryMap.put(baseLine,
+                        new ArrayList<CellSpaceBoundary>());
+            }
+            lineStringOfAdjacencyBoundaryMap.get(baseLine).add(doorBoundary);
+            if (!boundaryOfReferenceCellSpaceMap.containsKey(doorBoundary)) {
+                boundaryOfReferenceCellSpaceMap.put(doorBoundary,
+                        new ArrayList<CellSpace>());
+            }
+            boundaryOfReferenceCellSpaceMap.get(doorBoundary).add(baseCellSpace);
+            project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember().add(doorBoundary);
+        } else {
+        	CellSpaceBoundary deleted = null;
+        	ArrayList<CellSpaceBoundary> splitedBoundary = null;
+        	for (CellSpaceBoundary adjacencyBoundary : adjacencyBoundaryList) {
+        		LineString adjacencyLS = adjacencyBoundary.getGeometry2D();
+        		
+        		if (GeometryUtil.isContainsLineString(adjacencyLS, doorLineString)
+                        && adjacencyBoundary.getBoundaryType() != BoundaryType.Door) { // 기존 boundary에 door가 생긴다면
+        			splitedBoundary = splitCellSpaceBoundary(adjacencyBoundary, doorLineString); // boundary 쪼갠다.
+        			
+        			deleted = adjacencyBoundary;
+        		}
+        	}
+        	
+        	if (deleted != null) {
+	        	int idx = adjacencyBoundaryList.indexOf(deleted);
+	        	adjacencyBoundaryList.remove(deleted);
+	        	adjacencyBoundaryList.addAll(idx, splitedBoundary);
+	        	baseCellSpace.getPartialBoundedBy().remove(deleted);
+	        	baseCellSpace.getPartialBoundedBy().addAll(splitedBoundary);        	
+	        	
+	        	ArrayList<CellSpace> referenceCellSpaceList = boundaryOfReferenceCellSpaceMap.get(deleted);
+	        	CellSpace otherReference = null;
+	        	for (CellSpace otherCellSpace : referenceCellSpaceList) {
+	        		if (!baseCellSpace.equals(otherCellSpace)) {
+	        			ArrayList<LineString> otherLSElements = otherCellSpace.getLineStringElements();
+	        			boolean check = false;
+	        			for (LineString otherLS : otherLSElements) {
+	        				if (lineStringOfAdjacencyBoundaryMap.containsKey(otherLS)) {
+	                            if (lineStringOfAdjacencyBoundaryMap.get(otherLS).contains(deleted)) {
+	                                lineStringOfAdjacencyBoundaryMap.get(otherLS).remove(deleted);
+	                                lineStringOfAdjacencyBoundaryMap.get(otherLS).addAll(splitedBoundary);
+	                                otherCellSpace.getPartialBoundedBy().remove(deleted);
+	                                otherCellSpace.getPartialBoundedBy().addAll(splitedBoundary);
+	                                
+	                                otherReference = otherCellSpace;
+	                                check = true;
+	                                break;
+	                            }
+	                        }
+	        			}
+	        			
+	        			if (check) {
+	        				break;
+	        			}
+	        		}
+	        	}
+	        	
+	        	//
+	        	boundaryOfReferenceCellSpaceMap.remove(deleted);
+	        	for (CellSpaceBoundary splited : splitedBoundary) {
+	        		boundaryOfReferenceCellSpaceMap.put(splited, new ArrayList<CellSpace>());
+	        		boundaryOfReferenceCellSpaceMap.get(splited).add(baseCellSpace);
+	        		boundaryOfReferenceCellSpaceMap.get(splited).add(otherReference);
+	        	}
+	        	project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember().remove(deleted);
+	        	project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember().addAll(splitedBoundary);
+        	} else {
+        		CellSpaceBoundary doorBoundary = createCellSpaceBoundary(doorLineString);
+            	doorBoundary.setBoundaryType(BoundaryType.Door);
+            	baseCellSpace.getPartialBoundedBy().add(doorBoundary);
+
+                if (!lineStringOfAdjacencyBoundaryMap.containsKey(baseLine)) {
+                    lineStringOfAdjacencyBoundaryMap.put(baseLine,
+                            new ArrayList<CellSpaceBoundary>());
+                }
+                lineStringOfAdjacencyBoundaryMap.get(baseLine).add(doorBoundary);
+                if (!boundaryOfReferenceCellSpaceMap.containsKey(doorBoundary)) {
+                    boundaryOfReferenceCellSpaceMap.put(doorBoundary,
+                            new ArrayList<CellSpace>());
+                }
+                boundaryOfReferenceCellSpaceMap.get(doorBoundary).add(baseCellSpace);
+                project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember().add(doorBoundary);
+        	}
+        }
     }
 
     public void createCellSpaceBoundaryAsDoor(LineString baseDoorLine) {
@@ -1369,8 +1425,23 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             if (splitPoints.get(0).equalsPanelRatioXY(splitPoints.get(1)))
                 continue;
 
-            CellSpaceBoundary newBoundary = new CellSpaceBoundary();
-            if (doorLineString.getPoints().containsAll(splitPoints)) {
+            boolean result = true;
+            for (Point splitPoint : splitPoints) {
+            	boolean check = false;
+            	for (Point doorPoint : doorLineString.getPoints()) {
+            		if (doorPoint.equalsPanelRatioXY(splitPoint)) {
+            			check = true;
+            			break;
+            		}
+            	}
+            	if (check == false) {
+            		result = false;
+            		break;
+            	}
+            }
+
+            CellSpaceBoundary newBoundary = new CellSpaceBoundary();            
+            if (result) {
                 newBoundary.setBoundaryType(BoundaryType.Door);
             } else {
                 newBoundary.setBoundaryType(BoundaryType.CellSpaceBoundary);
@@ -1378,8 +1449,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             newBoundary.setGeometry2D(split);
 
             newBoundaryList.add(newBoundary);
-            project.getCurrentCellSpaceBoundaryOnFloor().getCellSpaceBoundaryMember()
-                    .add(newBoundary);
         }
 
         /*
@@ -1646,11 +1715,14 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 // double y = ((double) e.getY() / floorPlanHeight * floorPlanScale);
 
                 // snapPoint = getSnapPointToLineString(x1, y1, x2, y2, e.getX(), e.getY());
-                snapPoint = GeometryUtil.getSnapPointToLineString(x1, y1, x2, y2, e.getX(),
-                        e.getY());
-                if (snapPoint != null) {
-                    System.out.println("snapPointfound");
-                    return snapPoint;
+                double distance = GeometryUtil.getDistancePointToLineString(geometry2D, e.getX(), e.getY());
+                if (distance < 10) {
+	                snapPoint = GeometryUtil.getSnapPointToLineString(x1, y1, x2, y2, e.getX(),
+	                        e.getY());
+	                if (snapPoint != null) {
+	                    System.out.println("snapPointfound");
+	                    return snapPoint;
+	                }
                 }
             }
         }

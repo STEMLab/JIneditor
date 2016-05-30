@@ -244,8 +244,7 @@ public class JTSUtil {
 		int result = 0; // not similar
 		if (dx1 == dx2 && dy1 == dy2) {
 			result = 1; // similar
-		} else if ((dx1 == dx2 && dy1 == -dy2) ||
-				(dx1 == -dx2 && dy1 == dy2)) {
+		} else if (dx1 == -dx2 && dy1 == -dy2) {
 			result = -1; // similar, but orientation is reversed.
 		}
 		

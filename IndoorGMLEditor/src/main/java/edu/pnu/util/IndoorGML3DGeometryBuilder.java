@@ -40,11 +40,78 @@ public class IndoorGML3DGeometryBuilder {
 		ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors = primalSpaceFeatures.getCellSpaceBoundaryOnFloors();
 		for(int i = 0; i < cellSpaceOnFloors.size(); i++) {
 			fromCellSpaceOnFloor(cellSpaceOnFloors.get(i), cellSpaceBoundaryOnFloors.get(i));
+			create3DBoundaryFromCellSpace(cellSpaceOnFloors.get(i), cellSpaceBoundaryOnFloors.get(i));
 		}
-		
-		for(int i = 0; i < cellSpaceBoundaryOnFloors.size(); i++) {
+		/*
+		for(int i = 0; i < cellSpaceBoundaryOnFloors.size(); i++) {			
 			fromCellSpaceBoundaryOnFloor(cellSpaceBoundaryOnFloors.get(i));
 		}
+		*/
+	}
+	
+	public void create3DBoundaryFromCellSpace(CellSpaceOnFloor cellSpaceOnFloor, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
+		double groundHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getGroundHeight();
+		double ceilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
+		double defaultDoorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
+		
+		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
+		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
+		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
+		HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DRererenceMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
+		
+		ArrayList<CellSpaceBoundary> removes = new ArrayList<CellSpaceBoundary>();
+        for(CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
+            if(boundary.getBoundaryType() == BoundaryType.Only3DBoundary) {
+                removes.add(boundary);
+                
+                ArrayList<CellSpace> references = boundaryOfReferenceCellSpaceMap.get(boundary);
+                for(CellSpace reference : references) {
+                    reference.getPartialBoundedBy().remove(boundary);
+                }
+            }
+        }
+        cellSpaceBoundaryMember.removeAll(removes);
+        
+        for (CellSpace cellSpace : cellSpaceMember) {
+        	ArrayList<CellSpaceBoundary> boundedBy = cellSpace.getPartialBoundedBy();
+        	int remain = boundedBy.size();
+        	
+        	while (remain > 0) {
+        		ArrayList<CellSpaceBoundary> combineBoundary = new ArrayList<CellSpaceBoundary>();
+        		CellSpace targetCell = null;
+        		for (CellSpaceBoundary bounded : boundedBy) {
+            		if (!boundary3DRererenceMap.containsKey(bounded)) {
+            			ArrayList<CellSpace> referenceCellSpaceList = boundaryOfReferenceCellSpaceMap.get(bounded);
+            			CellSpace candidate = null;
+            			for (CellSpace cell : referenceCellSpaceList) {
+            				if (!cell.equals(cellSpace)) {
+            					candidate = cellSpace;
+            					break;
+            				}
+            			}
+            			
+            			if (targetCell == null) {
+            				targetCell = candidate;
+                			combineBoundary.add(bounded);
+            			} else if (targetCell.equals(candidate)) {
+                			combineBoundary.add(bounded);
+            			}
+            		}
+            		
+            		if (bounded.getBoundaryType() == BoundaryType.Door && bounded.getGeometry3D() == null) {
+            			Polygon geometry3D = new Polygon();
+        				geometry3D = createPolygonFrom2Points((ArrayList<Point>)bounded.getGeometry2D().getPoints().clone(), ceilingHeight);
+        				bounded.setGeometry3D(geometry3D);
+        				
+        				remain--;
+            		} 
+            	}
+        		
+        		
+        		
+        	}
+        	
+        }
 	}
 	
 	public void fromCellSpaceBoundaryOnFloor(CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
@@ -52,20 +119,20 @@ public class IndoorGML3DGeometryBuilder {
 		double ceilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
 		double defaultDoorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
 		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
-                HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
+		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
                 
 		ArrayList<CellSpaceBoundary> removes = new ArrayList<CellSpaceBoundary>();
-                for(CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
-                        if(boundary.getBoundaryType() == BoundaryType.Boundary3D) {
-                                removes.add(boundary);
-                                
-                                ArrayList<CellSpace> references = boundaryOfReferenceCellSpaceMap.get(boundary);
-                                for(CellSpace reference : references) {
-                                        reference.getPartialBoundedBy().remove(boundary);
-                                }
-                        }
+        for(CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
+            if(boundary.getBoundaryType() == BoundaryType.Only3DBoundary) {
+                removes.add(boundary);
+                
+                ArrayList<CellSpace> references = boundaryOfReferenceCellSpaceMap.get(boundary);
+                for(CellSpace reference : references) {
+                    reference.getPartialBoundedBy().remove(boundary);
                 }
-                cellSpaceBoundaryMember.removeAll(removes);
+            }
+        }
+        cellSpaceBoundaryMember.removeAll(removes);
 		
 		ArrayList<CellSpace> prevReference = null;
 		ArrayList<CellSpace> currentReference = null;
@@ -103,7 +170,7 @@ public class IndoorGML3DGeometryBuilder {
 				
 				if(combineLS.getPoints().size() > 2) {
 					CellSpaceBoundary newBoundary = new CellSpaceBoundary();
-					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
+					newBoundary.setBoundaryType(BoundaryType.Only3DBoundary);
 					newBoundary.setGeometry3D(geometry3D);
 					newBoundaryList.add(newBoundary);
 					
@@ -149,13 +216,13 @@ public class IndoorGML3DGeometryBuilder {
 			CellSpaceBoundary boundary = null;
 			if(combineLS.getPoints().size() > 2) {
 				boundary = new CellSpaceBoundary();
-				boundary.setBoundaryType(BoundaryType.Boundary3D);
+				boundary.setBoundaryType(BoundaryType.Only3DBoundary);
 				newBoundaryList.add(boundary);
 				
 				for(CellSpace reference : prevReference) {
 					reference.getPartialBoundedBy().add(boundary);
 				}
-                                boundaryOfReferenceCellSpaceMap.put(boundary, (ArrayList<CellSpace>) prevReference.clone());
+				boundaryOfReferenceCellSpaceMap.put(boundary, (ArrayList<CellSpace>) prevReference.clone());
 			} else {
 				boundary = cellSpaceBoundaryMember.get(cellSpaceBoundaryMember.size() - 1);
 			}
@@ -234,62 +301,62 @@ public class IndoorGML3DGeometryBuilder {
 		ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
 
 		// upper side
-                ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
-                ArrayList<Point> upperPointList = new ArrayList<Point>();
-                for(int i = 0; i < points.size(); i++) {
-                        Point point = points.get(i).clone();
-                        point.setZ(ceilingHeight);
-                        
-                        upperPointList.add(point);
-                }
-                LinearRing upperRing = new LinearRing();
-                upperRing.setPoints(upperPointList);
-                Polygon upperSurface = new Polygon();
-                upperSurface.setExteriorRing(upperRing);
-                surfaceMember.add(upperSurface);
+        ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
+        ArrayList<Point> upperPointList = new ArrayList<Point>();
+        for(int i = 0; i < points.size(); i++) {
+                Point point = points.get(i).clone();
+                point.setZ(ceilingHeight);
                 
-                ArrayList<Point> originPointList = cellSpace.getGeometry2D().getExteriorRing().getPoints();
-                for(int i = 0; i < originPointList.size() - 1; i++) {
-                        ArrayList<Point> sidePointList = new ArrayList<Point>();
-                        Point p1 = originPointList.get(i).clone();
-                        p1.setZ(groundHeight);
-                        Point p2 = originPointList.get(i+1).clone();
-                        p2.setZ(groundHeight);
-                        Point p3 = upperPointList.get(i+1).clone();
-                        p3.setZ(ceilingHeight);
-                        Point p4 = upperPointList.get(i).clone();
-                        p4.setZ(ceilingHeight);/*
-                        panel.setPanelRatioXY(p1);
-                        panel.setPanelRatioXY(p2);
-                        panel.setPanelRatioXY(p3);
-                        panel.setPanelRatioXY(p4);*/
-                        
-                        sidePointList.add(p1);
-                        sidePointList.add(p2);
-                        sidePointList.add(p3);
-                        sidePointList.add(p4);
-                        sidePointList.add(p1);
-                        
-                        LinearRing sideRing = new LinearRing();
-                        sideRing.setPoints(sidePointList);
-                        Polygon sideSurface = new Polygon();
-                        sideSurface.setExteriorRing(sideRing);
-                        surfaceMember.add(sideSurface);
-                }
+                upperPointList.add(point);
+        }
+        LinearRing upperRing = new LinearRing();
+        upperRing.setPoints(upperPointList);
+        Polygon upperSurface = new Polygon();
+        upperSurface.setExteriorRing(upperRing);
+        surfaceMember.add(upperSurface);
+        
+        ArrayList<Point> originPointList = cellSpace.getGeometry2D().getExteriorRing().getPoints();
+        for(int i = 0; i < originPointList.size() - 1; i++) {
+                ArrayList<Point> sidePointList = new ArrayList<Point>();
+                Point p1 = originPointList.get(i).clone();
+                p1.setZ(groundHeight);
+                Point p2 = originPointList.get(i+1).clone();
+                p2.setZ(groundHeight);
+                Point p3 = upperPointList.get(i+1).clone();
+                p3.setZ(ceilingHeight);
+                Point p4 = upperPointList.get(i).clone();
+                p4.setZ(ceilingHeight);/*
+                panel.setPanelRatioXY(p1);
+                panel.setPanelRatioXY(p2);
+                panel.setPanelRatioXY(p3);
+                panel.setPanelRatioXY(p4);*/
                 
-                // lower side
-                ArrayList<Point> lowerPointList = new ArrayList<Point>();
-                for(int i = points.size() - 1; i >= 0; i--) {
-                        Point point = points.get(i).clone();
-                        point.setZ(groundHeight);
-                        
-                        lowerPointList.add(point);
-                }
-                LinearRing lowerRing = new LinearRing();
-                lowerRing.setPoints(lowerPointList);
-                Polygon lowerSurface = new Polygon();
-                lowerSurface.setExteriorRing(lowerRing);
-                surfaceMember.add(lowerSurface);
+                sidePointList.add(p1);
+                sidePointList.add(p2);
+                sidePointList.add(p3);
+                sidePointList.add(p4);
+                sidePointList.add(p1);
+                
+                LinearRing sideRing = new LinearRing();
+                sideRing.setPoints(sidePointList);
+                Polygon sideSurface = new Polygon();
+                sideSurface.setExteriorRing(sideRing);
+                surfaceMember.add(sideSurface);
+        }
+        
+        // lower side
+        ArrayList<Point> lowerPointList = new ArrayList<Point>();
+        for(int i = points.size() - 1; i >= 0; i--) {
+                Point point = points.get(i).clone();
+                point.setZ(groundHeight);
+                
+                lowerPointList.add(point);
+        }
+        LinearRing lowerRing = new LinearRing();
+        lowerRing.setPoints(lowerPointList);
+        Polygon lowerSurface = new Polygon();
+        lowerSurface.setExteriorRing(lowerRing);
+        surfaceMember.add(lowerSurface);
                 
 		
 		// side facet : shell의 옆면

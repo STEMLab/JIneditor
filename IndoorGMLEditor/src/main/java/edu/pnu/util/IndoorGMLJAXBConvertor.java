@@ -68,6 +68,7 @@ import net.opengis.indoorgml.geometry.Point;
 import net.opengis.indoorgml.geometry.Polygon;
 import net.opengis.indoorgml.geometry.Shell;
 import net.opengis.indoorgml.geometry.Solid;
+import edu.pnu.project.BoundaryType;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 
@@ -211,6 +212,10 @@ public class IndoorGMLJAXBConvertor {
 	}
 
 	private CellSpaceBoundaryType createCellSpaceBoundaryType(CellSpaceBoundaryType target, CellSpaceBoundary cellSpaceBoundary) {
+		if (cellSpaceBoundary.getBoundaryType() == BoundaryType.Door) {
+			cellSpaceBoundary.setDescription("Usage", "Door");
+		}
+		
 		if(target == null) {
 			target = IGMLFactory.createCellSpaceBoundaryType();
 		}
