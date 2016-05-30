@@ -1171,7 +1171,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                         for (Point doorPoint : doorPointList) {
                         	boolean check = false;
                         	for (Point splitPoint : splitPoints) {
-                        		if (doorPoint.equals(splitPoint)) {
+                        		if (doorPoint.equalsPanelRatioXY(splitPoint)) {
                         			check = true;
                         			break;
                         		}
@@ -1249,6 +1249,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                                                         .addAll(splitedBoundary);
                                                 otherCellSpace.getPartialBoundedBy().remove(
                                                         adjacencyBoundary);
+                                                otherCellSpace.getPartialBoundedBy().
+                                                		addAll(splitedBoundary);
                                             }
                                         }
                                     }

@@ -127,11 +127,5 @@ public class Point extends AbstractGeometry implements Serializable, IndoorGMLEl
 		
 		return isEquals;
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
-		return super.equals(obj);
-	}
 	
 }
