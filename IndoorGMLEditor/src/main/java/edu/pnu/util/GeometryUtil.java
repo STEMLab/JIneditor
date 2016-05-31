@@ -216,15 +216,17 @@ public class GeometryUtil {
 	}
 	
 	public static Polygon getCouterClockwisedPolygon(Polygon polygon) {
-	        com.vividsolutions.jts.geom.Polygon jtsPolygon = JTSUtil.convertJTSPolygon(polygon);
-	        com.vividsolutions.jts.geom.LinearRing exteriorRing = (LinearRing) jtsPolygon.getExteriorRing();
-	        
-	        double counterClockwised = JTSUtil.Orientation2D_Polygon(jtsPolygon.getCoordinates().length, exteriorRing.getCoordinateSequence());
-	        if(counterClockwised >= 0) {
-	            jtsPolygon = (com.vividsolutions.jts.geom.Polygon) jtsPolygon.reverse();
-	        }
-	        
-	        return JTSUtil.convertPolygon(jtsPolygon);
+		Polygon result = polygon;
+        com.vividsolutions.jts.geom.Polygon jtsPolygon = JTSUtil.convertJTSPolygon(polygon);
+        com.vividsolutions.jts.geom.LinearRing exteriorRing = (LinearRing) jtsPolygon.getExteriorRing();
+        
+        double counterClockwised = JTSUtil.Orientation2D_Polygon(jtsPolygon.getCoordinates().length, exteriorRing.getCoordinateSequence());
+        if(counterClockwised >= 0) {
+            jtsPolygon = (com.vividsolutions.jts.geom.Polygon) jtsPolygon.reverse();
+            result = JTSUtil.convertPolygon(jtsPolygon);
+        }
+        
+        return result;
 	}
 	
 	

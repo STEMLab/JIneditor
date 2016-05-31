@@ -40,7 +40,7 @@ public class IndoorGMLExporter {
 	
 	public void export() throws JAXBException{
 		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
-	        IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
+	    IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
 		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(project.getIndoorFeatures(), project.getIs3DGeometry());
 		coordinateGenerator.generate();				
 		
@@ -63,7 +63,7 @@ public class IndoorGMLExporter {
 		save.setFileFilter(filter);
 		int result = save.showSaveDialog(null);
 		if( result == JFileChooser.CANCEL_OPTION ) {
-			System.exit(1);
+			return;
 		}
 		File output = save.getSelectedFile();
 

@@ -382,9 +382,9 @@ public class IndoorCoordinateGenerator {
 	        AffineTransformation affine = new AffineTransformationBuilder(coord1, coord2, coord3, coord4, coord5, coord6).getTransformation();
 	        Geometry geom = affine.transform(p);
 
-                Point resultP = JTSUtil.convertPoint((com.vividsolutions.jts.geom.Point) geom);
-                
-                return resultP;
+            Point resultP = JTSUtil.convertPoint((com.vividsolutions.jts.geom.Point) geom);
+            
+            return resultP;
 	}
 
 }

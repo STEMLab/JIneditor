@@ -2,6 +2,8 @@ package edu.pnu.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
@@ -57,60 +59,135 @@ public class IndoorGML3DGeometryBuilder {
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
 		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
-		HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DRererenceMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
-		
-		ArrayList<CellSpaceBoundary> removes = new ArrayList<CellSpaceBoundary>();
-        for(CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
-            if(boundary.getBoundaryType() == BoundaryType.Only3DBoundary) {
-                removes.add(boundary);
-                
-                ArrayList<CellSpace> references = boundaryOfReferenceCellSpaceMap.get(boundary);
-                for(CellSpace reference : references) {
-                    reference.getPartialBoundedBy().remove(boundary);
-                }
-            }
+		HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DReferenceMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
+		        
+        for (CellSpace cellSpace : cellSpaceMember) {
+        	ArrayList<CellSpaceBoundary> removed = new ArrayList<CellSpaceBoundary>();
+        	for (CellSpaceBoundary bounded : cellSpace.getPartialBoundedBy()) {
+        		if (bounded.getBoundaryType() == BoundaryType.Only3DBoundary) {
+	        		removed.add(bounded);
+	        		cellSpaceBoundaryMember.remove(bounded);
+        		} else if (bounded.getGeometry3D() != null) {
+        			bounded.setGeometry3D(null);
+        		}
+        	}
+        	cellSpace.getPartialBoundedBy().removeAll(removed);
         }
-        cellSpaceBoundaryMember.removeAll(removes);
+        
         
         for (CellSpace cellSpace : cellSpaceMember) {
         	ArrayList<CellSpaceBoundary> boundedBy = cellSpace.getPartialBoundedBy();
+        	ArrayList<CellSpaceBoundary> generated3DBoundary = new ArrayList<CellSpaceBoundary>();
         	int remain = boundedBy.size();
-        	
+
+    		ArrayList<CellSpace> ignore = new ArrayList<CellSpace>();
         	while (remain > 0) {
         		ArrayList<CellSpaceBoundary> combineBoundary = new ArrayList<CellSpaceBoundary>();
         		CellSpace targetCell = null;
         		for (CellSpaceBoundary bounded : boundedBy) {
-            		if (!boundary3DRererenceMap.containsKey(bounded)) {
+            		if (!boundary3DReferenceMap.containsKey(bounded)) {
             			ArrayList<CellSpace> referenceCellSpaceList = boundaryOfReferenceCellSpaceMap.get(bounded);
             			CellSpace candidate = null;
+            			// c1과 c2의 동일한 벽에 위치한 boundary들을 모은다.
             			for (CellSpace cell : referenceCellSpaceList) {
             				if (!cell.equals(cellSpace)) {
-            					candidate = cellSpace;
+            					candidate = cell;
             					break;
             				}
             			}
             			
-            			if (targetCell == null) {
-            				targetCell = candidate;
-                			combineBoundary.add(bounded);
-            			} else if (targetCell.equals(candidate)) {
-                			combineBoundary.add(bounded);
+            			if (!ignore.contains(candidate)) {
+	            			if (targetCell == null) {
+	            				targetCell = candidate;
+	                			combineBoundary.add(bounded);
+	            			} else if (targetCell.equals(candidate)) {
+	                			combineBoundary.add(bounded);
+	            			}
             			}
+            		} else {
+            			// 이미 다른 cell에서 bounded의 3D boundary가 생성되어 있다면 그것을 추가한다.
+            			CellSpaceBoundary boundary3D = boundary3DReferenceMap.get(bounded);
+            			if (!generated3DBoundary.contains(boundary3D)) {
+            				generated3DBoundary.add(boundary3D);
+            			}
+            			remain--;
             		}
             		
+            		// 문이면 별도로 생성한다.
             		if (bounded.getBoundaryType() == BoundaryType.Door && bounded.getGeometry3D() == null) {
             			Polygon geometry3D = new Polygon();
-        				geometry3D = createPolygonFrom2Points((ArrayList<Point>)bounded.getGeometry2D().getPoints().clone(), ceilingHeight);
+            			ArrayList<Point> geometry3DPoints = new ArrayList<Point>();
+            			geometry3DPoints.add(bounded.getGeometry2D().getPoints().get(0).clone());
+            			geometry3DPoints.add(bounded.getGeometry2D().getPoints().get(1).clone());
+        				geometry3D = createPolygonFrom2Points(geometry3DPoints, defaultDoorHeight);
         				bounded.setGeometry3D(geometry3D);
         				
         				remain--;
             		} 
             	}
         		
+        		// 하나의 벽으로 합칠 수 있는 boundary들의 점을 찾는다.
+        		ArrayList<Point> combinePoints = new ArrayList<Point>();
+        		ArrayList<CellSpaceBoundary> refinement = new ArrayList<CellSpaceBoundary>();
+        		for (int i = 0; i < combineBoundary.size(); i++) {
+        			CellSpaceBoundary target = combineBoundary.get(i);
+        			LineString geometry2D = target.getGeometry2D();
+        			
+        			// 
+        			if (combinePoints.size() == 0) {
+        				if (target.getBoundaryType() == BoundaryType.Door) {
+        					ArrayList<Point> clone = (ArrayList<Point>) geometry2D.getPoints().clone();
+        					Point cloneLast = clone.get(1).clone();
+        					clone.get(0).setZ(defaultDoorHeight);
+        					clone.get(1).setZ(defaultDoorHeight);
+        					cloneLast.setZ(groundHeight);
+        					clone.add(cloneLast);
+        					        					
+        					combinePoints.addAll(clone);
+        				} else {
+            				combinePoints.addAll((ArrayList<Point>) geometry2D.getPoints().clone());
+            				refinement.add(target);
+        				}
+        			} else {        			
+	        			Point lastPoint = combinePoints.get(combinePoints.size() - 1);
+	        			Point startPoint = geometry2D.getPoints().get(0);
+	        			if (lastPoint.equalsPanelRatioXY(startPoint)) { // 끝점 같은것과 직선인지 검사해야함
+	        				if (target.getBoundaryType() == BoundaryType.Door) {
+	        					ArrayList<Point> clone = (ArrayList<Point>) geometry2D.getPoints().clone();
+	        					Point cloneLast = clone.get(1).clone();
+	        					clone.get(0).setZ(defaultDoorHeight);
+	        					clone.get(1).setZ(defaultDoorHeight);
+	        					cloneLast.setZ(groundHeight);
+	        					clone.add(cloneLast);
+	        					        					
+	        					combinePoints.addAll(clone);
+	        				} else {
+	        					combinePoints.add(geometry2D.getPoints().get(1).clone());
+	        					refinement.add(target);
+	        				}
+	        			}
+        			}
+        		}
         		
-        		
+        		if (refinement.size() > 0) {
+	        		CellSpaceBoundary newBoundary = new CellSpaceBoundary();
+	        		Polygon geometry3D = createPolygonFrom2Points(combinePoints, ceilingHeight);
+					newBoundary.setBoundaryType(BoundaryType.Only3DBoundary);
+					newBoundary.setGeometry3D(geometry3D);
+					
+					for (CellSpaceBoundary target : refinement) {
+						boundary3DReferenceMap.put(target, newBoundary);
+					}
+					cellSpaceBoundaryMember.add(newBoundary);
+					generated3DBoundary.add(newBoundary);
+					
+					remain--;
+        		} else {
+        			ignore.add(targetCell);
+        		}
         	}
-        	
+
+			cellSpace.getPartialBoundedBy().addAll(generated3DBoundary);
         }
 	}
 	
@@ -252,8 +329,6 @@ public class IndoorGML3DGeometryBuilder {
 	public void fromCellSpaceOnFloor(CellSpaceOnFloor cellSpaceOnFloor, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		for(CellSpace cellSpace : cellSpaceMember) {
-		        if(cellSpace.getGmlID().equalsIgnoreCase("C1"))
-		            System.out.println("C1 found");
 			Solid solid = createSolidForCellSpace(cellSpace, cellSpaceOnFloor.getFloorProperty());
 			cellSpace.setGeometry3D(solid);
 		}
@@ -285,7 +360,11 @@ public class IndoorGML3DGeometryBuilder {
 		
 		Polygon originPolygon = cellSpace.getGeometry2D();
 		Polygon counterClockwisedPolygon = GeometryUtil.getCouterClockwisedPolygon(originPolygon);
-		ArrayList<Point> exteriorPoints = counterClockwisedPolygon.getExteriorRing().getPoints();
+		//cellSpace.setGeometry2D(counterClockwisedPolygon);
+		// counterClockWisedPolygon으로 바꾼 polygon에 대해서(실제로는 JTSUtil에서 clockwisedPolygon으로 줘야한다.)
+		// panelRatioXY 적용하는 작업 필요
+		/*
+		ArrayList<Point> exteriorPoints = counterClockwisedPolygon.getExteriorRing().getPoints();		
 		ArrayList<LineString> lineStrings = new ArrayList<LineString>();
 		for (int i = 0; i < exteriorPoints.size() - 1; i++) {
 		    LineString newLS = new LineString();
@@ -293,12 +372,12 @@ public class IndoorGML3DGeometryBuilder {
 		    newLS.getPoints().add(exteriorPoints.get((i + 1) % exteriorPoints.size()).clone());
 		    lineStrings.add(newLS);
 		}
-		cellSpace.setLineStringElements(lineStrings);
-		
+		cellSpace.setLineStringElements(lineStrings);		
+		*/
 		
 		Shell shell = new Shell();
 		ArrayList<Polygon> surfaceMember = new ArrayList<Polygon>();
-		ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
+		//ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
 
 		// upper side
         ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();

@@ -14,6 +14,8 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
 
+import edu.pnu.gui.CanvasPanel;
+
 public class JTSUtil {
     private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FIXED);
 	private static final GeometryFactory gf = new GeometryFactory(pm); 
@@ -155,6 +157,7 @@ public class JTSUtil {
 		for(int j = 0; j < line.getNumPoints(); j++) {
 			Point p = line.getPointN(j);
 			net.opengis.indoorgml.geometry.Point newPoint = convertPoint(p);
+			
 			points.add(newPoint);
 		}
 		
@@ -330,8 +333,8 @@ public class JTSUtil {
 	
 	public static double IsLeft(Coordinate P0, Coordinate P1, Coordinate P2)
         {
-            return ((P1.X - P0.X) * (P2.Y - P0.Y)
-                    - (P2.X - P0.X) * (P1.Y - P0.Y));
+            return ((P1.x - P0.x) * (P2.y - P0.y)
+                    - (P2.x - P0.x) * (P1.y - P0.y));
         }
 
         //===================================================================

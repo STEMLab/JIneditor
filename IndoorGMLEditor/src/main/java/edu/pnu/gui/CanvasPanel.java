@@ -32,6 +32,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 
+import com.vividsolutions.jts.geom.CoordinateSequence;
+
 import net.opengis.indoorgml.core.AbstractFeature;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
@@ -52,6 +54,7 @@ import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.GeometryUtil;
+import edu.pnu.util.JTSUtil;
 
 public class CanvasPanel extends JPanel implements MouseListener, MouseMotionListener,
         MouseWheelListener, KeyListener {
@@ -913,7 +916,32 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         // create CellSpace
         CellSpace cellSpace = new CellSpace();
-        ArrayList<Point> exteriorPoints = new ArrayList<Point>();
+
+        // CounterClockwised polygon check
+        ArrayList<Point> checkPoints = new ArrayList<Point>();
+        for (LineString ls : lineStringElements) {
+            checkPoints.add(ls.getPoints().get(0).clone());
+        }
+        checkPoints.add(checkPoints.get(0).clone());
+
+        LinearRing checkRing = new LinearRing();
+        checkRing.setPoints(checkPoints);
+        com.vividsolutions.jts.geom.LineString jtsLine = JTSUtil.convertJTSLineString(checkRing);
+        if (JTSUtil.Orientation2D_Polygon(jtsLine.getNumPoints(), jtsLine.getCoordinateSequence()) > 0) {
+        	ArrayList<LineString> temp = new ArrayList<LineString>();
+        	int last = lineStringElements.size() - 1;
+        	for (int i = last; i >= 0; i--) {
+        		LineString line = lineStringElements.get(i);
+        		Point p = line.getPoints().get(0);
+        		line.getPoints().add(p);
+        		line.getPoints().remove(0);
+        		
+        		temp.add(lineStringElements.get(i));
+        	}
+        	lineStringElements = temp;
+        	System.out.println("reversed");
+        }
+        //
         for (int i = 0; i < lineStringElements.size(); i++) {
             LineString ls = lineStringElements.get(i);
             // Point p1 = ls.getPoints().get(0);
@@ -964,6 +992,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         }
         cellSpace.setLineStringElements((ArrayList<LineString>) lineStringElements.clone());
+        ArrayList<Point> exteriorPoints = new ArrayList<Point>();
         for (LineString ls : cellSpace.getLineStringElements()) {
             exteriorPoints.add(ls.getPoints().get(0).clone());
         }
@@ -2205,6 +2234,13 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 
         ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
         for (int i = 0; i < points.size() - 1; i++) {
+        	if (points.get(i).getPanelRatioX() == 0 && points.get(i).getPanelRatioY() == 0) {
+        		setPanelRatioXY(points.get(i));
+        	}
+        	if (points.get(i + 1).getPanelRatioX() == 0 && points.get(i + 1).getPanelRatioY() == 0) {
+        		setPanelRatioXY(points.get(i + 1));
+        	}
+        	
             setPanelXYForCurrentScale(points.get(i));
             setPanelXYForCurrentScale(points.get(i + 1));
 
@@ -2424,6 +2460,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         boolean isAdjacency = false;
         double snapBounds = 10;
 
+        if (point.getPanelRatioX() == 0 && point.getPanelRatioY() == 0) {
+        	setPanelRatioXY(point);
+        }
         setPanelXYForCurrentScale(point);
         double pointX = point.getPanelX();
         double pointY = point.getPanelY();
@@ -2447,6 +2486,13 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             Point p1 = points.get(i);
             Point p2 = points.get(i + 1);
 
+            if (p1.getPanelRatioX() == 0 && p1.getPanelRatioY() == 0) {
+            	setPanelRatioXY(p1);
+            }
+            if (p2.getPanelRatioX() == 0 && p2.getPanelRatioY() == 0) {
+            	setPanelRatioXY(p2);
+            }
+            
             setPanelXYForCurrentScale(p1);
             setPanelXYForCurrentScale(p2);
             double x1 = p1.getPanelX();
