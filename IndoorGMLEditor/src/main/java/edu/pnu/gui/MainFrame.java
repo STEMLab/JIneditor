@@ -1141,7 +1141,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        btnImport.setVisible(false);
+        //btnImport.setVisible(false);
         return btnImport;
     }
     private JTextField getTextField_ID() {
@@ -1149,7 +1149,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	textField_ID = new JTextField();
         	textField_ID.setColumns(10);
         }
-        textField_ID.setVisible(false);
+        //textField_ID.setVisible(false);
         return textField_ID;
     }
     private JButton getBtnAa() {
@@ -1161,7 +1161,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        btnAa.setVisible(false);
+        //btnAa.setVisible(false);
         return btnAa;
     }
 	private JMenu getMnAssist() {

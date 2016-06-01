@@ -97,7 +97,7 @@ public class WKTImporter {
                     //com.vividsolutions.jts.geom.MultiPolygon multiPolygon = (com.vividsolutions.jts.geom.MultiPolygon) wktReader.read(line);
                     com.vividsolutions.jts.geom.Polygon polygon = (com.vividsolutions.jts.geom.Polygon) wktReader.read(line);
                     double counterClockwised = JTSUtil.Orientation2D_Polygon(polygon.getCoordinates().length, polygon.getExteriorRing().getCoordinateSequence());
-        	        if(counterClockwised >= 0) {
+        	        if(counterClockwised > 0) {
         	        	polygon = (com.vividsolutions.jts.geom.Polygon) polygon.reverse();
         	        }
         	        

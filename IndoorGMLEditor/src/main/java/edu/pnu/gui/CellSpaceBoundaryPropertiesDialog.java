@@ -87,7 +87,7 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
                         if (textField_Description.getText() != null) {
                             cellSpaceBoundary.setDescription(textField_Description.getText());
                         }
-                        if(textField_Door.getText() != null) {
+                        if(textField_Door.getText() != null && !textField_Door.getText().equals("")) {
                             cellSpaceBoundary.setDoorHeight(Double.parseDouble(textField_Door.getText()));
                         }
                         dispose();

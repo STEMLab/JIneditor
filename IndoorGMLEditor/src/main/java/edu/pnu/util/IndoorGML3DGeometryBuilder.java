@@ -64,7 +64,7 @@ public class IndoorGML3DGeometryBuilder {
         for (CellSpace cellSpace : cellSpaceMember) {
         	ArrayList<CellSpaceBoundary> removed = new ArrayList<CellSpaceBoundary>();
         	for (CellSpaceBoundary bounded : cellSpace.getPartialBoundedBy()) {
-        		if (bounded.getBoundaryType() == BoundaryType.Only3DBoundary) {
+        		if (bounded.getBoundaryType() == BoundaryType.Boundary3D) {
 	        		removed.add(bounded);
 	        		cellSpaceBoundaryMember.remove(bounded);
         		} else if (bounded.getGeometry3D() != null) {
@@ -172,7 +172,7 @@ public class IndoorGML3DGeometryBuilder {
         		if (refinement.size() > 0) {
 	        		CellSpaceBoundary newBoundary = new CellSpaceBoundary();
 	        		Polygon geometry3D = createPolygonFrom2Points(combinePoints, ceilingHeight);
-					newBoundary.setBoundaryType(BoundaryType.Only3DBoundary);
+					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
 					newBoundary.setGeometry3D(geometry3D);
 					
 					for (CellSpaceBoundary target : refinement) {
@@ -200,7 +200,7 @@ public class IndoorGML3DGeometryBuilder {
                 
 		ArrayList<CellSpaceBoundary> removes = new ArrayList<CellSpaceBoundary>();
         for(CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
-            if(boundary.getBoundaryType() == BoundaryType.Only3DBoundary) {
+            if(boundary.getBoundaryType() == BoundaryType.Boundary3D) {
                 removes.add(boundary);
                 
                 ArrayList<CellSpace> references = boundaryOfReferenceCellSpaceMap.get(boundary);
@@ -247,7 +247,7 @@ public class IndoorGML3DGeometryBuilder {
 				
 				if(combineLS.getPoints().size() > 2) {
 					CellSpaceBoundary newBoundary = new CellSpaceBoundary();
-					newBoundary.setBoundaryType(BoundaryType.Only3DBoundary);
+					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
 					newBoundary.setGeometry3D(geometry3D);
 					newBoundaryList.add(newBoundary);
 					
@@ -293,7 +293,7 @@ public class IndoorGML3DGeometryBuilder {
 			CellSpaceBoundary boundary = null;
 			if(combineLS.getPoints().size() > 2) {
 				boundary = new CellSpaceBoundary();
-				boundary.setBoundaryType(BoundaryType.Only3DBoundary);
+				boundary.setBoundaryType(BoundaryType.Boundary3D);
 				newBoundaryList.add(boundary);
 				
 				for(CellSpace reference : prevReference) {

@@ -2515,9 +2515,31 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 lowerY = y2;
                 upperY = y1;
             }
+            
+            double epsilon = 5;
+            boolean coverX = false;
+            if (upperX - lowerX <= epsilon) {
+            	coverX = true;
+            } else {
+            	if (lowerX <= x && x <= upperX) {
+            		coverX = true;
+            	}
+            }
+            boolean coverY = false;
+            if (upperY - lowerY <= epsilon) {
+            	coverY = true;
+            } else {
+            	if (lowerY <= y && y <= upperY) {
+            		coverY = true;
+            	}
+            }
+            
 
-            if (!(lowerX <= x && x <= upperX && lowerY <= y && y <= upperY))
-                continue;
+            if (!(coverX && coverY)) {
+            	continue;
+            }
+            //if (!(lowerX <= x && x <= upperX && lowerY <= y && y <= upperY))
+            //    continue;
 
             // double distance = getDistancePointToLine(x1, y1, x2, y2, x, y);
             double distance = GeometryUtil.getDistancePointToLine(x1, y1, x2, y2, x, y);

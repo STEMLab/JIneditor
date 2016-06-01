@@ -88,7 +88,7 @@ public class CellSpacePropertiesDialog extends JDialog {
                         if (textField_Description.getText() != null) {
                             cellSpace.setDescription(textField_Description.getText());
                         }
-                        if(textField_Ceiling.getText() != null) {
+                        if(textField_Ceiling.getText() != null && !textField_Ceiling.getText().equals("")) {
                             cellSpace.setCeilingHeight(Double.parseDouble(textField_Ceiling.getText()));
                         }
                         cellSpace.setDescription("Usage", (String) comboBox_Usage.getSelectedItem());
