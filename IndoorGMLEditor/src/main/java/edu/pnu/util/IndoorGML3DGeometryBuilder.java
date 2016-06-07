@@ -26,6 +26,8 @@ public class IndoorGML3DGeometryBuilder {
 	private HashMap<LineString, Polygon> xLink3DMap;
 	private ArrayList<LineString> combineLineStrings;
 	private CanvasPanel panel;
+	
+	private HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
 		
 	public IndoorGML3DGeometryBuilder(CanvasPanel panel, IndoorFeatures indoorFeatures) {
 	        this.panel = panel;
@@ -33,6 +35,8 @@ public class IndoorGML3DGeometryBuilder {
 		
 		xLink3DMap = new HashMap<LineString, Polygon>();
 		combineLineStrings = new ArrayList<LineString>();
+		
+		boundary3DMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
 	}
 
 	public void create3DGeometry() {
@@ -74,8 +78,8 @@ public class IndoorGML3DGeometryBuilder {
         	cellSpace.getPartialBoundedBy().removeAll(removed);
         }
         
-        
-        for (CellSpace cellSpace : cellSpaceMember) {
+        int count = 0;
+        for (CellSpace cellSpace : cellSpaceMember) {        	
         	ArrayList<CellSpaceBoundary> boundedBy = cellSpace.getPartialBoundedBy();
         	ArrayList<CellSpaceBoundary> generated3DBoundary = new ArrayList<CellSpaceBoundary>();
         	int remain = boundedBy.size();
@@ -89,20 +93,26 @@ public class IndoorGML3DGeometryBuilder {
             			ArrayList<CellSpace> referenceCellSpaceList = boundaryOfReferenceCellSpaceMap.get(bounded);
             			CellSpace candidate = null;
             			// c1과 c2의 동일한 벽에 위치한 boundary들을 모은다.
-            			for (CellSpace cell : referenceCellSpaceList) {
-            				if (!cell.equals(cellSpace)) {
-            					candidate = cell;
-            					break;
-            				}
-            			}
-            			
-            			if (!ignore.contains(candidate)) {
-	            			if (targetCell == null) {
-	            				targetCell = candidate;
-	                			combineBoundary.add(bounded);
-	            			} else if (targetCell.equals(candidate)) {
-	                			combineBoundary.add(bounded);
+            			try {
+	            			if (referenceCellSpaceList.size() >= 2) {
+		            			for (CellSpace cell : referenceCellSpaceList) {
+		            				if (!cell.equals(cellSpace)) {
+		            					candidate = cell;
+		            					break;
+		            				}
+		            			}
+		            			
+		            			if (!ignore.contains(candidate)) {
+			            			if (targetCell == null) {
+			            				targetCell = candidate;
+			                			combineBoundary.add(bounded);
+			            			} else if (targetCell.equals(candidate)) {
+			                			combineBoundary.add(bounded);
+			            			}
+		            			}
 	            			}
+            			} catch (Exception e) {
+            				System.out.println("exception");
             			}
             		} else {
             			// 이미 다른 cell에서 bounded의 3D boundary가 생성되어 있다면 그것을 추가한다.
@@ -115,11 +125,14 @@ public class IndoorGML3DGeometryBuilder {
             		
             		// 문이면 별도로 생성한다.
             		if (bounded.getBoundaryType() == BoundaryType.Door && bounded.getGeometry3D() == null) {
+    					bounded.getGeometry2D().getPoints().get(0).setZ(groundHeight);
+    					bounded.getGeometry2D().getPoints().get(1).setZ(groundHeight);
+    					
             			Polygon geometry3D = new Polygon();
             			ArrayList<Point> geometry3DPoints = new ArrayList<Point>();
             			geometry3DPoints.add(bounded.getGeometry2D().getPoints().get(0).clone());
             			geometry3DPoints.add(bounded.getGeometry2D().getPoints().get(1).clone());
-        				geometry3D = createPolygonFrom2Points(geometry3DPoints, defaultDoorHeight);
+        				geometry3D = createPolygonFrom2Points(geometry3DPoints, groundHeight + defaultDoorHeight);
         				bounded.setGeometry3D(geometry3D);
         				
         				remain--;
@@ -136,15 +149,24 @@ public class IndoorGML3DGeometryBuilder {
         			// 
         			if (combinePoints.size() == 0) {
         				if (target.getBoundaryType() == BoundaryType.Door) {
-        					ArrayList<Point> clone = (ArrayList<Point>) geometry2D.getPoints().clone();
+        					geometry2D.getPoints().get(0).setZ(groundHeight);
+        					geometry2D.getPoints().get(1).setZ(groundHeight);
+        					
+        					ArrayList<Point> clone = new ArrayList<Point>();
+        					clone.add(geometry2D.getPoints().get(0).clone());
+        					clone.add(geometry2D.getPoints().get(1).clone());
+        					
         					Point cloneLast = clone.get(1).clone();
-        					clone.get(0).setZ(defaultDoorHeight);
-        					clone.get(1).setZ(defaultDoorHeight);
+        					clone.get(0).setZ(groundHeight + defaultDoorHeight);
+        					clone.get(1).setZ(groundHeight + defaultDoorHeight);
         					cloneLast.setZ(groundHeight);
         					clone.add(cloneLast);
         					        					
         					combinePoints.addAll(clone);
         				} else {
+        					geometry2D.getPoints().get(0).setZ(groundHeight);
+        					geometry2D.getPoints().get(1).setZ(groundHeight);
+        					
             				combinePoints.addAll((ArrayList<Point>) geometry2D.getPoints().clone());
             				refinement.add(target);
         				}
@@ -153,15 +175,24 @@ public class IndoorGML3DGeometryBuilder {
 	        			Point startPoint = geometry2D.getPoints().get(0);
 	        			if (lastPoint.equalsPanelRatioXY(startPoint)) { // 끝점 같은것과 직선인지 검사해야함
 	        				if (target.getBoundaryType() == BoundaryType.Door) {
-	        					ArrayList<Point> clone = (ArrayList<Point>) geometry2D.getPoints().clone();
+	        					geometry2D.getPoints().get(0).setZ(groundHeight);
+	        					geometry2D.getPoints().get(1).setZ(groundHeight);
+	        					
+	        					ArrayList<Point> clone = new ArrayList<Point>();
+	        					clone.add(geometry2D.getPoints().get(0).clone());
+	        					clone.add(geometry2D.getPoints().get(1).clone());
+	        					
 	        					Point cloneLast = clone.get(1).clone();
-	        					clone.get(0).setZ(defaultDoorHeight);
-	        					clone.get(1).setZ(defaultDoorHeight);
+	        					clone.get(0).setZ(groundHeight + defaultDoorHeight);
+	        					clone.get(1).setZ(groundHeight + defaultDoorHeight);
 	        					cloneLast.setZ(groundHeight);
 	        					clone.add(cloneLast);
 	        					        					
 	        					combinePoints.addAll(clone);
 	        				} else {
+	        					geometry2D.getPoints().get(0).setZ(groundHeight);
+	        					geometry2D.getPoints().get(1).setZ(groundHeight);
+	        					
 	        					combinePoints.add(geometry2D.getPoints().get(1).clone());
 	        					refinement.add(target);
 	        				}
@@ -181,13 +212,22 @@ public class IndoorGML3DGeometryBuilder {
 					cellSpaceBoundaryMember.add(newBoundary);
 					generated3DBoundary.add(newBoundary);
 					
+					// for joonseokkim
+					newBoundary.setDuality(refinement.get(0).getDuality());
+    				boundary3DMap.put(refinement.get(0), newBoundary);
+					//
+					
 					remain--;
         		} else {
-        			ignore.add(targetCell);
+        			if (targetCell != null && !ignore.contains(targetCell)) {
+            			ignore.add(targetCell);
+        			}
         		}
         	}
 
-			cellSpace.getPartialBoundedBy().addAll(generated3DBoundary);
+        	if (!generated3DBoundary.isEmpty()) {
+        		cellSpace.getPartialBoundedBy().addAll(generated3DBoundary);
+        	}
         }
 	}
 	
@@ -357,30 +397,26 @@ public class IndoorGML3DGeometryBuilder {
 		//        ceilingHeight = cellSpace.getCeilingHeight();
 		//}
 		
-		
 		Polygon originPolygon = cellSpace.getGeometry2D();
-		Polygon counterClockwisedPolygon = GeometryUtil.getCouterClockwisedPolygon(originPolygon);
-		//cellSpace.setGeometry2D(counterClockwisedPolygon);
-		// counterClockWisedPolygon으로 바꾼 polygon에 대해서(실제로는 JTSUtil에서 clockwisedPolygon으로 줘야한다.)
-		// panelRatioXY 적용하는 작업 필요
-		/*
-		ArrayList<Point> exteriorPoints = counterClockwisedPolygon.getExteriorRing().getPoints();		
-		ArrayList<LineString> lineStrings = new ArrayList<LineString>();
-		for (int i = 0; i < exteriorPoints.size() - 1; i++) {
-		    LineString newLS = new LineString();
-		    newLS.getPoints().add(exteriorPoints.get(i).clone());
-		    newLS.getPoints().add(exteriorPoints.get((i + 1) % exteriorPoints.size()).clone());
-		    lineStrings.add(newLS);
+		LineString exteriorRing = originPolygon.getExteriorRing();
+		ArrayList<Point> points = null;
+		com.vividsolutions.jts.geom.LineString jtsLine = JTSUtil.convertJTSLineString(exteriorRing);
+		double isCounterClockwise = JTSUtil.Orientation2D_Polygon(jtsLine.getNumPoints(), jtsLine.getCoordinateSequence());
+		if (isCounterClockwise > 0) {			
+			points = new ArrayList<Point>();
+			ArrayList<Point> originPoints = exteriorRing.getPoints();
+			for (int i = originPoints.size() - 1; i >= 0; i--) {
+				points.add(originPoints.get(i));
+			}
+		} else {
+			points = exteriorRing.getPoints();
 		}
-		cellSpace.setLineStringElements(lineStrings);		
-		*/
 		
 		Shell shell = new Shell();
 		ArrayList<Polygon> surfaceMember = new ArrayList<Polygon>();
 		//ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
 
 		// upper side
-        ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
         ArrayList<Point> upperPointList = new ArrayList<Point>();
         for(int i = 0; i < points.size(); i++) {
                 Point point = points.get(i).clone();
@@ -394,12 +430,11 @@ public class IndoorGML3DGeometryBuilder {
         upperSurface.setExteriorRing(upperRing);
         surfaceMember.add(upperSurface);
         
-        ArrayList<Point> originPointList = cellSpace.getGeometry2D().getExteriorRing().getPoints();
-        for(int i = 0; i < originPointList.size() - 1; i++) {
+        for(int i = 0; i < points.size() - 1; i++) {
                 ArrayList<Point> sidePointList = new ArrayList<Point>();
-                Point p1 = originPointList.get(i).clone();
+                Point p1 = points.get(i).clone();
                 p1.setZ(groundHeight);
-                Point p2 = originPointList.get(i+1).clone();
+                Point p2 = points.get(i+1).clone();
                 p2.setZ(groundHeight);
                 Point p3 = upperPointList.get(i+1).clone();
                 p3.setZ(ceilingHeight);
@@ -688,5 +723,9 @@ public class IndoorGML3DGeometryBuilder {
 		polygon.setExteriorRing(linearRing);
 		
 		return polygon;		
+	}
+	
+	public HashMap<CellSpaceBoundary, CellSpaceBoundary> getBoundary3DMap() {
+		return boundary3DMap;
 	}
 }

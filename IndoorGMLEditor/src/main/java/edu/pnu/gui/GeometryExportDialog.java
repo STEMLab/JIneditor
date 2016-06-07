@@ -4,16 +4,19 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
-import javax.xml.bind.JAXBException;
 
+import net.opengis.indoorgml.core.CellSpaceBoundary;
 import edu.pnu.importexport.IndoorGMLExporter;
 import edu.pnu.project.ProjectFile;
+import edu.pnu.util.CellSpaceBoundaryBuilder;
+import edu.pnu.util.Geometry3DRemover;
 import edu.pnu.util.IndoorGML3DGeometryBuilder;
 
 public class GeometryExportDialog extends JDialog {
@@ -82,19 +85,29 @@ public class GeometryExportDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
+						// 준석햄 데이터를 위한 boundary 생성
+						CellSpaceBoundaryBuilder csbb = new CellSpaceBoundaryBuilder(panel, project.getIndoorFeatures());
+						csbb.build();
+						
+						HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap = null;
 						if(rdbtn3D.isSelected()) {
 						//	IndoorGML3DGeometryBuilder builder
 							project.setIs3DGeometry(true);
 							IndoorGML3DGeometryBuilder builder = new IndoorGML3DGeometryBuilder(panel, project.getIndoorFeatures());
 							builder.create3DGeometry();
+							
+							boundary3DMap = builder.getBoundary3DMap();
 						} else {
 							project.setIs3DGeometry(false);
 						}
 						
 						IndoorGMLExporter exporter = new IndoorGMLExporter(project);
 						try {
+							exporter.setBoundary3DMap(boundary3DMap);
 							exporter.export();
-						} catch (JAXBException e1) {
+							
+							Geometry3DRemover.removeGeometry3D(project.getIndoorFeatures());
+						} catch (Exception e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}

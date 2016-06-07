@@ -122,9 +122,29 @@ public class GeometryUtil {
 	public static LineString getIntersectionLineString(LineString ls1, LineString ls2) {
 	        com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
 	        com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
+	        
 	        com.vividsolutions.jts.geom.Geometry geom = line1.intersection(line2);
+	        if (!geom.getGeometryType().equalsIgnoreCase("LineString")) {
+	        	//System.out.println("intersection is not LineString type");
+	        	return null;
+	        }
 	        com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) geom;
 	        //com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) line1.intersection(line2);
+	        
+	        //for joonseok kim
+	        if (intersection.isEmpty()) {
+		        com.vividsolutions.jts.geom.Point line1StartPoint = line1.getStartPoint();
+		        com.vividsolutions.jts.geom.Point line1EndPoint = line1.getEndPoint();
+		        com.vividsolutions.jts.geom.Point line2StartPoint = line2.getStartPoint();
+		        com.vividsolutions.jts.geom.Point line2EndPoint = line2.getEndPoint();	        
+		        if (line1StartPoint.distance(line2StartPoint) <= epsilon && line1EndPoint.distance(line2EndPoint) <= epsilon) {
+		        	intersection = (com.vividsolutions.jts.geom.LineString) line1.clone();
+		        } else if (line1StartPoint.distance(line2EndPoint) <= epsilon && line1EndPoint.distance(line2StartPoint) <= epsilon) {
+		        	intersection = (com.vividsolutions.jts.geom.LineString) line1.clone();
+		        } else {
+		        	//System.out.println("LINESTRING EMPTY");
+		        }
+	        }
 	        
 	        return JTSUtil.convertLineString(intersection);
 	}
@@ -229,5 +249,32 @@ public class GeometryUtil {
         return result;
 	}
 	
-	
+	public static boolean isEqualsForJSK(LineString ls1, LineString ls2) {
+		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
+		com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
+		
+		if (line1.equals(line2)) {
+			return true;
+		}
+		
+		com.vividsolutions.jts.geom.Point line1StartPoint = line1.getStartPoint();
+        com.vividsolutions.jts.geom.Point line1EndPoint = line1.getEndPoint();
+        com.vividsolutions.jts.geom.Point line2StartPoint = line2.getStartPoint();
+        com.vividsolutions.jts.geom.Point line2EndPoint = line2.getEndPoint();
+        
+        double distance1 = line1StartPoint.distance(line1EndPoint);
+        double distance2 = line2StartPoint.distance(line2EndPoint);
+		if (Math.abs(JTSUtil.isSimilarOrientation(line1, line2)) == 1 &&
+				line1.distance(line2) < epsilon && Math.abs(distance1 - distance2) < epsilon) {
+			if (line1StartPoint.distance(line2StartPoint) <= epsilon && line1EndPoint.distance(line2EndPoint) <= epsilon) {
+	        	return true;
+	        } else if (line1StartPoint.distance(line2EndPoint) <= epsilon && line1EndPoint.distance(line2StartPoint) <= epsilon) {
+	        	return true;
+	        }
+			
+			return true;
+		}
+		
+		return false;
+	}
 }
