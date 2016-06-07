@@ -1,6 +1,8 @@
 package edu.pnu.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
@@ -39,17 +41,20 @@ public class IndoorGMLIDGenerator {
 		this.is3DGeometry = is3DGeometry;
 	}
 	
-	public void generateGMLID() {
+	public void generateGMLID() {		
 		traverseIndoorFeatures(indoorFeatures);
 	}
 
 	public void traverseIndoorFeatures(IndoorFeatures indoorFeatures) {
 		indoorFeatures.setGmlID("IFs");
 		
+		/*
 		PrimalSpaceFeatures.setLabelNumber(1);
 		CellSpace.setLabelNumber(1);
 		CellSpaceBoundary.setLabelNumber(1);
+		*/
 		
+		/*
 		MultiLayeredGraph.setLabelNumber(1);
 		SpaceLayers.setLabelNumber(1);
 		SpaceLayer.setLabelNumber(1);
@@ -59,13 +64,14 @@ public class IndoorGMLIDGenerator {
 		Transition.setLabelNumber(1);
 		InterEdges.setLabelNumber(1);
 		InterLayerConnection.setLabelNumber(1);
+		*/
 		Point.setLabelNumber(1);
 		LineString.setLabelNumber(1);
 		Polygon.setLabelNumber(1);
 		Solid.setLabelNumber(1);
 		
-		isMLGHeight = false;
-		traversePrimalSpaceFeatures(indoorFeatures.getPrimalSpaceFeatures());
+		//isMLGHeight = false;
+		//traversePrimalSpaceFeatures(indoorFeatures.getPrimalSpaceFeatures());
 		isMLGHeight = true;
 		traverseMultiLayeredGraph(indoorFeatures.getMultiLayeredGraph());
 	}
@@ -129,23 +135,25 @@ public class IndoorGMLIDGenerator {
 	}
 
 	public void traverseMultiLayeredGraph(MultiLayeredGraph multiLayeredGraph) {
-		multiLayeredGraph.setGmlID("MG" + MultiLayeredGraph.getLabelNumber());
-		MultiLayeredGraph.setLabelNumber(MultiLayeredGraph.getLabelNumber() + 1);
+		//multiLayeredGraph.setGmlID("MG" + MultiLayeredGraph.getLabelNumber());
+		//MultiLayeredGraph.setLabelNumber(MultiLayeredGraph.getLabelNumber() + 1);
 		
 		ArrayList<SpaceLayers> spaceLayersList = multiLayeredGraph.getSpaceLayers();
 		for(SpaceLayers spaceLayers : spaceLayersList) {
 			traverseSpaceLayers(spaceLayers);
 		}
 		
+		/*
 		ArrayList<InterEdges> interEdgesList = multiLayeredGraph.getInterEdges();
 		for(InterEdges interEdges : interEdgesList) {
 			traverseInterEdges(interEdges);
 		}
+		*/
 	}
 
 	public void traverseSpaceLayers(SpaceLayers spaceLayers) {
-		spaceLayers.setGmlID("SL" + SpaceLayers.getLabelNumber());
-		SpaceLayers.setLabelNumber(SpaceLayers.getLabelNumber() + 1);
+		//spaceLayers.setGmlID("SL" + SpaceLayers.getLabelNumber());
+		//SpaceLayers.setLabelNumber(SpaceLayers.getLabelNumber() + 1);
 		
 		ArrayList<SpaceLayer> spaceLayerList = spaceLayers.getSpaceLayerMember();
 		for(SpaceLayer spaceLayer : spaceLayerList) {
@@ -155,8 +163,8 @@ public class IndoorGMLIDGenerator {
 	}
 
 	public void traverseSpaceLayer(SpaceLayer spaceLayer) {
-		spaceLayer.setGmlID("IS" + SpaceLayer.getLabelNumber());
-		SpaceLayer.setLabelNumber(SpaceLayer.getLabelNumber() + 1);
+		//spaceLayer.setGmlID("IS" + SpaceLayer.getLabelNumber());
+		//SpaceLayer.setLabelNumber(SpaceLayer.getLabelNumber() + 1);
 		
 		ArrayList<Nodes> nodesList = spaceLayer.getNodes();
 		for(Nodes nodes : nodesList) {
@@ -170,8 +178,8 @@ public class IndoorGMLIDGenerator {
 	}
 
 	public void traverseNodes(Nodes nodes) {
-		nodes.setGmlID("N" + Nodes.getLabelNumber());
-		Nodes.setLabelNumber(Nodes.getLabelNumber() + 1);
+		//nodes.setGmlID("N" + Nodes.getLabelNumber());
+		//Nodes.setLabelNumber(Nodes.getLabelNumber() + 1);
 		
 		ArrayList<StateOnFloor> stateOnFloorList = nodes.getStateOnFloors();
 		for(StateOnFloor stateOnFloor : stateOnFloorList) {
@@ -191,15 +199,15 @@ public class IndoorGMLIDGenerator {
 	}
 
 	public void traverseState(State state) {
-		state.setGmlID("R" + State.getLabelNumber());
-		State.setLabelNumber(State.getLabelNumber() + 1);
+		//state.setGmlID("R" + State.getLabelNumber());
+		//State.setLabelNumber(State.getLabelNumber() + 1);
 		
 		traversePoint(state.getPosition());
 	}
 
 	public void traverseEdges(Edges edges) {
-		edges.setGmlID("E" + Edges.getLabelNumber());
-		Edges.setLabelNumber(Edges.getLabelNumber() + 1);
+		//edges.setGmlID("E" + Edges.getLabelNumber());
+		//Edges.setLabelNumber(Edges.getLabelNumber() + 1);
 		
 		ArrayList<TransitionOnFloor> transitionOnFloorList = edges.getTransitionOnFloors();
 		for(TransitionOnFloor transitionOnFloor : transitionOnFloorList) {
@@ -219,9 +227,8 @@ public class IndoorGMLIDGenerator {
 	}
 
 	public void traverseTransition(Transition transition) {
-		transition.setGmlID("T" + Transition.getLabelNumber());
-		Transition.setLabelNumber(Transition.getLabelNumber() + 1);
-		
+		//transition.setGmlID("T" + Transition.getLabelNumber());
+		//Transition.setLabelNumber(Transition.getLabelNumber() + 1);
 		traverseLineString(transition.getPath());
 	}
 	
@@ -314,5 +321,4 @@ public class IndoorGMLIDGenerator {
 			traverseShell(interior);
 		}
 	}
-
 }

@@ -11,7 +11,6 @@ import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
 import net.opengis.indoorgml.core.CellSpaceOnFloor;
 import net.opengis.indoorgml.core.Edges;
 import net.opengis.indoorgml.core.IndoorFeatures;
-import net.opengis.indoorgml.core.InterEdges;
 import net.opengis.indoorgml.core.InterLayerConnection;
 import net.opengis.indoorgml.core.MultiLayeredGraph;
 import net.opengis.indoorgml.core.Nodes;
@@ -21,7 +20,6 @@ import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
 import net.opengis.indoorgml.geometry.LineString;
-import net.opengis.indoorgml.geometry.Point;
 
 public class ProjectFile implements Serializable {
 	/**
@@ -463,14 +461,13 @@ public class ProjectFile implements Serializable {
 	        State[] states = transition.getStates();
 	        
 	        for(State state : states)
-	            states[0].getTransitionReference().remove(transition);
+	            state.getTransitionReference().remove(transition);
 	        
 	        CellSpaceBoundary duality = transition.getDuality();
 	        if(duality != null) {
 	            duality.setDuality(null);
 	        }
-
-                currentTransitionOnFloor.getTransitionMember().remove(transition);
+	        currentTransitionOnFloor.getTransitionMember().remove(transition);
 	}
 	
 	public void deleteCellSpace(CellSpace cellSpace) {
@@ -512,7 +509,7 @@ public class ProjectFile implements Serializable {
 			// cellSpace를 구성하는 하나의 lineSegment에 인접하는 boundary들을 저장해놓은 map
 			HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjaccencyBoundaryMap = currentCellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
 			ArrayList<LineString> removedLS = new ArrayList<LineString>();
-			for(LineString ls : lineStringOfAdjaccencyBoundaryMap.keySet()) {
+			for(LineString ls : lineStringOfAdjaccencyBoundaryMap.keySet()) { // 맞닿아 있는 Cell의 LineString에 대해서도 삭제
 				ArrayList<CellSpaceBoundary> adjacencyBoundary = lineStringOfAdjaccencyBoundaryMap.get(ls);
 				if(adjacencyBoundary.contains(boundary)) { // 삭제되어야할 boundary가 있으면 인접한 linestring에서 지운다.
 					adjacencyBoundary.remove(boundary);
@@ -535,8 +532,37 @@ public class ProjectFile implements Serializable {
 			}
 			boundaryOfReferenceCellSpaceMap.remove(boundary);
 			currentCellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember().remove(boundary);
+		}		
+		currentCellSpaceOnFloor.getCellSpaceMember().remove(cellSpace);
+	}
+	
+	public void deleteCellSpaceBoundary(CellSpaceBoundary boundary) {
+		Transition duality = boundary.getDuality();
+		if (duality != null) {
+			duality.setDuality(null);
 		}
 		
-		currentCellSpaceOnFloor.getCellSpaceMember().remove(cellSpace);
+		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = currentCellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
+		HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringOfAdjacencyBoundaryMap = currentCellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
+		ArrayList<CellSpace> referenceCellSpace = boundaryOfReferenceCellSpaceMap.get(boundary);
+		for (CellSpace cellSpace : referenceCellSpace) {
+			for (LineString ls : cellSpace.getLineStringElements()) {
+				if (lineStringOfAdjacencyBoundaryMap.containsKey(ls)) {
+					ArrayList<CellSpaceBoundary> adjacencyBoundary = lineStringOfAdjacencyBoundaryMap.get(ls);
+					if (adjacencyBoundary.contains(boundary)) {
+						adjacencyBoundary.remove(boundary);
+					}
+					
+					if (adjacencyBoundary.size() == 0) {
+						lineStringOfAdjacencyBoundaryMap.remove(ls);
+					}
+					break;
+				}
+			}
+			cellSpace.getPartialBoundedBy().remove(boundary);
+		}
+		boundaryOfReferenceCellSpaceMap.remove(boundary);
+		
+		currentCellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember().remove(boundary);
 	}
 }
