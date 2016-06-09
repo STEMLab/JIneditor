@@ -895,9 +895,13 @@ public class IndoorGMLJAXBConvertor {
 
 	private void setFloorDescription(AbstractFeature target, String floor) {
 		String[] splits = floor.split("_");
+		
+		if (splits.length < 2) {
+			return;
+		}
 		String section = splits[0];
 		
-		floor = splits[1];		
+		floor = splits[1];
 		if (floor.contains("F")) {
 			floor = floor.replace("F", "");
 		}
@@ -930,6 +934,8 @@ public class IndoorGMLJAXBConvertor {
 	}
 	
 	private String generateGMLID(AbstractFeature target) {
+		return target.getGmlID();
+		/*
 		String origin = target.getGmlID();
 		String intValue = origin.replaceAll("[^0-9]", "");
 		String typeCode = getIDTypeCode(target);
@@ -939,9 +945,12 @@ public class IndoorGMLJAXBConvertor {
 		
 		String generated = sb.toString();
 		return generated;
+		*/
 	}
 	
 	private String generateGMLID(AbstractGeometry target) {
+		return target.getGMLID();
+		/*
 		String origin = target.getGMLID();
 		String intValue = origin.replaceAll("[^0-9]", "");
 		String typeCode = getIDTypeCode(target);
@@ -950,7 +959,8 @@ public class IndoorGMLJAXBConvertor {
 		sb.append(typeCode);
 		
 		String generated = sb.toString();
-		return generated;		
+		return generated;
+		*/		
 	}
 	
 	private String getIDTypeCode(Object object) {
