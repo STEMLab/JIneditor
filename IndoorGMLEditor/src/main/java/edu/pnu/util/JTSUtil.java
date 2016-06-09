@@ -226,7 +226,7 @@ public class JTSUtil {
 			dy1 = -1;
 		}
 		
-		value = p2.getX() - q2.getX();
+		value = p2.getX() - q2.getX(); 
 		if (Math.abs(value) < epsilon) {
 			dx2 = 0;
 		} else if (value > 0) {
@@ -332,10 +332,10 @@ public class JTSUtil {
 	}
 	
 	public static double IsLeft(Coordinate P0, Coordinate P1, Coordinate P2)
-    {
-        return ((P1.x - P0.x) * (P2.y - P0.y)
-                - (P2.x - P0.x) * (P1.y - P0.y));
-    }
+        {
+            return ((P1.x - P0.x) * (P2.y - P0.y)
+                    - (P2.x - P0.x) * (P1.y - P0.y));
+        }
 
         //===================================================================
 
@@ -369,11 +369,8 @@ public class JTSUtil {
 
             // test orientation at this rmin vertex
             // ccw <=> the edge leaving is left of the entering edge
-            if (rmin == n-1) {
-            	rmin = 0;
-            }
             if (rmin == 0)
-                return IsLeft(V.getCoordinate(n - 2), V.getCoordinate(0), V.getCoordinate(1));
+                return IsLeft(V.getCoordinate(n - 1), V.getCoordinate(0), V.getCoordinate(1));
             else
                 return IsLeft(V.getCoordinate(rmin - 1), V.getCoordinate(rmin), V.getCoordinate((rmin + 1) % n));
         }

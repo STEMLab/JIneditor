@@ -407,8 +407,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                         } catch (ClassNotFoundException e1) {
                             // TODO Auto-generated catch block
                             e1.printStackTrace();
-                        } catch (Exception e1) {
-                        	e1.printStackTrace();
                         }
                     }
                 }

@@ -1,13 +1,9 @@
 package edu.pnu.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.xml.bind.JAXBElement;
 
-import net.opengis.gml.v_3_2_1.AbstractFeatureType;
-import net.opengis.gml.v_3_2_1.AbstractGMLType;
 import net.opengis.gml.v_3_2_1.AbstractRingPropertyType;
 import net.opengis.gml.v_3_2_1.CodeType;
 import net.opengis.gml.v_3_2_1.CurvePropertyType;
@@ -66,7 +62,6 @@ import net.opengis.indoorgml.core.v_1_0.StateType;
 import net.opengis.indoorgml.core.v_1_0.TransitionMemberType;
 import net.opengis.indoorgml.core.v_1_0.TransitionPropertyType;
 import net.opengis.indoorgml.core.v_1_0.TransitionType;
-import net.opengis.indoorgml.geometry.AbstractGeometry;
 import net.opengis.indoorgml.geometry.LineString;
 import net.opengis.indoorgml.geometry.LinearRing;
 import net.opengis.indoorgml.geometry.Point;
@@ -84,31 +79,12 @@ public class IndoorGMLJAXBConvertor {
 	private boolean is3DGeometry;
 	private IndoorFeatures indoorFeatures;
 	
-	private Map<String, Object> idRegistry;
-	
-	private HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
-	
 	public IndoorGMLJAXBConvertor(IndoorFeatures indoorFeatures, boolean is3DGeometry) {
 		this.IGMLFactory = new net.opengis.indoorgml.core.v_1_0.ObjectFactory();
 		this.GMLFactory = new net.opengis.gml.v_3_2_1.ObjectFactory();
 		
 		this.indoorFeatures = indoorFeatures;
 		this.is3DGeometry = is3DGeometry;
-		
-		idRegistry = new HashMap<String, Object>(); 
-	}
-	
-	//code for jsk
-	public IndoorGMLJAXBConvertor(IndoorFeatures indoorFeatures, boolean is3DGeometry, HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
-		this.IGMLFactory = new net.opengis.indoorgml.core.v_1_0.ObjectFactory();
-		this.GMLFactory = new net.opengis.gml.v_3_2_1.ObjectFactory();
-		
-		this.indoorFeatures = indoorFeatures;
-		this.is3DGeometry = is3DGeometry;
-		
-		idRegistry = new HashMap<String, Object>();
-		
-		this.boundary3DMap = boundary3DMap;
 	}
 	
 	public JAXBElement<IndoorFeaturesType> getJAXBElement() {
@@ -122,11 +98,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createIndoorFeaturesType();
 		}
-		// 준석햄 데이터를 위한 ID 생성
-		String generatedID = "1" + generateGMLID(indoorFeatures);
-		target.setId(generatedID);
-		
-		//target.setId(indoorFeatures.getGmlID());
+		target.setId(indoorFeatures.getGmlID());
 		target.getName().add(createCodeType(null, indoorFeatures.getGmlID(), null));
 		
 		MultiLayeredGraphType multiLayeredGraphType = createMultiLayeredGraphType(null, indoorFeatures.getMultiLayeredGraph());
@@ -137,8 +109,6 @@ public class IndoorGMLJAXBConvertor {
 		primalSpaceFeaturesPropertyType.setPrimalSpaceFeatures(primalSpaceFeaturesType);
 		target.setPrimalSpaceFeatures(primalSpaceFeaturesPropertyType);
 		
-		idCheck(target);
-		
 		return target;
 	}
 
@@ -146,10 +116,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createPrimalSpaceFeaturesType();
 		}
-
-		String generatedID = generateGMLID(primalSpaceFeatures);
-		target.setId(generatedID);
-		//target.setId(primalSpaceFeatures.getGmlID());
+		target.setId(primalSpaceFeatures.getGmlID());
 		target.getName().add(createCodeType(null, primalSpaceFeatures.getGmlID(), null));
 		
 		ArrayList<CellSpaceOnFloor> cellSpaceOnFloors = primalSpaceFeatures.getCellSpaceOnFloors();
@@ -162,23 +129,15 @@ public class IndoorGMLJAXBConvertor {
 			target = createCellSpaceBoundaryType(target, cellSpaceBoundaryOnFloor);
 		}
 		
-		idCheck(target);
 		return target;
 	}
 
 	private PrimalSpaceFeaturesType createCellSpaceType(PrimalSpaceFeaturesType target, CellSpaceOnFloor cellSpaceOnFloor) {
-		int count = 0;
-		
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		for(CellSpace cellSpace : cellSpaceMember) {
 			//cellSpaceMemberType = IGMLFactory.createCellSpaceMemberType();
 			setFloorDescription(cellSpace, cellSpaceOnFloor.getFloorProperty().getLevel());
 			CellSpaceType cellSpaceType = createCellSpaceType(null, cellSpace);
-
-			if (cellSpace.getDescription("Usage").equals("Stair")) {
-				System.out.println(cellSpace.getGmlID());
-				count++;
-			}
 			
 			//cellSpaceMemberType.setCellSpace(cellSpaceType);
 			FeaturePropertyType featurePropertyType = GMLFactory.createFeaturePropertyType();
@@ -187,8 +146,6 @@ public class IndoorGMLJAXBConvertor {
 			target.getCellSpaceMember().add(featurePropertyType);
 		}
 		
-		System.out.println("Floor : " + cellSpaceOnFloor.getFloorProperty().getLevel() + " satir count : " + count);
-		
 		return target;
 	}
 
@@ -196,21 +153,14 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createCellSpaceType();
 		}
-
-		String generatedID = generateGMLID(cellSpace);
-		target.setId(generatedID);
-		//target.setId(cellSpace.getGmlID());
+		target.setId(cellSpace.getGmlID());
 		target.getName().add(createCodeType(null, cellSpace.getGmlID(), null));
 		target.setDescription(createStringOrRefType(null, cellSpace.getDescription()));
 
 		State duality = cellSpace.getDuality();
 		if(duality != null) {
 			StatePropertyType statePropertyType = IGMLFactory.createStatePropertyType();
-			
-			// 준석햄 데이터를 위한 ID 생성
-			String generatedHref = generateGMLID(duality);
-			statePropertyType.setHref("#" + generatedHref);
-			//statePropertyType.setHref("#" + duality.getGmlID());
+			statePropertyType.setHref("#" + duality.getGmlID());
 			target.setDuality(statePropertyType);
 		}
 		
@@ -219,10 +169,7 @@ public class IndoorGMLJAXBConvertor {
 			if(is3DGeometry && cellSpaceBoundary.getGeometry3D() == null) continue;
 			else if(!is3DGeometry && cellSpaceBoundary.getGeometry2D() == null) continue;
 			CellSpaceBoundaryPropertyType cellSpaceBoundaryPropertyType = IGMLFactory.createCellSpaceBoundaryPropertyType();
-			
-			String generatedHref = generateGMLID(cellSpaceBoundary);
-			cellSpaceBoundaryPropertyType.setHref("#" + generatedHref);
-			//cellSpaceBoundaryPropertyType.setHref("#" + cellSpaceBoundary.getGmlID());
+			cellSpaceBoundaryPropertyType.setHref("#" + cellSpaceBoundary.getGmlID());
 			
 			target.getPartialboundedBy().add(cellSpaceBoundaryPropertyType);
 		}
@@ -230,6 +177,7 @@ public class IndoorGMLJAXBConvertor {
 		
 		if(is3DGeometry) {
 			// geometry3D solid 
+			System.out.println(cellSpace.getGmlID());
 			SolidPropertyType solidPropertyType = createSolidPropertyType(null, cellSpace.getGeometry3D());
 
 			target.setGeometry3D(solidPropertyType);
@@ -239,8 +187,7 @@ public class IndoorGMLJAXBConvertor {
 			target.setGeometry2D(surfacePropertyType);
 		}
 		// ExternalReference
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -267,29 +214,19 @@ public class IndoorGMLJAXBConvertor {
 	private CellSpaceBoundaryType createCellSpaceBoundaryType(CellSpaceBoundaryType target, CellSpaceBoundary cellSpaceBoundary) {
 		if (cellSpaceBoundary.getBoundaryType() == BoundaryType.Door) {
 			cellSpaceBoundary.setDescription("Usage", "Door");
-			
-			if (cellSpaceBoundary.getDuality() == null) {
-				System.out.println("****** " + cellSpaceBoundary.getGmlID() + " don't have duliaty !! ********");
-			}
 		}
 		
 		if(target == null) {
 			target = IGMLFactory.createCellSpaceBoundaryType();
 		}
-
-		String generatedID = generateGMLID(cellSpaceBoundary);
-		target.setId(generatedID);
-		//target.setId(cellSpaceBoundary.getGmlID());
+		target.setId(cellSpaceBoundary.getGmlID());
 		target.getName().add(createCodeType(null, cellSpaceBoundary.getGmlID(), null));
 		target.setDescription(createStringOrRefType(null, cellSpaceBoundary.getDescription()));
 
 		Transition duality = cellSpaceBoundary.getDuality();
 		if(duality != null) {
 			TransitionPropertyType transitionPropertyType = IGMLFactory.createTransitionPropertyType();
-			
-			String generatedHref = generateGMLID(duality);
-			transitionPropertyType.setHref("#" + generatedHref);
-			//transitionPropertyType.setHref("#" + duality.getGmlID());
+			transitionPropertyType.setHref("#" + duality.getGmlID());
 			target.setDuality(transitionPropertyType);
 		}
 		
@@ -303,8 +240,7 @@ public class IndoorGMLJAXBConvertor {
 			target.setGeometry2D(curvePropertyType);
 		}
 		// ExternalReference
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -312,10 +248,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createMultiLayeredGraphType();
 		}
-
-		String generatedID = generateGMLID(multiLayeredGraph);
-		target.setId(generatedID);
-		//target.setId(multiLayeredGraph.getGmlID());
+		target.setId(multiLayeredGraph.getGmlID());
 		target.getName().add(createCodeType(null, multiLayeredGraph.getName(), null));
 		target.setDescription(createStringOrRefType(null, multiLayeredGraph.getDescription()));
 		
@@ -328,9 +261,7 @@ public class IndoorGMLJAXBConvertor {
 		ArrayList<InterEdges> interEdgesList = multiLayeredGraph.getInterEdges();
 		for(InterEdges interEdges : interEdgesList) {
 			InterEdgesType interEdgesType = createInterEdgesType(null, interEdges);
-			if (interEdgesType != null) {
-				target.getInterEdges().add(interEdgesType);
-			}
+			target.getInterEdges().add(interEdgesType);
 		}
 		
 		return target;
@@ -340,10 +271,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createSpaceLayersType();
 		}
-		
-		String generatedID = generateGMLID(spaceLayers);
-		target.setId(generatedID);
-		//target.setId(spaceLayers.getGmlID());
+		target.setId(spaceLayers.getGmlID());
 		target.getName().add(createCodeType(null, spaceLayers.getGmlID(), null));
 		target.setDescription(createStringOrRefType(null, spaceLayers.getDescription()));
 		
@@ -355,8 +283,7 @@ public class IndoorGMLJAXBConvertor {
 			spaceLayerMemberType.setSpaceLayer(spaceLayerType);			
 			target.getSpaceLayerMember().add(spaceLayerMemberType);
 		}
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -364,10 +291,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createSpaceLayerType();
 		}
-		
-		String generatedID = generateGMLID(spaceLayer);
-		target.setId(generatedID);
-		//target.setId(spaceLayer.getGmlID());
+		target.setId(spaceLayer.getGmlID());
 		target.getName().add(createCodeType(null, spaceLayer.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, spaceLayer.getDescription()));
 		
@@ -384,8 +308,7 @@ public class IndoorGMLJAXBConvertor {
 			
 			target.getEdges().add(edgesType);
 		}
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -393,10 +316,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createNodesType();
 		}
-		
-		String generatedID = generateGMLID(nodes);
-		target.setId(generatedID);
-		//target.setId(nodes.getGmlID());
+		target.setId(nodes.getGmlID());
 		target.getName().add(createCodeType(null, nodes.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, nodes.getDescription()));
 		
@@ -404,8 +324,7 @@ public class IndoorGMLJAXBConvertor {
 		for(StateOnFloor stateOnFloor : stateOnFloorList) {
 			target = createStateType(target, stateOnFloor);
 		}
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -427,24 +346,15 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createStateType();
 		}
-		
-		String generatedID = generateGMLID(state);
-		target.setId(generatedID);
-		//target.setId(state.getGmlID());
+		target.setId(state.getGmlID());
 		target.getName().add(createCodeType(null, state.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, state.getDescription()));
 
 		ArrayList<Transition> connects = state.getTransitionReference();
 		if(state.getTransitionReference().size() > 0) {
 			for(Transition connect : connects) {
-				if (connect.getGmlID().equals("T37")) {
-					System.out.println("T37 found");
-				}
 				TransitionPropertyType transitionPropertyType = IGMLFactory.createTransitionPropertyType();
-				
-				String generatedHref = generateGMLID(connect);
-				transitionPropertyType.setHref("#" + generatedHref);
-				//transitionPropertyType.setHref("#" + connect.getGmlID());
+				transitionPropertyType.setHref("#" + connect.getGmlID());
 				
 				target.getConnects().add(transitionPropertyType);
 			}
@@ -453,10 +363,7 @@ public class IndoorGMLJAXBConvertor {
 		CellSpace duality = state.getDuality();
 		if(duality != null) {
 			CellSpacePropertyType cellSpacePropertyType = IGMLFactory.createCellSpacePropertyType();
-			
-			String generatedHref = generateGMLID(duality);
-			cellSpacePropertyType.setHref("#" + generatedHref);
-			//cellSpacePropertyType.setHref("#" + duality.getGmlID());
+			cellSpacePropertyType.setHref("#" + duality.getGmlID());
 			
 			target.setDuality(cellSpacePropertyType);
 		}
@@ -470,8 +377,7 @@ public class IndoorGMLJAXBConvertor {
 			
 			stateType.getName().add(codeType);
 		}*/
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -479,10 +385,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createEdgesType();
 		}
-		
-		String generatedID = generateGMLID(edges);
-		target.setId(generatedID);
-		//target.setId(edges.getGmlID());
+		target.setId(edges.getGmlID());
 		target.getName().add(createCodeType(null, edges.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, edges.getDescription()));
 		
@@ -490,8 +393,7 @@ public class IndoorGMLJAXBConvertor {
 		for(TransitionOnFloor transitionOnFloor : transitionOnFloorList) {
 			target = createTransitionType(target, transitionOnFloor);
 		}
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -499,7 +401,7 @@ public class IndoorGMLJAXBConvertor {
 		// TODO Auto-generated method stub
 		ArrayList<Transition> transitionList = transitionOnFloor.getTransitionMember();
 		
-		for(Transition transition : transitionList) {			
+		for(Transition transition : transitionList) {
 			setFloorDescription(transition, transitionOnFloor.getFloorProperty().getLevel());
 			TransitionMemberType transitionMemberType = IGMLFactory.createTransitionMemberType();
 			TransitionType transitionType = createTransitionType(null, transition);
@@ -515,34 +417,22 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createTransitionType();
 		}
-		
-		String generatedID = generateGMLID(transition);
-		target.setId(generatedID);
-		//target.setId(transition.getGmlID());
+		target.setId(transition.getGmlID());
 		target.getName().add(createCodeType(null, transition.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, transition.getDescription()));
 		
 		State[] states = transition.getStates();
 		for(State state : states) {
 			StatePropertyType statePropertyType = IGMLFactory.createStatePropertyType();
-			
-			String generatedHref = generateGMLID(state);
-			statePropertyType.setHref("#" + generatedHref);
-			//statePropertyType.setHref("#" + state.getGmlID());
+			statePropertyType.setHref("#" + state.getGmlID());
 			
 			target.getConnects().add(statePropertyType);
 		}
 		
 		CellSpaceBoundary duality = transition.getDuality();
 		if(duality != null) {
-			if (boundary3DMap.containsKey(duality)) {
-				duality = boundary3DMap.get(duality);
-			}
 			CellSpaceBoundaryPropertyType cellSpaceBoundaryPropertyType = IGMLFactory.createCellSpaceBoundaryPropertyType();
-			
-			String generatedHref = generateGMLID(duality);
-			cellSpaceBoundaryPropertyType.setHref("#" + generatedHref);
-			//cellSpaceBoundaryPropertyType.setHref("#" + duality.getGmlID());
+			cellSpaceBoundaryPropertyType.setHref("#" + duality.getGmlID());
 			
 			target.setDuality(cellSpaceBoundaryPropertyType);			
 		}
@@ -559,23 +449,15 @@ public class IndoorGMLJAXBConvertor {
 			transitionType.getName().add(codeType);
 		}
 		*/
-
-		idCheck(target);
+		
 		return target;
 	}
 
 	private InterEdgesType createInterEdgesType(InterEdgesType target, InterEdges interEdges) {
-		if (interEdges.getInterLayerConnectionMember().size() == 0) {
-			return null;
-		}
-		
 		if(target == null) {
 			target = IGMLFactory.createInterEdgesType();
 		}
-		
-		String generatedID = generateGMLID(interEdges);
-		target.setId(generatedID);
-		//target.setId(interEdges.getGmlID());
+		target.setId(interEdges.getGmlID());
 		target.getName().add(createCodeType(null, interEdges.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, interEdges.getDescription()));
 		
@@ -587,8 +469,7 @@ public class IndoorGMLJAXBConvertor {
 			interLayerConnectionMemberType.setInterLayerConnection(interLayerConnectionType);
 			target.getInterLayerConnectionMember().add(interLayerConnectionMemberType);
 		}
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -596,10 +477,7 @@ public class IndoorGMLJAXBConvertor {
 		if(target == null) {
 			target = IGMLFactory.createInterLayerConnectionType();
 		}
-		
-		String generatedID = generateGMLID(interLayerConnection);
-		target.setId(generatedID);
-		//target.setId(interLayerConnection.getGmlID());
+		target.setId(interLayerConnection.getGmlID());
 		target.getName().add(createCodeType(null, interLayerConnection.getGmlID(), null));
         target.setDescription(createStringOrRefType(null, interLayerConnection.getDescription()));
 		target.setTypeOfTopoExpression(interLayerConnection.getTopology());
@@ -619,8 +497,7 @@ public class IndoorGMLJAXBConvertor {
 			spaceLayerPropertyType.setHref("#" + spaceLayer.getGmlID());
 			target.getConnectedLayers().add(spaceLayerPropertyType);
 		}
-
-		idCheck(target);
+		
 		return target;
 	}
 
@@ -629,11 +506,7 @@ public class IndoorGMLJAXBConvertor {
 			target = GMLFactory.createPointPropertyType();
 		}
 		PointType pointType = GMLFactory.createPointType();
-		
-		//준석햄 데이터를 위한 ID 생성
-		String generatedID = generateGMLID(point);
-		pointType.setId(generatedID);
-		//pointType.setId(point.getGMLID());
+		pointType.setId(point.getGMLID());
 		pointType.getName().add(createCodeType(null, point.getGMLID(), null));
 		
 		DirectPositionType directPositionType = GMLFactory.createDirectPositionType();
@@ -643,8 +516,6 @@ public class IndoorGMLJAXBConvertor {
 		
 		pointType.setPos(directPositionType);
 		target.setPoint(pointType);
-		
-		idCheck(pointType);
 		return target;
 	}
 	
@@ -668,11 +539,7 @@ public class IndoorGMLJAXBConvertor {
 			target.setAbstractCurve(jOrientableCurveType);
 		} else {
 			LineStringType lineStringType = GMLFactory.createLineStringType();
-			
-			String generatedID = generateGMLID(lineString);
-			lineStringType.setId(generatedID);
-			//lineStringType.setId(lineString.getGMLID());
-			
+			lineStringType.setId(lineString.getGMLID());
 			//lineStringType.getName().add(createCodeType(lineString.getGMLID(), null));
 			ArrayList<Point> points = lineString.getPoints();
 			for(int i = 0; i < points.size(); i++) {
@@ -692,8 +559,6 @@ public class IndoorGMLJAXBConvertor {
 			
 			JAXBElement<LineStringType> jAbstractCurve = GMLFactory.createLineString(lineStringType);
 			target.setAbstractCurve(jAbstractCurve);
-
-			idCheck(lineStringType);			
 		}
 		
 		return target;
@@ -762,10 +627,7 @@ public class IndoorGMLJAXBConvertor {
                 polygon = _polygon;
         }
         PolygonType polygonType = GMLFactory.createPolygonType();
-        
-        String generatedID = generateGMLID(polygon);
-		polygonType.setId(generatedID);
-        //polygonType.setId(polygon.getGMLID());
+        polygonType.setId(polygon.getGMLID());
         //polygonType.getName().add(createCodeType(polygon.getGMLID(), null));
         
         // exterior
@@ -780,8 +642,7 @@ public class IndoorGMLJAXBConvertor {
         }
         JAXBElement<PolygonType> jPolygonType = GMLFactory.createPolygon(polygonType);
         target.setAbstractSurface(jPolygonType);
-
-		idCheck(polygonType);
+        
         return target;
 		/*if(polygon.getxLinkGeometry() != null) {
 			OrientableSurfaceType orientableSurfaceType = GMLFactory.createOrientableSurfaceType();
@@ -843,10 +704,7 @@ public class IndoorGMLJAXBConvertor {
 			target = GMLFactory.createSolidPropertyType();
 		}
 		SolidType solidType = GMLFactory.createSolidType();
-		
-		String generatedID = generateGMLID(solid);
-		solidType.setId(generatedID);
-		//solidType.setId(solid.getGMLID());
+		solidType.setId(solid.getGMLID());
 		//solidType.getName().add(createCodeType(solid.getGMLID(), null));
 		
 		// exteior
@@ -858,8 +716,7 @@ public class IndoorGMLJAXBConvertor {
 		
 		JAXBElement<SolidType> jSolidType = GMLFactory.createSolid(solidType);
 		target.setAbstractSolid(jSolidType);
-
-		idCheck(solidType);
+		
 		return target;
 	}
 	
@@ -894,104 +751,6 @@ public class IndoorGMLJAXBConvertor {
 	}
 
 	private void setFloorDescription(AbstractFeature target, String floor) {
-		String[] splits = floor.split("_");
-		String section = splits[0];
-		
-		floor = splits[1];		
-		if (floor.contains("F")) {
-			floor = floor.replace("F", "");
-		}
-		int intFloor;
-		if (floor.startsWith("B")) {
-			floor = floor.replace("B", "");
-			intFloor = -1 * Integer.parseInt(floor);
-		} else {
-			intFloor = Integer.parseInt(floor);
-		}
-		
-		target.setDescription("Section", section);
-		target.setDescription("Floor", String.valueOf(intFloor));
-	}
-	
-	private void idCheck(AbstractFeatureType target) {
-		if (idRegistry.containsKey(target.getId())) {
-			System.out.println("** Chekcer : " + target.getId() + " found");
-		} else {
-			idRegistry.put(target.getId(), target);
-		}
-	}
-	
-	private void idCheck(AbstractGMLType target) {
-		if (idRegistry.containsKey(target.getId())) {
-			System.out.println("** Chekcer : " + target.getId() + " found");
-		} else {
-			idRegistry.put(target.getId(), target);
-		}
-	}
-	
-	private String generateGMLID(AbstractFeature target) {
-		String origin = target.getGmlID();
-		String intValue = origin.replaceAll("[^0-9]", "");
-		String typeCode = getIDTypeCode(target);
-		StringBuffer sb = new StringBuffer();
-		sb.append(intValue);
-		sb.append(typeCode);
-		
-		String generated = sb.toString();
-		return generated;
-	}
-	
-	private String generateGMLID(AbstractGeometry target) {
-		String origin = target.getGMLID();
-		String intValue = origin.replaceAll("[^0-9]", "");
-		String typeCode = getIDTypeCode(target);
-		StringBuffer sb = new StringBuffer();
-		sb.append(intValue);
-		sb.append(typeCode);
-		
-		String generated = sb.toString();
-		return generated;		
-	}
-	
-	private String getIDTypeCode(Object object) {
-		String code = null;
-		
-		if (object instanceof IndoorFeatures) {
-			code = "01";
-		} else if (object instanceof PrimalSpaceFeatures) {
-			code = "02";
-		} else if (object instanceof CellSpace) {
-			code = "03";
-		} else if (object instanceof CellSpaceBoundary) {
-			code = "04";
-		} else if (object instanceof MultiLayeredGraph) {
-			code = "05";
-		} else if (object instanceof SpaceLayers) {
-			code = "06";
-		} else if (object instanceof SpaceLayer) {
-			code = "07";
-		} else if (object instanceof Nodes) {
-			code = "08";
-		} else if (object instanceof State) {
-			code = "09";
-		} else if (object instanceof Edges) {
-			code = "10";
-		} else if (object instanceof Transition) {
-			code = "11";
-		} else if (object instanceof InterEdges) {
-			code = "12";
-		} else if (object instanceof InterLayerConnection) {
-			code = "13";
-		} else if (object instanceof Point) {
-			code = "20";
-		} else if (object instanceof LineString) {
-			code = "21";
-		} else if (object instanceof Polygon) {
-			code = "22";
-		} else if (object instanceof Solid) {
-			code = "23";
-		}
-		
-		return code;
+		target.setDescription("Floor", floor);
 	}
 }

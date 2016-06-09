@@ -1,7 +1,6 @@
 package edu.pnu.importexport;
 
 import java.io.File;
-import java.util.HashMap;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -20,7 +19,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import net.opengis.indoorgml.core.CellSpaceBoundary;
+import net.opengis.indoorgml.core.IndoorFeatures;
 import net.opengis.indoorgml.core.v_1_0.IndoorFeaturesType;
 
 import org.w3c.dom.Document;
@@ -29,29 +28,20 @@ import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
 import edu.pnu.util.IndoorCoordinateGenerator;
-import edu.pnu.util.IndoorGMLIDGenerator;
 import edu.pnu.util.IndoorGMLJAXBConvertor;
 
 public class IndoorGMLExporter {
 	private ProjectFile project;
-	
-	private HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
 
 	public IndoorGMLExporter(ProjectFile project) {
 		// TODO Auto-generated constructor stub
 		this.project = project;
 	}
 	
-	public void setBoundary3DMap(HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
-		this.boundary3DMap = boundary3DMap;
-	}
-	
 	public void export() throws JAXBException{
 		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
-		IndoorGMLIDGenerator idGenerator = new IndoorGMLIDGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
 	    IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
-		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(project.getIndoorFeatures(), project.getIs3DGeometry(), boundary3DMap);
-		idGenerator.generateGMLID();
+		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(project.getIndoorFeatures(), project.getIs3DGeometry());
 		coordinateGenerator.generate();				
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("net.opengis.indoorgml.core.v_1_0"

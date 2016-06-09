@@ -161,7 +161,7 @@ public class IndoorCoordinateGenerator {
 		}
 	}
 
-	public void traverseState(State state) {
+	public void traverseState(State state) {		
 		generatePointCoordinate(state.getPosition());
 	}
 
@@ -184,7 +184,7 @@ public class IndoorCoordinateGenerator {
 	}
 
 	public void traverseTransition(Transition transition) {		
-		//generateLineStringCoordinate(transition.getPath());
+		generateLineStringCoordinate(transition.getPath());
 	}
 	
 	public void traverseInterEdges(InterEdges interEdges) {		

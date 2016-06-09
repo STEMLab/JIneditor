@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,13 +20,11 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -33,17 +32,15 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 
+import com.vividsolutions.jts.geom.CoordinateSequence;
+
 import net.opengis.indoorgml.core.AbstractFeature;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
 import net.opengis.indoorgml.core.CellSpaceOnFloor;
-import net.opengis.indoorgml.core.IndoorFeatures;
 import net.opengis.indoorgml.core.InterLayerConnection;
-import net.opengis.indoorgml.core.MultiLayeredGraph;
-import net.opengis.indoorgml.core.PrimalSpaceFeatures;
 import net.opengis.indoorgml.core.SpaceLayer;
-import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
 import net.opengis.indoorgml.geometry.LineString;
@@ -53,7 +50,6 @@ import net.opengis.indoorgml.geometry.Polygon;
 import edu.pnu.project.BoundaryType;
 import edu.pnu.project.EditState;
 import edu.pnu.project.EditWorkState;
-import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
@@ -389,12 +385,25 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
 
                 if (stateEnd1 != null && stateEnd2 != null) {
-                    createTransition(transitionPoints, stateEnd1, stateEnd2);
+                    TransitionOnFloor transitionOnFloor = project.getCurrentTransitionOnFloor();
+                    Transition transition = new Transition();
+                    LineString path = new LineString();
+                    ArrayList<Point> pathPoints = path.getPoints();
 
-            		transitionPoints.clear();
-            		stateEnd1 = null;
-            		stateEnd2 = null;
-            		System.out.println("create transition");
+                    pathPoints.addAll(transitionPoints);
+                    path.setPoints(pathPoints);
+
+                    transition.setStates(new State[] { stateEnd1, stateEnd2 });
+                    transition.setPath(path);
+
+                    transitionOnFloor.getTransitionMember().add(transition);
+                    stateEnd1.getTransitionReference().add(transition);
+                    stateEnd2.getTransitionReference().add(transition);
+
+                    transitionPoints.clear();
+                    stateEnd1 = null;
+                    stateEnd2 = null;
+                    System.out.println("create transition");
                 }
             } else if (currentEditState == EditState.CREATE_INTERLAYERCONNECTION) {
                 System.out.println("mousepressed_createinterlayerconnection");
@@ -862,24 +871,31 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         repaint();
     }
 
-	private void createTransition(ArrayList<Point> transitionPoints, State stateEnd1, State stateEnd2) {
-		TransitionOnFloor transitionOnFloor = project.getCurrentTransitionOnFloor();
-		Transition transition = new Transition();
-		LineString path = new LineString();
-		ArrayList<Point> pathPoints = path.getPoints();
-
-		pathPoints.addAll(transitionPoints);
-		path.setPoints(pathPoints);
-
-		transition.setStates(new State[] { stateEnd1, stateEnd2 });
-		transition.setPath(path);
-		
-		stateEnd1.getTransitionReference().add(transition);
-		stateEnd2.getTransitionReference().add(transition);
-
-		transitionOnFloor.getTransitionMember().add(transition);
-	}
-
+    /*
+     * public void createCellSpaceBoundary(CellSpace cellSpace) { CellSpaceBoundaryOnFloor bdyOnFloor = project.getCurrentCellSpaceBoundaryOnFloor();
+     * ArrayList<CellSpaceBoundary> bdyMember = bdyOnFloor.getCellSpaceBoundaryMember(); HashMap<LineString, ArrayList<LineString>> xLink2DMap =
+     * bdyOnFloor.getxLink2DMap(); ArrayList<CellSpaceBoundary> partialBoundedBy = cellSpace.getPartialBoundedBy();
+     * 
+     * ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints(); for(int i = 0; i < points.size() - 1; i++) { // points에 양끝에
+     * 같은 점이므로 size -1 만큼 반복 CellSpaceBoundary boundary = new CellSpaceBoundary();
+     * 
+     * Point p1 = points.get(i).clone(); Point p2 = points.get((i + 1) % points.size()).clone();
+     * 
+     * LineString curve = null; for(LineString lineString : xLink2DMap.keySet()) { ArrayList<Point> lsPoints = lineString.getPoints();
+     * if(lsPoints.size() != 2) continue;
+     * 
+     * if(lsPoints.get(0).equals(p1) && lsPoints.get(1).equals(p2)) { curve = new LineString(); curve.setxLinkGeometry(lineString);
+     * curve.setIsReversed(false); }else if(lsPoints.get(1).equals(p1) && lsPoints.get(0).equals(p2)) { curve = new LineString();
+     * curve.setxLinkGeometry(lineString); curve.setIsReversed(true); } }
+     * 
+     * if(curve != null) { boundary.setGeometry2D(curve); xLink2DMap.get(curve.getxLinkGeometry()).add(curve); } else { ArrayList<Point> curvePoints =
+     * new ArrayList<Point>(); curvePoints.add(p1); curvePoints.add(p2); curve = new LineString(); curve.setPoints(curvePoints);
+     * boundary.setGeometry2D(curve);
+     * 
+     * ArrayList<LineString> referenceList = new ArrayList<LineString>(); xLink2DMap.put(curve, referenceList); }
+     * 
+     * partialBoundedBy.add(boundary); bdyMember.add(boundary); } }
+     */
     // CellSpace, CellSpaceBoundary 생성 순서
     // 일단 처음 CellSpace는 그냥 만든다.
     // 처음 2개의 점을 찍을 때는
@@ -1819,7 +1835,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 scale -= 0.1;
             }
         } else {
-            if (scale < 10.0) {
+            if (scale < 5.0) {
                 scale += 0.1;
             }
         }
@@ -1906,14 +1922,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 selectedTransitionMap.clear();
                 project.setEditState(EditState.NONE);
                 mainFrame.setLabel_CurrentEditState("");
-            } else if (state == EditState.SELECT_CELLSPACEBOUNDARY) {
-            	for (CellSpaceBoundary selected : selectedCellSpaceBoundaryMap.keySet()) {
-            		project.deleteCellSpaceBoundary(selected);;
-            	}
-            	selectedCellSpaceBoundary = null;
-            	selectedCellSpaceBoundaryMap.clear();
-            	project.setEditState(EditState.NONE);
-            	mainFrame.setLabel_CurrentEditState("");
             }
             break;
         case KeyEvent.VK_ENTER:
@@ -2242,15 +2250,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             double y2 = points.get(i + 1).getPanelY();
 
             g2.draw(new Line2D.Double(x1, y1, x2, y2));
-        }
-        
-        ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
-        for (int i = 0; i < lineStringElements.size(); i++) {
-        	LineString lineString = lineStringElements.get(i);
-        	ArrayList<Point> lsPoints = lineString.getPoints();
-        	for (Point point : lsPoints) {
-        		setPanelXYForCurrentScale(point);
-        	}
         }
     }
 
@@ -2915,141 +2914,5 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                 }
         }
         repaint();
-    }
-    
-    // for joonseokkim
-    public void setPanelXYForCurrentScaleForJSK() {
-    	IndoorFeatures indoorFeatures = project.getIndoorFeatures();
-    	PrimalSpaceFeatures primalSpaceFeatures = indoorFeatures.getPrimalSpaceFeatures();
-    	ArrayList<CellSpaceOnFloor> cellSpaceOnFloorList = primalSpaceFeatures.getCellSpaceOnFloors();
-    	System.out.println("CellSpaceOnFloorList size : " + cellSpaceOnFloorList.size());
-    	for (CellSpaceOnFloor cellSpaceOnFloor : cellSpaceOnFloorList) {
-    		FloorProperty floorProperty = cellSpaceOnFloor.getFloorProperty();
-    		
-    		File floorPlanFile = new File(floorProperty.getFloorPlanPath());
-            BufferedImage floorPlan = null;
-            double width;
-            double height;
-            if (floorPlanFile.exists()) {
-                try {
-					floorPlan = ImageIO.read(floorPlanFile);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            }
-            
-            if (floorPlan == null) {
-            	System.out.println("floorPlan is null");
-            }
-            
-			width = floorPlan.getWidth();
-			height = floorPlan.getHeight();
-			
-			ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
-			for (CellSpace cellSpace : cellSpaceMember) {
-				Polygon geometry2D = cellSpace.getGeometry2D();
-				LineString exteriorRing = geometry2D.getExteriorRing();
-				setPanelXYForCurrentScaleForJSK(exteriorRing, width, height, floorPlanScale);
-				
-				ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
-				for (LineString ls : lineStringElements) {
-					setPanelXYForCurrentScaleForJSK(ls, width, height, floorPlanScale);
-				}
-			}
-    	}
-    	
-    	MultiLayeredGraph mlg = indoorFeatures.getMultiLayeredGraph();
-    	SpaceLayers spaceLayers = mlg.getSpaceLayers().get(0);
-    	SpaceLayer spaceLayer = spaceLayers.getSpaceLayerMember().get(0);
-    	ArrayList<StateOnFloor> stateOnFloorList = spaceLayer.getNodes().get(0).getStateOnFloors();
-    	for (StateOnFloor stateOnFloor : stateOnFloorList) {
-    		FloorProperty floorProperty = stateOnFloor.getFloorProperty();
-    		
-    		File floorPlanFile = new File(floorProperty.getFloorPlanPath());
-            BufferedImage floorPlan = null;
-            double width;
-            double height;
-            if (floorPlanFile.exists()) {
-                try {
-					floorPlan = ImageIO.read(floorPlanFile);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            }
-            
-            if (floorPlan == null) {
-            	System.out.println("floorPlan is null");
-            }
-            
-			width = floorPlan.getWidth();
-			height = floorPlan.getHeight();
-			
-			ArrayList<State> stateMember = stateOnFloor.getStateMember();
-			for (State state : stateMember) {
-				Point p = state.getPosition();
-				setPanelXYForCurrentScaleForJSK(p, width, height, floorPlanScale);
-			}
-    	}
-    	
-    	ArrayList<TransitionOnFloor> transitionOnFloorList = spaceLayer.getEdges().get(0).getTransitionOnFloors();
-    	System.out.println("transitionOnFloorList size : " + transitionOnFloorList.size());
-    	for (TransitionOnFloor transitionOnFloor : transitionOnFloorList) {
-    		FloorProperty floorProperty = transitionOnFloor.getFloorProperty();
-    		
-    		File floorPlanFile = new File(floorProperty.getFloorPlanPath());
-            BufferedImage floorPlan = null;
-            double width;
-            double height;
-            if (floorPlanFile.exists()) {
-                try {
-					floorPlan = ImageIO.read(floorPlanFile);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            }
-            
-            if (floorPlan == null) {
-            	System.out.println("floorPlan is null");
-            }
-            
-			width = floorPlan.getWidth();
-			height = floorPlan.getHeight();
-			
-			ArrayList<Transition> transitionMember = transitionOnFloor.getTransitionMember();
-			for (Transition transition : transitionMember) {
-				LineString ls = transition.getPath();
-				setPanelXYForCurrentScaleForJSK(ls, width, height, floorPlanScale);
-			}
-    	}
-    }
-    
-    public void setPanelXYForCurrentScaleForJSK(LineString ls, double floorPlanWidth, double floorPlanHeight, double floorPlanScale) {
-    	ArrayList<Point> points = ls.getPoints();
-    	
-    	for (Point point : points) {
-    		setPanelXYForCurrentScaleForJSK(point, floorPlanWidth, floorPlanHeight, floorPlanScale);
-    	}
-    }
-    
-    public void setPanelXYForCurrentScaleForJSK(Point p, double floorPlanWidth, double floorPlanHeight, double floorPlanScale) {
-        double x = (p.getPanelRatioX() * floorPlanWidth * floorPlanScale);
-        double y = (p.getPanelRatioY() * floorPlanHeight * floorPlanScale);
-
-        p.setPanelX(x);
-        p.setPanelY(y);
-    }
-
-    public void setPanelRatioXYForJSK(Point p, double floorPlanWidth, double floorPlanHeight, double floorPlanScale) {
-        double x = p.getPanelX();
-        double y = p.getPanelY();
-
-        double ratioX = ((double) x / (floorPlanWidth * floorPlanScale));
-        double ratioY = ((double) y / (floorPlanHeight * floorPlanScale));
-        
-        p.setPanelRatioX(ratioX);
-        p.setPanelRatioY(ratioY);
     }
 }
