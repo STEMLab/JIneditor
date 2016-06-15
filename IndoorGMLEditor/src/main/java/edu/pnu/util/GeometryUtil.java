@@ -277,4 +277,11 @@ public class GeometryUtil {
 		
 		return false;
 	}
+	
+	public static int isSimilarOrientation(LineString ls1, LineString ls2) {
+		com.vividsolutions.jts.geom.LineString line1 = JTSUtil.convertJTSLineString(ls1);
+		com.vividsolutions.jts.geom.LineString line2 = JTSUtil.convertJTSLineString(ls2);
+		
+		return JTSUtil.isSimilarOrientation(line1, line2);		
+	}
 }

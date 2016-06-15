@@ -3,12 +3,12 @@ package edu.pnu.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.pnu.project.StateOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.InterLayerConnection;
 import net.opengis.indoorgml.core.PrimalSpaceFeatures;
 import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.State;
-import edu.pnu.project.StateOnFloor;
 
 public class InterLayerConnectionGenerator {
 	private SpaceLayer target1SpaceLayer, target2SpaceLayer;

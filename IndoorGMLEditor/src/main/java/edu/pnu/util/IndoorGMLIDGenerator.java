@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.pnu.project.StateOnFloor;
+import edu.pnu.project.TransitionOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
@@ -25,8 +27,6 @@ import net.opengis.indoorgml.geometry.Point;
 import net.opengis.indoorgml.geometry.Polygon;
 import net.opengis.indoorgml.geometry.Shell;
 import net.opengis.indoorgml.geometry.Solid;
-import edu.pnu.project.StateOnFloor;
-import edu.pnu.project.TransitionOnFloor;
 
 public class IndoorGMLIDGenerator {
 	private boolean is3DGeometry;

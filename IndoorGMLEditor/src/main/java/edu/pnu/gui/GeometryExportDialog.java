@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -13,11 +14,13 @@ import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
 
 import net.opengis.indoorgml.core.CellSpaceBoundary;
+import net.opengis.indoorgml.core.IndoorFeatures;
 import edu.pnu.importexport.IndoorGMLExporter;
 import edu.pnu.project.ProjectFile;
 import edu.pnu.util.CellSpaceBoundaryBuilder;
 import edu.pnu.util.Geometry3DRemover;
 import edu.pnu.util.IndoorGML3DGeometryBuilder;
+import edu.pnu.util.IndoorGMLCloneGenerator;
 
 public class GeometryExportDialog extends JDialog {
 
@@ -89,11 +92,18 @@ public class GeometryExportDialog extends JDialog {
 						CellSpaceBoundaryBuilder csbb = new CellSpaceBoundaryBuilder(panel, project.getIndoorFeatures());
 						csbb.build();
 						
-						HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap = null;
+						// 에디터 상에서는 붙어 있는 벽, 문에 대한 boundary가 하나로 되어있지만
+						// 실제 IndoorGML의 데이터 모델로는 boundary가 두개 생겨 양쪽에서 봤을 때 벽을 모두 볼 수 있어야 한다.
+						// IndoorFeatures 객체를 복사하고, boundary와 transition을 하나씩 더 생성한다.
+						IndoorGMLCloneGenerator cloneGenerator = new IndoorGMLCloneGenerator();
+						IndoorFeatures clone = cloneGenerator.getClone(project.getIndoorFeatures());
+						Map<CellSpaceBoundary, CellSpaceBoundary> xLinkBoundaryMap = cloneGenerator.getXLinkBoundaryMap();
+						
+						Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap = null;
 						if(rdbtn3D.isSelected()) {
 						//	IndoorGML3DGeometryBuilder builder
 							project.setIs3DGeometry(true);
-							IndoorGML3DGeometryBuilder builder = new IndoorGML3DGeometryBuilder(panel, project.getIndoorFeatures());
+							IndoorGML3DGeometryBuilder builder = new IndoorGML3DGeometryBuilder(panel, clone, xLinkBoundaryMap);
 							builder.create3DGeometry();
 							
 							boundary3DMap = builder.getBoundary3DMap();
@@ -101,12 +111,12 @@ public class GeometryExportDialog extends JDialog {
 							project.setIs3DGeometry(false);
 						}
 						
-						IndoorGMLExporter exporter = new IndoorGMLExporter(project);
+						IndoorGMLExporter exporter = new IndoorGMLExporter(clone, project.getIs3DGeometry());
 						try {
 							exporter.setBoundary3DMap(boundary3DMap);
 							exporter.export();
 							
-							Geometry3DRemover.removeGeometry3D(project.getIndoorFeatures());
+							Geometry3DRemover.removeGeometry3D(clone);
 						} catch (Exception e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();

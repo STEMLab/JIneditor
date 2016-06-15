@@ -2,6 +2,7 @@ package edu.pnu.importexport;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -21,6 +22,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import net.opengis.indoorgml.core.CellSpaceBoundary;
+import net.opengis.indoorgml.core.IndoorFeatures;
 import net.opengis.indoorgml.core.v_1_0.IndoorFeaturesType;
 
 import org.w3c.dom.Document;
@@ -34,23 +36,26 @@ import edu.pnu.util.IndoorGMLJAXBConvertor;
 
 public class IndoorGMLExporter {
 	private ProjectFile project;
+	private IndoorFeatures indoorFeatures;
+	private boolean is3DGeometry;
 	
-	private HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
+	private Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
 
-	public IndoorGMLExporter(ProjectFile project) {
+	public IndoorGMLExporter(IndoorFeatures indoorFeatures, boolean is3DGeometry) {
 		// TODO Auto-generated constructor stub
-		this.project = project;
+		this.indoorFeatures = indoorFeatures;
+		this.is3DGeometry = is3DGeometry;
 	}
 	
-	public void setBoundary3DMap(HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
+	public void setBoundary3DMap(Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
 		this.boundary3DMap = boundary3DMap;
 	}
 	
 	public void export() throws JAXBException{
 		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
-		IndoorGMLIDGenerator idGenerator = new IndoorGMLIDGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
-	    IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(project.getIndoorFeatures(), project.getIs3DGeometry());
-		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(project.getIndoorFeatures(), project.getIs3DGeometry(), boundary3DMap);
+		IndoorGMLIDGenerator idGenerator = new IndoorGMLIDGenerator(indoorFeatures, is3DGeometry);
+	    IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(indoorFeatures, is3DGeometry);
+		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(indoorFeatures, is3DGeometry, boundary3DMap);
 		idGenerator.generateGMLID();
 		coordinateGenerator.generate();				
 		

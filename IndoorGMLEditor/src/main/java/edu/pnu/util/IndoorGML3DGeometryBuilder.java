@@ -2,8 +2,7 @@ package edu.pnu.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
@@ -23,20 +22,22 @@ import edu.pnu.project.FloorProperty;
 
 public class IndoorGML3DGeometryBuilder {
 	private IndoorFeatures indoorFeatures;
-	private HashMap<LineString, Polygon> xLink3DMap;
-	private ArrayList<LineString> combineLineStrings;
-	private CanvasPanel panel;
+	private HashMap<LineString, Polygon> xLink3DMap; // not used
+	private ArrayList<LineString> combineLineStrings; // not used
+	private CanvasPanel panel; // not used
 	
-	private HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
+	private Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
+	private Map<CellSpaceBoundary, CellSpaceBoundary> xLinkBoundaryMap;
 		
-	public IndoorGML3DGeometryBuilder(CanvasPanel panel, IndoorFeatures indoorFeatures) {
-	        this.panel = panel;
+	public IndoorGML3DGeometryBuilder(CanvasPanel panel, IndoorFeatures indoorFeatures, Map<CellSpaceBoundary, CellSpaceBoundary> xLinkBoundaryMap) {
+		this.panel = panel;
 		this.indoorFeatures = indoorFeatures;
 		
 		xLink3DMap = new HashMap<LineString, Polygon>();
 		combineLineStrings = new ArrayList<LineString>();
 		
 		boundary3DMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
+		this.xLinkBoundaryMap = xLinkBoundaryMap;
 	}
 
 	public void create3DGeometry() {
@@ -62,9 +63,8 @@ public class IndoorGML3DGeometryBuilder {
 		
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
-		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
-		HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DReferenceMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
-		        
+		HashMap<LineString, ArrayList<CellSpaceBoundary>> lineStringBoundaryMap = cellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
+				        
         for (CellSpace cellSpace : cellSpaceMember) {
         	ArrayList<CellSpaceBoundary> removed = new ArrayList<CellSpaceBoundary>();
         	for (CellSpaceBoundary bounded : cellSpace.getPartialBoundedBy()) {
@@ -78,7 +78,199 @@ public class IndoorGML3DGeometryBuilder {
         	cellSpace.getPartialBoundedBy().removeAll(removed);
         }
         
-        int count = 0;
+        for (CellSpace cellSpace : cellSpaceMember) {
+        	ArrayList<CellSpaceBoundary> generated3DBoundary = new ArrayList<CellSpaceBoundary>();
+        	for (LineString ls : cellSpace.getLineStringElements()) {
+        		if (!lineStringBoundaryMap.containsKey(ls)) {
+        			continue;
+        		}
+        		
+    			ArrayList<CellSpaceBoundary> adjacency = lineStringBoundaryMap.get(ls);
+    			int remain = adjacency.size();
+    			
+    			while (remain > 0) {
+    				ArrayList<Point> combinePoints = new ArrayList<Point>();
+            		ArrayList<CellSpaceBoundary> refinement = new ArrayList<CellSpaceBoundary>();
+            		ArrayList<CellSpaceBoundary> ignore = new ArrayList<CellSpaceBoundary>();
+            		
+    				for (int i = 0; i < adjacency.size(); i++) {
+    					CellSpaceBoundary boundary = adjacency.get(i);
+    					if (boundary3DMap.containsKey(boundary)) {
+    						continue;
+    					}
+    					
+						LineString geometry2D = boundary.getGeometry2D();						
+						if (geometry2D.getxLinkGeometry() != null) {
+							if (!ignore.contains(boundary)) {
+								ignore.add(boundary);
+								remain--;
+							}
+							continue;
+						}
+						
+						if (boundary.getBoundaryType() == BoundaryType.Door && boundary.getGeometry3D() == null) {
+	    					boundary.getGeometry2D().getPoints().get(0).setZ(groundHeight);
+	    					boundary.getGeometry2D().getPoints().get(1).setZ(groundHeight);
+	    					
+	            			Polygon geometry3D = new Polygon();
+	            			ArrayList<Point> geometry3DPoints = new ArrayList<Point>();
+	            			geometry3DPoints.add(boundary.getGeometry2D().getPoints().get(0).clone());
+	            			geometry3DPoints.add(boundary.getGeometry2D().getPoints().get(1).clone());
+	        				geometry3D = createPolygonFrom2Points(geometry3DPoints, groundHeight + defaultDoorHeight);
+	        				boundary.setGeometry3D(geometry3D);
+	        				
+	        				remain--;
+	        				
+	        				boundary3DMap.put(boundary, boundary);
+	            		}
+	        			
+	        			//
+	        			if (combinePoints.size() == 0) {
+	        				if (boundary.getBoundaryType() == BoundaryType.Door) {
+	        					geometry2D.getPoints().get(0).setZ(groundHeight);
+	        					geometry2D.getPoints().get(1).setZ(groundHeight);
+	        					
+	        					ArrayList<Point> clone = new ArrayList<Point>();
+	        					clone.add(geometry2D.getPoints().get(0).clone());
+	        					clone.add(geometry2D.getPoints().get(1).clone());
+	        					
+	        					Point cloneLast = clone.get(1).clone();
+	        					clone.get(0).setZ(groundHeight + defaultDoorHeight);
+	        					clone.get(1).setZ(groundHeight + defaultDoorHeight);
+	        					cloneLast.setZ(groundHeight);
+	        					clone.add(cloneLast);
+	        					        					
+	        					combinePoints.addAll(clone);
+	        				} else {
+	        					geometry2D.getPoints().get(0).setZ(groundHeight);
+	        					geometry2D.getPoints().get(1).setZ(groundHeight);
+	        					
+	            				combinePoints.addAll((ArrayList<Point>) geometry2D.getPoints().clone());
+	            				refinement.add(boundary);
+	        				}
+	        			} else {        			
+		        			Point lastPoint = combinePoints.get(combinePoints.size() - 1);
+		        			Point startPoint = geometry2D.getPoints().get(0);
+		        			if (lastPoint.equalsPanelRatioXY(startPoint)) { // 끝점 같은것과 직선인지 검사해야함
+		        				if (boundary.getBoundaryType() == BoundaryType.Door) {
+		        					geometry2D.getPoints().get(0).setZ(groundHeight);
+		        					geometry2D.getPoints().get(1).setZ(groundHeight);
+		        					
+		        					ArrayList<Point> clone = new ArrayList<Point>();
+		        					clone.add(geometry2D.getPoints().get(0).clone());
+		        					clone.add(geometry2D.getPoints().get(1).clone());
+		        					
+		        					Point cloneLast = clone.get(1).clone();
+		        					clone.get(0).setZ(groundHeight + defaultDoorHeight);
+		        					clone.get(1).setZ(groundHeight + defaultDoorHeight);
+		        					cloneLast.setZ(groundHeight);
+		        					clone.add(cloneLast);
+		        					        					
+		        					combinePoints.addAll(clone);
+		        				} else {
+		        					geometry2D.getPoints().get(0).setZ(groundHeight);
+		        					geometry2D.getPoints().get(1).setZ(groundHeight);
+		        					
+		        					combinePoints.add(geometry2D.getPoints().get(1).clone());
+		        					refinement.add(boundary);
+		        				}
+		        			}
+	        			}
+    				}
+	        			
+        			if (refinement.size() > 0) {
+    	        		CellSpaceBoundary newBoundary = new CellSpaceBoundary();
+    	        		Polygon geometry3D = createPolygonFrom2Points(combinePoints, ceilingHeight);
+    					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
+    					newBoundary.setGeometry3D(geometry3D);
+    					
+    					for (CellSpaceBoundary target : refinement) {
+    						boundary3DMap.put(target, newBoundary);
+    						remain--;
+    					}
+    					cellSpaceBoundaryMember.add(newBoundary);
+    					generated3DBoundary.add(newBoundary);
+    					
+    					newBoundary.setDuality(refinement.get(0).getDuality());
+            		}
+
+    			}
+    			
+        	}
+        	
+        	if (!generated3DBoundary.isEmpty()) {
+        		cellSpace.getPartialBoundedBy().addAll(generated3DBoundary);
+        	}
+        }
+        
+        // create CellSpaceBoundary has xlink geometry
+        for (CellSpace cellSpace : cellSpaceMember) {
+        	ArrayList<CellSpaceBoundary> partialBoundedBy = cellSpace.getPartialBoundedBy();
+        	ArrayList<CellSpaceBoundary> ignore = new ArrayList<CellSpaceBoundary>();
+        	ArrayList<CellSpaceBoundary> generated = new ArrayList<CellSpaceBoundary>();
+        	
+        	for (CellSpaceBoundary bounded : partialBoundedBy) {
+        		if (bounded.getBoundaryType() == BoundaryType.Boundary3D) {
+        			continue;
+        		}
+        		if (boundary3DMap.containsKey(bounded)) {
+        			continue;
+        		}
+        		
+        		LineString geometry2D = bounded.getGeometry2D();
+        		if (geometry2D.getxLinkGeometry() != null) {
+        			CellSpaceBoundary mirrorBoundary = xLinkBoundaryMap.get(bounded);
+        			CellSpaceBoundary mirrorBoundary3D = boundary3DMap.get(mirrorBoundary);
+        			if (ignore.contains(mirrorBoundary3D)) {
+        				continue;
+        			} else {
+        				ignore.add(mirrorBoundary3D);
+        			}
+        			
+        			CellSpaceBoundary newBoundary = new CellSpaceBoundary();
+	        		Polygon geometry3D = new Polygon();
+	        		geometry3D.setxLinkGeometry(mirrorBoundary3D.getGeometry3D());
+	        		geometry3D.setIsReversed(geometry2D.getIsReversed());
+	        		
+					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
+					newBoundary.setGeometry3D(geometry3D);
+					
+					boundary3DMap.put(bounded, newBoundary);
+					cellSpaceBoundaryMember.add(newBoundary);
+					generated.add(newBoundary);
+					
+					newBoundary.setDuality(bounded.getDuality());
+        		}
+        	}
+        	if (!generated.isEmpty()) {
+        		cellSpace.getPartialBoundedBy().addAll(generated);
+        	}
+        }
+	}
+	
+	public void create3DBoundaryFromCellSpaceByOldModel(CellSpaceOnFloor cellSpaceOnFloor, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
+		double groundHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getGroundHeight();
+		double ceilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
+		double defaultDoorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
+		
+		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
+		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = cellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember();
+		HashMap<CellSpaceBoundary, ArrayList<CellSpace>> boundaryOfReferenceCellSpaceMap = cellSpaceBoundaryOnFloor.getBoundaryOfReferenceCellSpaceMap();
+		HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DReferenceMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
+				        
+        for (CellSpace cellSpace : cellSpaceMember) {
+        	ArrayList<CellSpaceBoundary> removed = new ArrayList<CellSpaceBoundary>();
+        	for (CellSpaceBoundary bounded : cellSpace.getPartialBoundedBy()) {
+        		if (bounded.getBoundaryType() == BoundaryType.Boundary3D) {
+	        		removed.add(bounded);
+	        		cellSpaceBoundaryMember.remove(bounded);
+        		} else if (bounded.getGeometry3D() != null) {
+        			bounded.setGeometry3D(null);
+        		}
+        	}
+        	cellSpace.getPartialBoundedBy().removeAll(removed);
+        }
+        
         for (CellSpace cellSpace : cellSpaceMember) {        	
         	ArrayList<CellSpaceBoundary> boundedBy = cellSpace.getPartialBoundedBy();
         	ArrayList<CellSpaceBoundary> generated3DBoundary = new ArrayList<CellSpaceBoundary>();
@@ -88,7 +280,7 @@ public class IndoorGML3DGeometryBuilder {
         	while (remain > 0) {
         		ArrayList<CellSpaceBoundary> combineBoundary = new ArrayList<CellSpaceBoundary>();
         		CellSpace targetCell = null;
-        		for (CellSpaceBoundary bounded : boundedBy) {
+        		for (CellSpaceBoundary bounded : boundedBy) {        			
             		if (!boundary3DReferenceMap.containsKey(bounded)) {
             			ArrayList<CellSpace> referenceCellSpaceList = boundaryOfReferenceCellSpaceMap.get(bounded);
             			CellSpace candidate = null;
@@ -357,7 +549,7 @@ public class IndoorGML3DGeometryBuilder {
 	        LineString ls = boundary.getGeometry2D();
 	        double doorHeight = defaultDoorHeight;
 	        
-	        if(!boundary.getIsDefaultDoor()) {
+	        if(!boundary.getIsDefaultDoorHeight()) {
 	                doorHeight = boundary.getDoorHeight();
 	        }
 	        
@@ -419,10 +611,10 @@ public class IndoorGML3DGeometryBuilder {
 		// upper side
         ArrayList<Point> upperPointList = new ArrayList<Point>();
         for(int i = 0; i < points.size(); i++) {
-                Point point = points.get(i).clone();
-                point.setZ(ceilingHeight);
-                
-                upperPointList.add(point);
+            Point point = points.get(i).clone();
+            point.setZ(ceilingHeight);
+            
+            upperPointList.add(point);
         }
         LinearRing upperRing = new LinearRing();
         upperRing.setPoints(upperPointList);
@@ -431,275 +623,46 @@ public class IndoorGML3DGeometryBuilder {
         surfaceMember.add(upperSurface);
         
         for(int i = 0; i < points.size() - 1; i++) {
-                ArrayList<Point> sidePointList = new ArrayList<Point>();
-                Point p1 = points.get(i).clone();
-                p1.setZ(groundHeight);
-                Point p2 = points.get(i+1).clone();
-                p2.setZ(groundHeight);
-                Point p3 = upperPointList.get(i+1).clone();
-                p3.setZ(ceilingHeight);
-                Point p4 = upperPointList.get(i).clone();
-                p4.setZ(ceilingHeight);/*
-                panel.setPanelRatioXY(p1);
-                panel.setPanelRatioXY(p2);
-                panel.setPanelRatioXY(p3);
-                panel.setPanelRatioXY(p4);*/
-                
-                sidePointList.add(p1);
-                sidePointList.add(p2);
-                sidePointList.add(p3);
-                sidePointList.add(p4);
-                sidePointList.add(p1);
-                
-                LinearRing sideRing = new LinearRing();
-                sideRing.setPoints(sidePointList);
-                Polygon sideSurface = new Polygon();
-                sideSurface.setExteriorRing(sideRing);
-                surfaceMember.add(sideSurface);
+            ArrayList<Point> sidePointList = new ArrayList<Point>();
+            Point p1 = points.get(i).clone();
+            p1.setZ(groundHeight);
+            Point p2 = points.get(i+1).clone();
+            p2.setZ(groundHeight);
+            Point p3 = upperPointList.get(i+1).clone();
+            p3.setZ(ceilingHeight);
+            Point p4 = upperPointList.get(i).clone();
+            p4.setZ(ceilingHeight);/*
+            panel.setPanelRatioXY(p1);
+            panel.setPanelRatioXY(p2);
+            panel.setPanelRatioXY(p3);
+            panel.setPanelRatioXY(p4);*/
+            
+            sidePointList.add(p1);
+            sidePointList.add(p2);
+            sidePointList.add(p3);
+            sidePointList.add(p4);
+            sidePointList.add(p1);
+            
+            LinearRing sideRing = new LinearRing();
+            sideRing.setPoints(sidePointList);
+            Polygon sideSurface = new Polygon();
+            sideSurface.setExteriorRing(sideRing);
+            surfaceMember.add(sideSurface);
         }
         
         // lower side
         ArrayList<Point> lowerPointList = new ArrayList<Point>();
         for(int i = points.size() - 1; i >= 0; i--) {
-                Point point = points.get(i).clone();
-                point.setZ(groundHeight);
-                
-                lowerPointList.add(point);
+            Point point = points.get(i).clone();
+            point.setZ(groundHeight);
+            
+            lowerPointList.add(point);
         }
         LinearRing lowerRing = new LinearRing();
         lowerRing.setPoints(lowerPointList);
         Polygon lowerSurface = new Polygon();
         lowerSurface.setExteriorRing(lowerRing);
         surfaceMember.add(lowerSurface);
-                
-		
-		// side facet : shell의 옆면
-                /*
-		LineString combineLS = null;
-		for(int i = 0; i < lineStringElements.size(); i++) {
-			// 3차원으로 extrude 할 때 옆면 외에 2D에는 없는 윗면, 아랫면의 기하도 추가로 만들어야함
-		        Point checkP1 = lineStringElements.get(i).getPoints().get(0);
-		        Point checkP2 = lineStringElements.get(i).getPoints().get(1);
-		        panel.setPanelRatioXY(checkP1);
-		        panel.setPanelRatioXY(checkP2);
-		        
-		        if(checkP1.getPanelRatioX() == checkP2.getPanelRatioX() && checkP1.getPanelRatioY() == checkP2.getPanelRatioY())
-		            continue;
-		        
-			Polygon sideFacet = null;
-			LineString line = lineStringElements.get(i);
-			ArrayList<Point> geometryPoints = line.getPoints();
-                        ArrayList<Point> pointList = new ArrayList<Point>();
-                        for(int j = geometryPoints.size() - 1; i >= 0; i--) {
-                                Point p = geometryPoints.get(i);
-                                Point newPoint = p.clone();
-                                if(newPoint.getZ() != doorHeight) {
-                                        newPoint.setZ(groundHeight);
-                                }
-                                pointList.add(newPoint);
-                        }
-                        
-                        sideFacet = createPolygonFrom2Points(pointList, ceilingHeight);
-                        surfaceMember.add(sideFacet);
-			*/
-                        /********** 임시로 주석처리 
-			if(combineLS == null) {
-				combineLS = new LineString();
-				for(Point p : geometry2D.getPoints()) {
-					Point newPoint = p.clone();
-					newPoint.setZ(groundHeight);
-					combineLS.getPoints().add(newPoint);
-				}
-			}
-			
-			LineString nextLS = lineStringElements.get((i + 1) % lineStringElements.size());
-			Point nextP2 = nextLS.getPoints().get(1);
-			LineString tempLS = new LineString();
-			Point p1 = geometry2D.getPoints().get(0);
-			Point p2 = geometry2D.getPoints().get(1);
-			tempLS.getPoints().clear();
-			tempLS.getPoints().add(p1);
-			tempLS.getPoints().add(nextP2);
-			
-			if(i < (lineStringElements.size() - 1) && GeometryUtil.isContainsLineString(tempLS, geometry2D)
-					&& GeometryUtil.isContainsLineString(tempLS, nextLS)) {
-				for(Point p : nextLS.getPoints()) {
-					Point newPoint = p.clone();
-					newPoint.setZ(groundHeight);
-					combineLS.getPoints().add(newPoint);
-				}
-			} else {
-				if(combineLS.getPoints().size() > 2) {
-					for(LineString combine : combineLineStrings) {
-						if(GeometryUtil.isEqualsLineString(combine, combineLS)) {
-							combineLS.setxLinkGeometry(combine);
-							combineLS.setIsReversed(true);
-						} else if(GeometryUtil.isEqualsIgnoreReverseLineString(combine, combineLS)) {
-							combineLS.setxLinkGeometry(combine);
-							combineLS.setIsReversed(false);
-						} else {
-							combineLineStrings.add(combineLS);
-						}
-					}
-					geometry2D = combineLS;
-				}				
-				combineLS = null;
-				
-				if(geometry2D.getxLinkGeometry() != null) {
-					Polygon xLinkPolygon = null;
-					if(xLink3DMap.containsKey(geometry2D.getxLinkGeometry())) {
-						xLinkPolygon = xLink3DMap.get(geometry2D.getxLinkGeometry());
-					} else {
-						// xlink에 해당되는 3D geometry가 map에 없을 경우 먼저 polygon을 생성하여 저장하고 xlink를 걸어준다
-						ArrayList<Point> xLinkGeometryPoints = ((LineString) geometry2D.getxLinkGeometry()).getPoints();					
-						ArrayList<Point> pointList = new ArrayList<Point>();
-						for(Point p : xLinkGeometryPoints) {
-							Point newPoint = p.clone();
-							newPoint.setZ(groundHeight);
-							pointList.add(newPoint);
-						}
-						
-						xLinkPolygon = createPolygonFrom2Points(pointList, ceilingHeight);
-						xLink3DMap.put((LineString) geometry2D.getxLinkGeometry(), xLinkPolygon);
-					}
-					sideFacet = new Polygon();
-					sideFacet.setxLinkGeometry(xLinkPolygon);
-					sideFacet.setIsReversed(geometry2D.getIsReversed()); // 방향은 geometry2D에 있는 방향을 가져온다.
-				} else {
-					if(xLink3DMap.containsKey(geometry2D)) { // 이미 만들어져 있는 경우
-						sideFacet = xLink3DMap.get(geometry2D); // shell의 옆면을 map에서 가져온다.
-					} else {
-						ArrayList<Point> geometryPoints = geometry2D.getPoints();
-						ArrayList<Point> pointList = new ArrayList<Point>();
-						for(Point p : geometryPoints) {
-							Point newPoint = p.clone();
-							if(newPoint.getZ() != doorHeight) {
-								newPoint.setZ(groundHeight);
-							}
-							pointList.add(newPoint);
-						}
-						
-						sideFacet = createPolygonFrom2Points(pointList, ceilingHeight); // map에 없는 경우 옆면 생성, map에 추가
-						xLink3DMap.put((LineString) geometry2D, sideFacet); // CellSpaceBoundary의 geometry3D는 xlink
-					}
-				}
-				surfaceMember.add(sideFacet);
-			}
-			임시로 추석 처리*/
-			
-			/*
-			Point p1 = geometry2D.getPoints().get(0);
-			Point p2 = geometry2D.getPoints().get(1);
-			if(p1.getZ() == doorHeight && p2.getZ() == doorHeight) { // Door
-				LineString combineLS = new LineString();
-				combineLS.setPoints((ArrayList<Point>) geometry2D.getPoints().clone());
-				LineString tempLS = new LineString();
-
-				int prevIdx;
-				if(i == 0) prevIdx = lineStringElements.size() - 1;
-				else prevIdx = i - 1;
-				for(int j = prevIdx; j >= 0; j--) {
-					// 한쪽 벽에 문이 여러개 있는 경우 문에 대한 기하가 뚫려 있는 하나의 기하로 만들어야 한다.
-					// LineString이 하나 이상 합쳐 질 경우 벽-문-벽-문이나 문-벽-문의 경우이다.
-					LineString prevLS = lineStringElements.get(j);
-					Point prevP1 = prevLS.getPoints().get(0);
-					tempLS.getPoints().clear();
-					tempLS.getPoints().add(prevP1);
-					tempLS.getPoints().add(p2);
-					if(GeometryUtil.isContainsLineString(tempLS, geometry2D) && GeometryUtil.isContainsLineString(tempLS, prevLS)) {
-						if(xLink3DMap.containsKey(prevLS)) {
-							surfaceMember.remove(xLink3DMap.get(prevLS));
-							xLink3DMap.remove(prevLS);
-						}
-						combineLS.getPoints().addAll(0, prevLS.getPoints());
-					} else {
-						break;
-					}
-					
-					if(j == 0) prevIdx = lineStringElements.size() - 1;
-				}
-				
-				int nextIdx = (i + 1) % lineStringElements.size();
-				int count = 0;
-				for(int j = nextIdx; j < lineStringElements.size(); j++) {
-					LineString nextLS = lineStringElements.get(j);
-					Point nextP2 = nextLS.getPoints().get(1);
-					tempLS.getPoints().clear();
-					tempLS.getPoints().add(p1);
-					tempLS.getPoints().add(nextP2);
-					if(GeometryUtil.isContainsLineString(tempLS, geometry2D) && GeometryUtil.isContainsLineString(tempLS, nextLS)) {
-						combineLS.getPoints().addAll(nextLS.getPoints());
-						count++;
-					} else {
-						break;
-					}
-					if(j == lineStringElements.size() - 1) j = 0;
-				}
-				i = i + count;
-				
-				if(combineLS.getPoints().size() > 2) {
-					for(LineString combine : combineLineStrings) {
-						if(GeometryUtil.isEqualsLineString(combine, combineLS)) {
-							combineLS.setxLinkGeometry(combine);
-							combineLS.setIsReversed(true);
-						} else if(GeometryUtil.isEqualsIgnoreReverseLineString(combine, combineLS)) {
-							combineLS.setxLinkGeometry(combine);
-							combineLS.setIsReversed(false);
-						} else {
-							combineLineStrings.add(combineLS);
-						}
-					}
-					geometry2D = combineLS;
-				}
-				
-			}
-			*/
-			
-		//}
-		/*
-		// side facet
-		for(int i = 0; i < points.size(); i++) {
-			Point p1 = points.get(i).clone();
-			Point p2 = points.get((i + 1)).clone();
-			p1.setZ(groundHeight);
-			p2.setZ(groundHeight);
-
-			pointList = new ArrayList<Point>();
-			pointList.add(p1);
-			pointList.add(p2);
-			
-			Polygon surface = createPolygonFrom2Points(pointList, ceilingHeight);
-			surfaceMember.add(surface);
-		}
-		*/
-		/*// upper side
-		ArrayList<Point> points = cellSpace.getGeometry2D().getExteriorRing().getPoints();
-		ArrayList<Point> pointList = new ArrayList<Point>();
-		for(int i = 0; i < points.size(); i++) {
-			Point point = points.get(i).clone();
-			point.setZ(ceilingHeight);
-			
-			pointList.add(point);
-		}
-		LinearRing upperRing = new LinearRing();
-		upperRing.setPoints(pointList);
-		Polygon upperSurface = new Polygon();
-		upperSurface.setExteriorRing(upperRing);
-		surfaceMember.add(upperSurface);
-		
-		// lower side
-		pointList = new ArrayList<Point>();
-		for(int i = points.size() - 1; i >= 0; i--) {
-			Point point = points.get(i).clone();
-			point.setZ(groundHeight);
-			
-			pointList.add(point);
-		}
-		LinearRing lowerRing = new LinearRing();
-		lowerRing.setPoints(pointList);
-		Polygon lowerSurface = new Polygon();
-		lowerSurface.setExteriorRing(lowerRing);
-		surfaceMember.add(lowerSurface);*/
 		
 		shell.setSurfaceMember(surfaceMember);
 		
@@ -725,7 +688,7 @@ public class IndoorGML3DGeometryBuilder {
 		return polygon;		
 	}
 	
-	public HashMap<CellSpaceBoundary, CellSpaceBoundary> getBoundary3DMap() {
+	public Map<CellSpaceBoundary, CellSpaceBoundary> getBoundary3DMap() {
 		return boundary3DMap;
 	}
 }

@@ -16,6 +16,7 @@ import net.opengis.gml.v_3_2_1.FeaturePropertyType;
 import net.opengis.gml.v_3_2_1.LineStringType;
 import net.opengis.gml.v_3_2_1.LinearRingType;
 import net.opengis.gml.v_3_2_1.OrientableCurveType;
+import net.opengis.gml.v_3_2_1.OrientableSurfaceType;
 import net.opengis.gml.v_3_2_1.PointPropertyType;
 import net.opengis.gml.v_3_2_1.PointType;
 import net.opengis.gml.v_3_2_1.PolygonType;
@@ -86,7 +87,9 @@ public class IndoorGMLJAXBConvertor {
 	
 	private Map<String, Object> idRegistry;
 	
-	private HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
+	private Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
+	
+	private int orientableSurface_Label;
 	
 	public IndoorGMLJAXBConvertor(IndoorFeatures indoorFeatures, boolean is3DGeometry) {
 		this.IGMLFactory = new net.opengis.indoorgml.core.v_1_0.ObjectFactory();
@@ -99,7 +102,7 @@ public class IndoorGMLJAXBConvertor {
 	}
 	
 	//code for jsk
-	public IndoorGMLJAXBConvertor(IndoorFeatures indoorFeatures, boolean is3DGeometry, HashMap<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
+	public IndoorGMLJAXBConvertor(IndoorFeatures indoorFeatures, boolean is3DGeometry, Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
 		this.IGMLFactory = new net.opengis.indoorgml.core.v_1_0.ObjectFactory();
 		this.GMLFactory = new net.opengis.gml.v_3_2_1.ObjectFactory();
 		
@@ -109,6 +112,8 @@ public class IndoorGMLJAXBConvertor {
 		idRegistry = new HashMap<String, Object>();
 		
 		this.boundary3DMap = boundary3DMap;
+		
+		orientableSurface_Label = 1;
 	}
 	
 	public JAXBElement<IndoorFeaturesType> getJAXBElement() {
@@ -726,65 +731,14 @@ public class IndoorGMLJAXBConvertor {
 		return target;
 	}
 
-	private SurfacePropertyType createSurfacePropertyType(SurfacePropertyType target, Polygon _polygon) {
+	private SurfacePropertyType createSurfacePropertyType(SurfacePropertyType target, Polygon polygon) {
 		if(target == null) {
 			target = GMLFactory.createSurfacePropertyType();
 		}
-        Polygon polygon = null;
-        if(_polygon.getxLinkGeometry() != null) {
-                System.out.println("-------Orientable Surface---------");
-                polygon = new Polygon();
-                Polygon xlinkGeometry = (Polygon) _polygon.getxLinkGeometry();
-                if(!_polygon.getIsReversed()) {
-	                    ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
-                        ArrayList<Point> newPoints = new ArrayList<Point>();
-                        for(int i = 0; i < points.size(); i++) {
-                                Point newPoint = points.get(i).clone();
-                                newPoint.setRealX(points.get(i).getRealX());
-                                newPoint.setRealY(points.get(i).getRealY());
-                                newPoints.add(newPoint);
-                        }
-                        LinearRing linearRing = new LinearRing();
-                        linearRing.setPoints(newPoints);
-                        polygon.setExteriorRing(linearRing);
-                } else {
-                        ArrayList<Point> points = xlinkGeometry.getExteriorRing().getPoints();
-                        ArrayList<Point> newPoints = new ArrayList<Point>();
-                        for(int i = points.size() - 1; i >= 0; i--) {
-                                newPoints.add(points.get(i).clone());
-                        }
-                        LinearRing linearRing = new LinearRing();
-                        linearRing.setPoints(newPoints);
-                        polygon.setExteriorRing(linearRing);
-                }
-                
-        } else {
-                polygon = _polygon;
-        }
-        PolygonType polygonType = GMLFactory.createPolygonType();
-        
-        String generatedID = generateGMLID(polygon);
-		polygonType.setId(generatedID);
-        //polygonType.setId(polygon.getGMLID());
-        //polygonType.getName().add(createCodeType(polygon.getGMLID(), null));
-        
-        // exterior
-        AbstractRingPropertyType abstractRingPropertyType = createAbstractRingPropertyType(null, polygon.getExteriorRing());
-        polygonType.setExterior(abstractRingPropertyType);
-        
-        // interior
-        ArrayList<LinearRing> interiorRings = polygon.getInteriorRing();
-        for(LinearRing interiorRing : interiorRings) {
-                abstractRingPropertyType = createAbstractRingPropertyType(null, interiorRing);
-                polygonType.getInterior().add(abstractRingPropertyType);
-        }
-        JAXBElement<PolygonType> jPolygonType = GMLFactory.createPolygon(polygonType);
-        target.setAbstractSurface(jPolygonType);
 
-		idCheck(polygonType);
-        return target;
-		/*if(polygon.getxLinkGeometry() != null) {
-			OrientableSurfaceType orientableSurfaceType = GMLFactory.createOrientableSurfaceType();
+        if(polygon.getxLinkGeometry() != null) {
+        	OrientableSurfaceType orientableSurfaceType = GMLFactory.createOrientableSurfaceType();
+        	orientableSurfaceType.setId("OrientableSurface" + orientableSurface_Label++);
 			SurfacePropertyType baseSurfacePropertyType = GMLFactory.createSurfacePropertyType();
 			
 			baseSurfacePropertyType.setHref("#" + polygon.getxLinkGeometry().getGMLID());
@@ -795,27 +749,34 @@ public class IndoorGMLJAXBConvertor {
 				orientableSurfaceType.setOrientation(SignType.VALUE_2);
 			} 
 			JAXBElement<OrientableSurfaceType> jOrientableSurfaceType = GMLFactory.createOrientableSurface(orientableSurfaceType);
-			surfacePropertyType.setAbstractSurface(jOrientableSurfaceType);
-		} else {
-			PolygonType polygonType = GMLFactory.createPolygonType();
-			polygonType.setId(polygon.getGMLID());
-			//polygonType.getName().add(createCodeType(polygon.getGMLID(), null));
+			target.setAbstractSurface(jOrientableSurfaceType);
 			
-			// exterior
-			abstractRingPropertyType = GMLFactory.createAbstractRingPropertyType();
-			visit(polygon.getExteriorRing());
-			polygonType.setExterior(abstractRingPropertyType);
-			
-			// interior
-			ArrayList<LinearRing> interiorRings = polygon.getInteriorRing();
-			for(LinearRing interiorRing : interiorRings) {
-				abstractRingPropertyType = GMLFactory.createAbstractRingPropertyType();			
-				visit(interiorRing);
-				polygonType.getInterior().add(abstractRingPropertyType);
-			}
-			JAXBElement<PolygonType> jPolygonType = GMLFactory.createPolygon(polygonType);
-			surfacePropertyType.setAbstractSurface(jPolygonType);
-		}*/
+			idCheck(orientableSurfaceType);       
+        } else {
+        	PolygonType polygonType = GMLFactory.createPolygonType();
+            
+            String generatedID = generateGMLID(polygon);
+    		polygonType.setId(generatedID);
+            //polygonType.setId(polygon.getGMLID());
+            polygonType.getName().add(createCodeType(null, polygon.getGMLID(), null));
+            
+            // exterior
+            AbstractRingPropertyType abstractRingPropertyType = createAbstractRingPropertyType(null, polygon.getExteriorRing());
+            polygonType.setExterior(abstractRingPropertyType);
+            
+            // interior
+            ArrayList<LinearRing> interiorRings = polygon.getInteriorRing();
+            for(LinearRing interiorRing : interiorRings) {
+            	abstractRingPropertyType = createAbstractRingPropertyType(null, interiorRing);
+            	polygonType.getInterior().add(abstractRingPropertyType);
+            }
+            JAXBElement<PolygonType> jPolygonType = GMLFactory.createPolygon(polygonType);
+            target.setAbstractSurface(jPolygonType);
+            
+    		idCheck(polygonType);
+        }
+
+        return target;
 	}
 
 	private ShellPropertyType createShellPropertyType(ShellPropertyType target, Shell shell) {

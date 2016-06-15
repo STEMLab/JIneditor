@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.pnu.project.StateOnFloor;
+import edu.pnu.project.TransitionOnFloor;
 import net.opengis.indoorgml.core.Edges;
 import net.opengis.indoorgml.core.IndoorFeatures;
 import net.opengis.indoorgml.core.MultiLayeredGraph;
@@ -12,8 +14,6 @@ import net.opengis.indoorgml.core.SpaceLayer;
 import net.opengis.indoorgml.core.SpaceLayers;
 import net.opengis.indoorgml.core.State;
 import net.opengis.indoorgml.core.Transition;
-import edu.pnu.project.StateOnFloor;
-import edu.pnu.project.TransitionOnFloor;
 
 public class TransitionRegistryChecker {
 	private IndoorFeatures indoorFeatures;
