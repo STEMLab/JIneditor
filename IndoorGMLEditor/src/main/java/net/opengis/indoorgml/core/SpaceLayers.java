@@ -16,12 +16,17 @@ public class SpaceLayers extends AbstractFeature implements Serializable, Indoor
 	
 	public SpaceLayers() {
 		super.setGmlID( "SL" + (labelNumber++) );
-		spaceLayerMember = new ArrayList<SpaceLayer>();
-		
-		spaceLayerMember.add(new SpaceLayer());
+	}
+	
+	public SpaceLayers(SpaceLayers other) {
+		super(other);
 	}
 
 	public ArrayList<SpaceLayer> getSpaceLayerMember() {
+		if (spaceLayerMember == null) {
+			spaceLayerMember = new ArrayList<SpaceLayer>();
+			spaceLayerMember.add(new SpaceLayer());
+		}
 		return spaceLayerMember;
 	}
 	public void setSpaceLayerMember(ArrayList<SpaceLayer> spaceLayerMember) {

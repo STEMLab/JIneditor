@@ -17,6 +17,10 @@ public class IndoorFeatures extends AbstractFeature implements Serializable, Ind
 	public IndoorFeatures() {
 	        super.setGmlID( "IFs" );
 	}
+	
+	public IndoorFeatures(IndoorFeatures other) {
+		super(other);
+	}
 
 	public PrimalSpaceFeatures getPrimalSpaceFeatures() {
 		if(primalSpaceFeatures == null) {

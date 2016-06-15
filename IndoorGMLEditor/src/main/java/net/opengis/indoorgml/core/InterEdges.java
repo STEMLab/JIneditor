@@ -17,10 +17,16 @@ public class InterEdges extends AbstractFeature implements Serializable, IndoorG
 	public InterEdges() {
 		// TODO Auto-generated constructor stub
 		super.setGmlID( "IE" + (labelNumber++) );
-		interLayerConnectionMember = new ArrayList<InterLayerConnection>();
+	}
+	
+	public InterEdges(InterEdges other) {
+		super(other);
 	}
 
 	public ArrayList<InterLayerConnection> getInterLayerConnectionMember() {
+		if (interLayerConnectionMember == null) {
+			interLayerConnectionMember = new ArrayList<InterLayerConnection>();
+		}
 		return interLayerConnectionMember;
 	}
 

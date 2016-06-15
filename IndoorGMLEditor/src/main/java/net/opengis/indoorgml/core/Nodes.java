@@ -18,10 +18,16 @@ public class Nodes extends AbstractFeature implements Serializable,
 
 	public Nodes() {
 		super.setGmlID( "N" + (labelNumber++) );
-		stateOnFloors = new ArrayList<StateOnFloor>();
+	}
+	
+	public Nodes(Nodes other) {
+		super(other);
 	}
 
 	public ArrayList<StateOnFloor> getStateOnFloors() {
+		if (stateOnFloors == null) {
+			stateOnFloors = new ArrayList<StateOnFloor>();
+		}
 		return stateOnFloors;
 	}
 

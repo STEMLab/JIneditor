@@ -20,7 +20,14 @@ public class State extends AbstractFeature implements Serializable, IndoorGMLEle
 	
 	public State() {
 		super.setGmlID("R" + (labelNumber++));
-		connects = new ArrayList<Transition>();
+	}
+	
+	public State(State other) {
+		super(other);
+		position = other.position.clone();
+		
+		// duality
+		// connects
 	}
 	
 	public Point getPosition() {
@@ -44,6 +51,9 @@ public class State extends AbstractFeature implements Serializable, IndoorGMLEle
 	}
 	
 	public ArrayList<Transition> getTransitionReference() {
+		if (connects == null) {
+			connects = new ArrayList<Transition>();
+		}
 		return connects;
 	}
 	

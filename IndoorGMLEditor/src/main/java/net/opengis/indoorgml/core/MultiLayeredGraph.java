@@ -18,12 +18,17 @@ public class MultiLayeredGraph extends AbstractFeature implements Serializable,
 
 	public MultiLayeredGraph() {
 		super.setGmlID( "MLG" + (labelNumber++) );
-		spaceLayers = new ArrayList<SpaceLayers>();
-
-		spaceLayers.add(new SpaceLayers());
+	}
+	
+	public MultiLayeredGraph(MultiLayeredGraph other) {
+		super(other);
 	}
 
 	public ArrayList<SpaceLayers> getSpaceLayers() {
+		if (spaceLayers == null) {
+			spaceLayers = new ArrayList<SpaceLayers>();
+			spaceLayers.add(new SpaceLayers());
+		}
 		return spaceLayers;
 	}
 

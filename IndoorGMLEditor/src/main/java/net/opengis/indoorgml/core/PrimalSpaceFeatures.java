@@ -16,6 +16,10 @@ public class PrimalSpaceFeatures extends AbstractFeature implements Serializable
 		super.setGmlID( "PS" + (labelNumber++) );
 	}
 	
+	public PrimalSpaceFeatures(PrimalSpaceFeatures other) {
+		super(other);
+	}
+	
 	public static int getLabelNumber() {
 		return labelNumber;
 	}

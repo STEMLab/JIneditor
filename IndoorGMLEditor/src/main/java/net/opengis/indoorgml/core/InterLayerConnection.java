@@ -23,6 +23,16 @@ public class InterLayerConnection extends AbstractFeature implements
 	public InterLayerConnection() {
                 super.setGmlID( "IL" + (labelNumber++) );
 	}
+	
+	public InterLayerConnection(InterLayerConnection other) {
+		super(other);
+		
+		topology = other.topology;
+		comment = other.comment;
+		
+		// interConnects
+		// connectedLayers
+	}
 
 	public State[] getInterConnects() {
 		return interConnects;

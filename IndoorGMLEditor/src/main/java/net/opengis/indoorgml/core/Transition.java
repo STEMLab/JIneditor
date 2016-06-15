@@ -23,9 +23,18 @@ public class Transition extends AbstractFeature implements Serializable,
 	private LineString path;
 
 	public Transition() {
-            super.setGmlID("T" + (labelNumber++));
-            connects = new State[2];
-        }
+        super.setGmlID("T" + (labelNumber++));
+        connects = new State[2];
+    }
+	
+	public Transition(Transition other) {
+		super(other);
+		weight = other.weight;
+		path = other.path.clone();
+		
+		// duality
+		// connects;
+	}
 	
 	public double getWeight() {
 		return weight;

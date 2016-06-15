@@ -17,10 +17,16 @@ public class Edges extends AbstractFeature implements Serializable, IndoorGMLEle
 	
 	public Edges() {
 		super.setGmlID( "E" + (labelNumber++) );
-		transitionOnFloors = new ArrayList<TransitionOnFloor>();
+	}
+	
+	public Edges(Edges other) {
+		super(other);
 	}
 
 	public ArrayList<TransitionOnFloor> getTransitionOnFloors() {
+		if (transitionOnFloors == null) {
+			transitionOnFloors = new ArrayList<TransitionOnFloor>();
+		}
 		return transitionOnFloors;
 	}
 

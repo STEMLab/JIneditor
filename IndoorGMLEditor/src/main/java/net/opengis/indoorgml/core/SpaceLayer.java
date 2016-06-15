@@ -18,13 +18,17 @@ public class SpaceLayer extends AbstractFeature implements Serializable,
 
 	public SpaceLayer() {
 		super.setGmlID( "IS" + (labelNumber++) );
-		
-		nodes = new ArrayList<Nodes>();
-
-		nodes.add(new Nodes());
+	}
+	
+	public SpaceLayer(SpaceLayer other) {
+		super(other);
 	}
 
 	public ArrayList<Nodes> getNodes() {
+		if (nodes == null) {
+			nodes = new ArrayList<Nodes>();
+			nodes.add(new Nodes());
+		}
 		return nodes;
 	}
 

@@ -30,10 +30,22 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 	
 	public CellSpace() {
 		super.setGmlID( "C" + (labelNumber++) );
-		partialBoundedBy = new ArrayList<CellSpaceBoundary>();
 		isDefaultCeiling = true;
 		
 		setDescription("Usage", "Room");
+	}
+	
+	public CellSpace(CellSpace other) {
+		super(other);
+		geometry2D = other.geometry2D.clone();
+		externalReference = other.externalReference;
+		
+		ceilingHeight = other.ceilingHeight;
+		isDefaultCeiling = other.isDefaultCeiling;
+		
+		// duality;
+		// partialBoundedBy;
+		// lineStringElements;
 	}
 	
 	public static int getLabelNumber() {
@@ -69,6 +81,9 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 	}
 
 	public ArrayList<CellSpaceBoundary> getPartialBoundedBy() {
+		if (partialBoundedBy == null) {
+			partialBoundedBy = new ArrayList<CellSpaceBoundary>();
+		}
 		return partialBoundedBy;
 	}
 
@@ -85,6 +100,9 @@ public class CellSpace extends AbstractFeature implements Serializable, IndoorGM
 	}
 
 	public ArrayList<LineString> getLineStringElements() {
+		if (lineStringElements == null) {
+			lineStringElements = new ArrayList<LineString>();
+		}
 		return lineStringElements;
 	}
 

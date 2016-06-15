@@ -11,6 +11,15 @@ public abstract class AbstractFeature implements Serializable {
 	private String name;
 	private String description;
 	
+	public AbstractFeature() {
+	}
+	
+	public AbstractFeature(AbstractFeature other) {
+		gmlID = other.gmlID;
+		name = other.name;
+		description = other.description;
+	}
+	
 	public String getGmlID() {
 		return gmlID;
 	}
