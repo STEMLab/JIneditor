@@ -59,4 +59,21 @@ public class Polygon extends AbstractGeometry implements Serializable {
 		// TODO Auto-generated method stub
 		//visitor.visit(this);
 	}
+
+	@Override
+	public Polygon clone() {
+		Polygon clone = new Polygon();
+		clone.setGMLID(this.getGMLID());
+		
+		LinearRing exteriorClone = exteriorRing.clone();
+		ArrayList<LinearRing> interiorClone = clone.getInteriorRing();
+		for (LinearRing interior : interiorRing) {
+			interiorClone.add(interior.clone());
+		}
+		clone.setExteriorRing(exteriorClone);
+		
+		return clone;
+	}
+	
+	
 }

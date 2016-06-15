@@ -1,6 +1,7 @@
 package net.opengis.indoorgml.geometry;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import edu.pnu.visitor.IndoorGMLElementVisitor;
 
@@ -23,4 +24,12 @@ public class LinearRing extends LineString implements Serializable  {
 		// TODO Auto-generated method stub
 		//visitor.visit(this);
 	}
+
+	@Override
+	public LinearRing clone() {
+		LinearRing clone = new LinearRing();
+		clone.setPoints((ArrayList<Point>) this.getPoints().clone());
+		return clone;
+	}
+	
 }

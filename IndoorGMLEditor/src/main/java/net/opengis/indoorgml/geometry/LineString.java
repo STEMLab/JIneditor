@@ -45,6 +45,15 @@ public class LineString extends AbstractGeometry implements Serializable, Indoor
 	public static void setLabelNumber(int labelNumber) {
 		LineString.labelNumber = labelNumber;
 	}
+	
+	public void reverse() {
+		ArrayList<Point> temp = new ArrayList<Point>();
+		for (int i = points.size() - 1; i >= 0; i--) {
+			temp.add(points.get(i));
+		}
+		
+		points = temp;
+	}
 
 	public LineString clone() {
 		// TODO Auto-generated method stub
