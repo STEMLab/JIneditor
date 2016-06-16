@@ -1047,6 +1047,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         LineString intersection = GeometryUtil.getIntersectionLineString(
                 ls, otherLS);
         CellSpaceBoundary newBoundary = createCellSpaceBoundary(intersection.clone());
+        if (c1.getDescription("Usage").equals("Door") || c2.getDescription("Usage").equals("Door")) {
+        	newBoundary.setBoundaryType(BoundaryType.Door);
+        }
         
         c1.getPartialBoundedBy().add(newBoundary);
         c2.getPartialBoundedBy().add(newBoundary);
@@ -1096,7 +1099,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         
         if (!lineStringOfAdjacencyBoundaryMap.containsKey(baseLine) || adjacencyBoundaryList.size() == 0) {
         	CellSpaceBoundary doorBoundary = createCellSpaceBoundary(doorLineString);
-        	doorBoundary.setBoundaryType(BoundaryType.Door);
+        	//doorBoundary.setBoundaryType(BoundaryType.Door);
         	baseCellSpace.getPartialBoundedBy().add(doorBoundary);
 
             if (!lineStringOfAdjacencyBoundaryMap.containsKey(baseLine)) {
@@ -2768,18 +2771,39 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private void showPropertiesDialog(String type, AbstractFeature feature) {
             JDialog dialog = null;
             if(type.equalsIgnoreCase("STATE")) {
-                    dialog = new StatePropertiesDialog((State) feature);
+            	dialog = new StatePropertiesDialog((State) feature);
             } else if(type.equalsIgnoreCase("TRANSITION")) {
-                    dialog = new TransitionPropertiesDialog((Transition) feature);
+            	dialog = new TransitionPropertiesDialog((Transition) feature);
             } else if(type.equalsIgnoreCase("CELLSPACE")) {
-                    dialog = new CellSpacePropertiesDialog((CellSpace) feature);
+            	dialog = new CellSpacePropertiesDialog((CellSpace) feature);
             } else if(type.equalsIgnoreCase("CELLSPACEBOUNDARY")) {
-                    dialog = new CellSpaceBoundaryPropertiesDialog((CellSpaceBoundary) feature);
+            	dialog = new CellSpaceBoundaryPropertiesDialog((CellSpaceBoundary) feature);
             }
             
             dialog.setModal(true);
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
+            
+            if (feature instanceof CellSpace) {
+            	CellSpace cellSpace = (CellSpace) feature;
+            	if (cellSpace.getDescription("Usage").equals("Door")) {
+            		double groundHeight = project.getCurrentCellSpaceOnFloor().getFloorProperty().getGroundHeight();
+            		double doorHeight = project.getCurrentCellSpaceOnFloor().getFloorProperty().getDoorHeight();
+            		cellSpace.setCeilingHeight(groundHeight + doorHeight);
+            		cellSpace.setIsDefaultCeiling(false);
+            		
+            		for (CellSpaceBoundary bounded : cellSpace.getPartialBoundedBy()) {
+            			bounded.setBoundaryType(BoundaryType.Door);
+            		}
+            	}
+            } else if (feature instanceof CellSpaceBoundary) {
+            	CellSpaceBoundary boundary = (CellSpaceBoundary) feature;
+            	if (boundary.getBoundaryType() == BoundaryType.Door) {
+            		//
+            	}
+            }
+            
+            System.out.println("properties end");
     }
     private JMenuItem getMntmStateDuality() {
         if (mntmStateDuality == null) {

@@ -14,6 +14,11 @@ import javax.swing.border.EmptyBorder;
 
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
+
+import edu.pnu.project.BoundaryType;
+
 public class CellSpaceBoundaryPropertiesDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
@@ -34,20 +39,22 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
 
     private JTextField textField_Duality;
 
-    private JLabel lblDoorHeight;
-
-    private JTextField textField_Door;
-
     private CellSpaceBoundary cellSpaceBoundary;
+    private JLabel lblUsage;
+    private JComboBox comboBox_Usage;
 
     /**
      * Launch the application.
      */
-    /*
-     * public static void main(String[] args) { try { CellSpaceBoundaryPropertiesDialog dialog = new CellSpaceBoundaryPropertiesDialog();
-     * dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); dialog.setVisible(true); } catch (Exception e) { e.printStackTrace(); } }
-     */
-
+    public static void main(String[] args) {
+    	try {
+    		CellSpaceBoundaryPropertiesDialog dialog = new CellSpaceBoundaryPropertiesDialog(new CellSpaceBoundary());
+    		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    		dialog.setVisible(true);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    }
     /**
      * Create the dialog.
      */
@@ -68,8 +75,8 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
         contentPanel.add(getTextField_Name());
         contentPanel.add(getTextField_Description());
         contentPanel.add(getTextField_Duality());
-        contentPanel.add(getLblDoorHeight());
-        contentPanel.add(getTextField_Door());
+        contentPanel.add(getLblUsage());
+        contentPanel.add(getComboBox_Usage());
         {
             JPanel buttonPane = new JPanel();
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -87,8 +94,10 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
                         if (textField_Description.getText() != null) {
                             cellSpaceBoundary.setDescription(textField_Description.getText());
                         }
-                        if(textField_Door.getText() != null && !textField_Door.getText().equals("")) {
-                            cellSpaceBoundary.setDoorHeight(Double.parseDouble(textField_Door.getText()));
+                        if (((String) comboBox_Usage.getSelectedItem()).equals("Boundary")) {
+                        	cellSpaceBoundary.setBoundaryType(BoundaryType.CellSpaceBoundary);
+                        } else {
+                        	cellSpaceBoundary.setBoundaryType(BoundaryType.Door);
                         }
                         dispose();
                     }
@@ -132,7 +141,7 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
     private JLabel getLblDuality() {
         if (lblDuality == null) {
             lblDuality = new JLabel("Duality");
-            lblDuality.setBounds(12, 110, 57, 15);
+            lblDuality.setBounds(12, 85, 57, 15);
         }
         return lblDuality;
     }
@@ -171,7 +180,7 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
         if (textField_Duality == null) {
             textField_Duality = new JTextField();
             textField_Duality.setEditable(false);
-            textField_Duality.setBounds(112, 107, 116, 21);
+            textField_Duality.setBounds(112, 82, 116, 21);
             textField_Duality.setColumns(10);
         }
         if(cellSpaceBoundary.getDuality() != null) {
@@ -179,22 +188,24 @@ public class CellSpaceBoundaryPropertiesDialog extends JDialog {
         }
         return textField_Duality;
     }
-
-    private JLabel getLblDoorHeight() {
-        if (lblDoorHeight == null) {
-            lblDoorHeight = new JLabel("Door Height");
-            lblDoorHeight.setBounds(12, 85, 84, 15);
-        }
-        return lblDoorHeight;
-    }
-
-    private JTextField getTextField_Door() {
-        if (textField_Door == null) {
-            textField_Door = new JTextField();
-            textField_Door.setBounds(112, 82, 116, 21);
-            textField_Door.setColumns(10);
-        }
-        textField_Door.setText(String.valueOf(cellSpaceBoundary.getDoorHeight()));
-        return textField_Door;
-    }
+	private JLabel getLblUsage() {
+		if (lblUsage == null) {
+			lblUsage = new JLabel("Usage");
+			lblUsage.setBounds(12, 110, 57, 15);
+		}
+		return lblUsage;
+	}
+	private JComboBox getComboBox_Usage() {
+		if (comboBox_Usage == null) {
+			comboBox_Usage = new JComboBox();
+			comboBox_Usage.setModel(new DefaultComboBoxModel(new String[] {"Boundary", "Door"}));
+			comboBox_Usage.setBounds(112, 107, 116, 21);
+		}
+		if (cellSpaceBoundary.getBoundaryType() == BoundaryType.CellSpaceBoundary) {
+			comboBox_Usage.setSelectedIndex(0);
+		} else if (cellSpaceBoundary.getBoundaryType() == BoundaryType.Door) {
+			comboBox_Usage.setSelectedIndex(1);
+		}
+		return comboBox_Usage;
+	}
 }

@@ -58,7 +58,7 @@ public class IndoorGML3DGeometryBuilder {
 	
 	public void create3DBoundaryFromCellSpace(CellSpaceOnFloor cellSpaceOnFloor, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
 		double groundHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getGroundHeight();
-		double ceilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
+		double defaultCeilingHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getCeilingHeight();
 		double defaultDoorHeight = cellSpaceBoundaryOnFloor.getFloorProperty().getDoorHeight();
 		
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
@@ -180,7 +180,7 @@ public class IndoorGML3DGeometryBuilder {
 	        			
         			if (refinement.size() > 0) {
     	        		CellSpaceBoundary newBoundary = new CellSpaceBoundary();
-    	        		Polygon geometry3D = createPolygonFrom2Points(combinePoints, ceilingHeight);
+    	        		Polygon geometry3D = createPolygonFrom2Points(combinePoints, defaultCeilingHeight);
     					newBoundary.setBoundaryType(BoundaryType.Boundary3D);
     					newBoundary.setGeometry3D(geometry3D);
     					
@@ -584,11 +584,11 @@ public class IndoorGML3DGeometryBuilder {
 		double groundHeight = floorProperty.getGroundHeight();
 		double doorHeight = floorProperty.getDoorHeight();
         double ceilingHeight = floorProperty.getCeilingHeight();
+        if (!cellSpace.getIsDefaultCeiling()) {//if (cellSpace.getDescription("Usage").equals("Door")) {
+        	ceilingHeight = cellSpace.getCeilingHeight();
+        	//ceilingHeight = groundHeight + doorHeight;
+        }
         
-		//if(!cellSpace.getIsDefaultCeiling()) {
-		//        ceilingHeight = cellSpace.getCeilingHeight();
-		//}
-		
 		Polygon originPolygon = cellSpace.getGeometry2D();
 		LineString exteriorRing = originPolygon.getExteriorRing();
 		ArrayList<Point> points = null;

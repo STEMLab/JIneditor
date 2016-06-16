@@ -37,15 +37,15 @@ public class CellSpacePropertiesDialog extends JDialog {
     /**
      * Launch the application.
      */
-    /*public static void main(String[] args) {
+    public static void main(String[] args) {
         try {
-            CellSpacePropertiesDialog dialog = new CellSpacePropertiesDialog();
+            CellSpacePropertiesDialog dialog = new CellSpacePropertiesDialog(new CellSpace());
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     /**
      * Create the dialog.
@@ -88,10 +88,11 @@ public class CellSpacePropertiesDialog extends JDialog {
                         if (textField_Description.getText() != null) {
                             cellSpace.setDescription(textField_Description.getText());
                         }
-                        if(textField_Ceiling.getText() != null && !textField_Ceiling.getText().equals("")) {
+                        if (textField_Ceiling.getText() != null && !textField_Ceiling.getText().equals("")) {
                             cellSpace.setCeilingHeight(Double.parseDouble(textField_Ceiling.getText()));
                         }
                         cellSpace.setDescription("Usage", (String) comboBox_Usage.getSelectedItem());
+                        
                         dispose();
                     }
                 });
@@ -204,7 +205,7 @@ public class CellSpacePropertiesDialog extends JDialog {
 	private JComboBox getComboBox_Usage() {
 		if (comboBox_Usage == null) {
 			comboBox_Usage = new JComboBox();
-			comboBox_Usage.setModel(new DefaultComboBoxModel(new String[] {"Room", "Corridor", "Stair", "Elevator"}));
+			comboBox_Usage.setModel(new DefaultComboBoxModel(new String[] {"Room", "Corridor", "Stair", "Elevator", "Door"}));
 			comboBox_Usage.setBounds(113, 132, 120, 21);
 		}
 		for (int i = 0; i < comboBox_Usage.getItemCount(); i++) {

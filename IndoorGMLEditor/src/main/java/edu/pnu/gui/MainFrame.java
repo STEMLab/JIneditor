@@ -672,7 +672,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnCellspace() {
         if (btnCellspace == null) {
-            btnCellspace = new JButton("CellSpace");
+            btnCellspace = new JButton("Cell");
             btnCellspace.setBackground(Color.white);
             btnCellspace.setOpaque(false);
             btnCellspace.setToolTipText("Create CellSpace");
@@ -973,7 +973,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JButton getBtnDoorcellspaceboundary() {
         if (btnDoorcellspaceboundary == null) {
-            btnDoorcellspaceboundary = new JButton("Door");
+            btnDoorcellspaceboundary = new JButton("CellBoundary");
             btnDoorcellspaceboundary.setBackground(Color.white);
             btnDoorcellspaceboundary.setOpaque(false);
             btnDoorcellspaceboundary.setToolTipText("Create Door(CellSpaceBoundary)");
@@ -1115,8 +1115,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	gbc_btnTransition.gridy = 4;
         	panel_1.add(getBtnTransition(), gbc_btnTransition);
         	GridBagConstraints gbc_btnInterlayerconnection = new GridBagConstraints();
-        	gbc_btnInterlayerconnection.anchor = GridBagConstraints.WEST;
-        	gbc_btnInterlayerconnection.fill = GridBagConstraints.VERTICAL;
+        	gbc_btnInterlayerconnection.fill = GridBagConstraints.BOTH;
         	gbc_btnInterlayerconnection.insets = new Insets(0, 0, 0, 5);
         	gbc_btnInterlayerconnection.gridx = 0;
         	gbc_btnInterlayerconnection.gridy = 5;
