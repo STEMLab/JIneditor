@@ -180,7 +180,8 @@ public class IndoorGMLJAXBConvertor {
 			setFloorDescription(cellSpace, cellSpaceOnFloor.getFloorProperty().getLevel());
 			CellSpaceType cellSpaceType = createCellSpaceType(null, cellSpace);
 
-			if (cellSpace.getDescription("Usage").equals("Stair")) {
+			String description = cellSpace.getDescription("Usage");
+			if (description != null && description.equals("Stair")) {
 				System.out.println(cellSpace.getGmlID());
 				count++;
 			}
@@ -192,7 +193,7 @@ public class IndoorGMLJAXBConvertor {
 			target.getCellSpaceMember().add(featurePropertyType);
 		}
 		
-		System.out.println("Floor : " + cellSpaceOnFloor.getFloorProperty().getLevel() + " satir count : " + count);
+		System.out.println("Floor : " + cellSpaceOnFloor.getFloorProperty().getLevel() + " stair count : " + count);
 		
 		return target;
 	}

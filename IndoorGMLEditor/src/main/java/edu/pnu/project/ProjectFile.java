@@ -337,6 +337,25 @@ public class ProjectFile implements Serializable {
 				+ " floorPlanPath : " + floorProperty.getFloorPlanPath());
 
 	}
+	
+	public void clearCurrentFloor() {
+		ArrayList<CellSpace> cellSpaceMember = (ArrayList<CellSpace>) currentCellSpaceOnFloor.getCellSpaceMember().clone();
+		for (CellSpace cellSpace : cellSpaceMember) {
+			deleteCellSpace(cellSpace);
+		}
+		ArrayList<CellSpaceBoundary> cellSpaceBoundaryMember = (ArrayList<CellSpaceBoundary>) currentCellSpaceBoundaryOnFloor.getCellSpaceBoundaryMember().clone();
+		for (CellSpaceBoundary boundary : cellSpaceBoundaryMember) {
+			deleteCellSpaceBoundary(boundary);
+		}
+		ArrayList<State> stateMember = (ArrayList<State>) currentStateOnFloor.getStateMember().clone();
+		for (State state : stateMember) {
+			deleteState(state);
+		}
+		ArrayList<Transition> transitionMember = (ArrayList<Transition>) currentTransitionOnFloor.getTransitionMember().clone();
+		for (Transition transition : transitionMember) {
+			deleteTransition(transition);
+		}
+	}
 
 	public void deleteFloorProperty(FloorProperty floorProperty) {
 		ArrayList<SpaceLayers> spaceLayersList = multiLayeredGraph

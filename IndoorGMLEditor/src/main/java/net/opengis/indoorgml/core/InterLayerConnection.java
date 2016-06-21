@@ -21,7 +21,7 @@ public class InterLayerConnection extends AbstractFeature implements
 	private String comment;
 	
 	public InterLayerConnection() {
-                super.setGmlID( "IL" + (labelNumber++) );
+		super.setGmlID( "IL" + (labelNumber++) );
 	}
 	
 	public InterLayerConnection(InterLayerConnection other) {

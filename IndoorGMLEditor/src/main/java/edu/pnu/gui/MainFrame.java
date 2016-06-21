@@ -80,6 +80,7 @@ import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.IndoorGMLIDGenerator;
 import edu.pnu.util.InterLayerConnectionGenerator;
+import java.awt.Font;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -161,7 +162,14 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JButton btnAa;
     private JMenu mnAssist;
     private JMenuItem mntmGenerateInterlayerconnection;
-    private JMenuItem mntmWkt;
+    private JLabel lblCreate;
+    private JMenu mnInterlayerconnection;
+    private JMenuItem mntmDeleteAllInterlayerconnection;
+    private JLabel lblSelect;
+    private JButton btnClearFloor;
+    private JMenu mnWkt;
+    private JMenuItem mntmImport;
+    private JMenuItem mntmClearFloor;
 
     /**
      * Launch the application.
@@ -394,6 +402,9 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
                             if (floorPlan != null) {
                                 resizePanelPrefferedDimension(floorPlan.getWidth(), floorPlan.getHeight());
                             }
+                            
+                            panel.setPanelXYForCurrentScaleForJSK();
+                            
                             panel.repaint();
                             scrollPane.repaint();
                             repaint();
@@ -491,7 +502,6 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         if (mnImport == null) {
             mnImport = new JMenu("Import");
             mnImport.add(getMnImportIndoorGML());
-            mnImport.add(getMntmWkt());
         }
         return mnImport;
     }
@@ -613,7 +623,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JMenuItem getMntmCellspace() {
         if (mntmCellspace == null) {
-            mntmCellspace = new JMenuItem("CellSpace");
+            mntmCellspace = new JMenuItem("Cell");
             mntmCellspace.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACE);
@@ -666,6 +676,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             toolBar.add(getBtnImport());
             toolBar.add(getTextField_ID());
             toolBar.add(getBtnAa());
+            toolBar.add(getBtnClearFloor());
         }
         return toolBar;
     }
@@ -989,7 +1000,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 
     private JMenuItem getMntmDoorcellspaceboundary() {
         if (mntmDoorcellspaceboundary == null) {
-            mntmDoorcellspaceboundary = new JMenuItem("Door(CellSpaceBoundary)");
+            mntmDoorcellspaceboundary = new JMenuItem("CellBoundary");
             mntmDoorcellspaceboundary.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent arg0) {
                     currentProject.setEditState(EditState.CREATE_CELLSPACEBOUNDARY_AS_DOOR);
@@ -1080,45 +1091,56 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	panel_1 = new JPanel();
         	GridBagLayout gbl_panel_1 = new GridBagLayout();
         	gbl_panel_1.columnWidths = new int[] {5};
-        	gbl_panel_1.rowHeights = new int[] {40, 40, 40, 40, 40, 40, 40};
+        	gbl_panel_1.rowHeights = new int[] {0, 40, 10, 40, 40, 40, 40, 40, 40};
         	gbl_panel_1.columnWeights = new double[]{0.0};
-        	gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+        	gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
         	panel_1.setLayout(gbl_panel_1);
+        	GridBagConstraints gbc_lblSelect = new GridBagConstraints();
+        	gbc_lblSelect.fill = GridBagConstraints.HORIZONTAL;
+        	gbc_lblSelect.insets = new Insets(0, 0, 5, 0);
+        	gbc_lblSelect.gridx = 0;
+        	gbc_lblSelect.gridy = 0;
+        	panel_1.add(getLblSelect(), gbc_lblSelect);
         	GridBagConstraints gbc_btnNone = new GridBagConstraints();
         	gbc_btnNone.fill = GridBagConstraints.BOTH;
-        	gbc_btnNone.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnNone.insets = new Insets(0, 0, 5, 0);
         	gbc_btnNone.gridx = 0;
-        	gbc_btnNone.gridy = 0;
+        	gbc_btnNone.gridy = 1;
         	panel_1.add(getBtnNone(), gbc_btnNone);
+        	GridBagConstraints gbc_lblCreate = new GridBagConstraints();
+        	gbc_lblCreate.fill = GridBagConstraints.HORIZONTAL;
+        	gbc_lblCreate.insets = new Insets(0, 0, 5, 0);
+        	gbc_lblCreate.gridx = 0;
+        	gbc_lblCreate.gridy = 2;
+        	panel_1.add(getLblCreate(), gbc_lblCreate);
         	GridBagConstraints gbc_btnCellspace = new GridBagConstraints();
         	gbc_btnCellspace.fill = GridBagConstraints.BOTH;
-        	gbc_btnCellspace.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnCellspace.insets = new Insets(0, 0, 5, 0);
         	gbc_btnCellspace.gridx = 0;
-        	gbc_btnCellspace.gridy = 1;
+        	gbc_btnCellspace.gridy = 3;
         	panel_1.add(getBtnCellspace(), gbc_btnCellspace);
         	GridBagConstraints gbc_btnDoorcellspaceboundary = new GridBagConstraints();
         	gbc_btnDoorcellspaceboundary.fill = GridBagConstraints.BOTH;
-        	gbc_btnDoorcellspaceboundary.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnDoorcellspaceboundary.insets = new Insets(0, 0, 5, 0);
         	gbc_btnDoorcellspaceboundary.gridx = 0;
-        	gbc_btnDoorcellspaceboundary.gridy = 2;
+        	gbc_btnDoorcellspaceboundary.gridy = 4;
         	panel_1.add(getBtnDoorcellspaceboundary(), gbc_btnDoorcellspaceboundary);
         	GridBagConstraints gbc_btnState = new GridBagConstraints();
         	gbc_btnState.fill = GridBagConstraints.BOTH;
-        	gbc_btnState.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnState.insets = new Insets(0, 0, 5, 0);
         	gbc_btnState.gridx = 0;
-        	gbc_btnState.gridy = 3;
+        	gbc_btnState.gridy = 5;
         	panel_1.add(getBtnState(), gbc_btnState);
         	GridBagConstraints gbc_btnTransition = new GridBagConstraints();
         	gbc_btnTransition.fill = GridBagConstraints.BOTH;
-        	gbc_btnTransition.insets = new Insets(0, 0, 5, 5);
+        	gbc_btnTransition.insets = new Insets(0, 0, 5, 0);
         	gbc_btnTransition.gridx = 0;
-        	gbc_btnTransition.gridy = 4;
+        	gbc_btnTransition.gridy = 6;
         	panel_1.add(getBtnTransition(), gbc_btnTransition);
         	GridBagConstraints gbc_btnInterlayerconnection = new GridBagConstraints();
         	gbc_btnInterlayerconnection.fill = GridBagConstraints.BOTH;
-        	gbc_btnInterlayerconnection.insets = new Insets(0, 0, 0, 5);
         	gbc_btnInterlayerconnection.gridx = 0;
-        	gbc_btnInterlayerconnection.gridy = 5;
+        	gbc_btnInterlayerconnection.gridy = 7;
         	panel_1.add(getBtnInterlayerconnection(), gbc_btnInterlayerconnection);
         }
         return panel_1;
@@ -1142,7 +1164,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        //btnImport.setVisible(false);
+        btnImport.setVisible(false);
         return btnImport;
     }
     private JTextField getTextField_ID() {
@@ -1150,7 +1172,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	textField_ID = new JTextField();
         	textField_ID.setColumns(10);
         }
-        //textField_ID.setVisible(false);
+        textField_ID.setVisible(false);
         return textField_ID;
     }
     private JButton getBtnAa() {
@@ -1162,14 +1184,17 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        //btnAa.setVisible(false);
+        btnAa.setVisible(false);
         return btnAa;
     }
 	private JMenu getMnAssist() {
 		if (mnAssist == null) {
-			mnAssist = new JMenu("Assist");
-			mnAssist.add(getMntmGenerateInterlayerconnection());
+			mnAssist = new JMenu("          ");
+			mnAssist.add(getMnInterlayerconnection());
+			mnAssist.add(getMnWkt());
+			mnAssist.add(getMntmClearFloor());
 		}
+		//mnAssist.setVisible(false);
 		return mnAssist;
 	}
 	private JMenuItem getMntmGenerateInterlayerconnection() {
@@ -1194,10 +1219,98 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 		}
 		return mntmGenerateInterlayerconnection;
 	}
-	private JMenuItem getMntmWkt() {
-		if (mntmWkt == null) {
-			mntmWkt = new JMenuItem("WKT");
+	private JLabel getLblCreate() {
+		if (lblCreate == null) {
+			lblCreate = new JLabel("   Creation");
+			lblCreate.setFont(new Font("굴림", Font.PLAIN, 15));
+			lblCreate.setForeground(Color.WHITE);
+			lblCreate.setBackground(Color.DARK_GRAY);
+			lblCreate.setOpaque(true);
 		}
-		return mntmWkt;
+		return lblCreate;
+	}
+	private JMenu getMnInterlayerconnection() {
+		if (mnInterlayerconnection == null) {
+			mnInterlayerconnection = new JMenu("InterLayerConnection");
+			mnInterlayerconnection.add(getMntmGenerateInterlayerconnection());
+			mnInterlayerconnection.add(getMntmDeleteAllInterlayerconnection());
+		}
+		return mnInterlayerconnection;
+	}
+	private JMenuItem getMntmDeleteAllInterlayerconnection() {
+		if (mntmDeleteAllInterlayerconnection == null) {
+			mntmDeleteAllInterlayerconnection = new JMenuItem("Delete all InterLayerConnection");
+			mntmDeleteAllInterlayerconnection.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					IndoorFeatures indoorFeatures = currentProject.getIndoorFeatures();
+					indoorFeatures.getMultiLayeredGraph().getInterEdges().get(0).getInterLayerConnectionMember().clear();
+					panel.repaint();
+				}
+			});
+		}
+		return mntmDeleteAllInterlayerconnection;
+	}
+	private JLabel getLblSelect() {
+		if (lblSelect == null) {
+			lblSelect = new JLabel("   Selection");
+			lblSelect.setForeground(Color.WHITE);
+			lblSelect.setFont(new Font("굴림", Font.PLAIN, 15));
+			lblSelect.setBackground(Color.DARK_GRAY);
+			lblSelect.setOpaque(true);
+		}
+		return lblSelect;
+	}
+	private JButton getBtnClearFloor() {
+		if (btnClearFloor == null) {
+			btnClearFloor = new JButton("Clear Floor");
+			btnClearFloor.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					currentProject.clearCurrentFloor();
+					panel.repaint();
+				}
+			});
+		}
+		btnClearFloor.setVisible(false);
+		return btnClearFloor;
+	}
+	private JMenu getMnWkt() {
+		if (mnWkt == null) {
+			mnWkt = new JMenu("WKT");
+			mnWkt.add(getMntmImport());
+		}
+		return mnWkt;
+	}
+	private JMenuItem getMntmImport() {
+		if (mntmImport == null) {
+			mntmImport = new JMenuItem("Import");
+			mntmImport.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+    	            WKTImporter wktImporter = new WKTImporter(panel, currentProject);
+    	            String filePath;
+                    JFileChooser fileChooser = new JFileChooser();
+
+                    int returnVal = fileChooser.showOpenDialog(MainFrame.this);
+                    if (returnVal == JFileChooser.APPROVE_OPTION) {
+                        File file = fileChooser.getSelectedFile();
+                        wktImporter.read(file);
+                    }
+                    panel.repaint();
+                    repaint();					
+				}
+			});
+		}
+		return mntmImport;
+	}
+	private JMenuItem getMntmClearFloor() {
+		if (mntmClearFloor == null) {
+			mntmClearFloor = new JMenuItem("Clear Floor");
+			mntmClearFloor.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					currentProject.clearCurrentFloor();
+					panel.repaint();
+				}
+			});
+		}
+		return mntmClearFloor;
 	}
 }

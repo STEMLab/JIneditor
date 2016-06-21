@@ -594,6 +594,12 @@ public class IndoorGML3DGeometryBuilder {
 		ArrayList<Point> points = null;
 		com.vividsolutions.jts.geom.LineString jtsLine = JTSUtil.convertJTSLineString(exteriorRing);
 		double isCounterClockwise = JTSUtil.Orientation2D_Polygon(jtsLine.getNumPoints(), jtsLine.getCoordinateSequence());
+		if (cellSpace.getGmlID().equals("C107")) {
+			System.out.println("C107found");
+		}
+		if (cellSpace.getGmlID().equals("C1130")) {
+			System.out.println("C1130found");
+		}
 		if (isCounterClockwise > 0) {			
 			points = new ArrayList<Point>();
 			ArrayList<Point> originPoints = exteriorRing.getPoints();

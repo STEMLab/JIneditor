@@ -128,4 +128,12 @@ public class Point extends AbstractGeometry implements Serializable, IndoorGMLEl
 		return isEquals;
 	}
 	
+	public void copy(Point other) {
+		this.panelRatioX = other.panelRatioX;
+		this.panelRatioY = other.panelRatioY;
+		this.panelX = other.panelX;
+		this.panelY = other.panelY;
+		this.z = other.z;
+	}
+	
 }

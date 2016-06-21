@@ -205,7 +205,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
                     point.setPanelRatioX(snapPointToCellSpace.getPanelRatioX());
                     point.setPanelRatioY(snapPointToCellSpace.getPanelRatioY());
                 }
-            } else if (snapPointToCellSpace == null) {
+            } else if (snapPointToCellSpace == null && currentKeyEvent != KeyEvent.VK_ALT) {
                 int size = cellSpaceCreatingLineStrings.size();
                 Point firstPoint = snapPointsToCreatingCellSpace.get(0);
                 if (size == 1) {
@@ -913,6 +913,19 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         com.vividsolutions.jts.geom.LineString jtsLine = JTSUtil.convertJTSLineString(checkRing);
         if (JTSUtil.Orientation2D_Polygon(jtsLine.getNumPoints(), jtsLine.getCoordinateSequence()) > 0) {
         	ArrayList<LineString> temp = new ArrayList<LineString>();
+        	for (int i = checkPoints.size() - 1; i >= 0; i--) {
+        		LineString tempLine = new LineString();
+        		ArrayList<Point> tempPoints = tempLine.getPoints();
+        		tempPoints.add(checkPoints.get(i).clone());
+        		if (i == 0) {
+        			tempPoints.add(checkPoints.get(checkPoints.size() - 1).clone());
+        		} else {
+        			tempPoints.add(checkPoints.get(i - 1).clone());
+        		}
+        		temp.add(tempLine);
+        	}
+        	lineStringElements = temp;
+        	/*
         	int last = lineStringElements.size() - 1;
         	for (int i = last; i >= 0; i--) {
         		LineString line = lineStringElements.get(i);
@@ -923,6 +936,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         		temp.add(lineStringElements.get(i));
         	}
         	lineStringElements = temp;
+        	*/
         	System.out.println("reversed");
         }
         //
@@ -1046,8 +1060,14 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         // geometry2d of boundary will be a intersection between ls and otherLS.
         LineString intersection = GeometryUtil.getIntersectionLineString(
                 ls, otherLS);
+        if (intersection == null) {
+        	System.out.println("Intersection is null");
+        	return;
+        }
         CellSpaceBoundary newBoundary = createCellSpaceBoundary(intersection.clone());
-        if (c1.getDescription("Usage").equals("Door") || c2.getDescription("Usage").equals("Door")) {
+        String c1Usage = c1.getDescription("Usage");
+        String c2Usage = c2.getDescription("Usage");
+        if ((c1Usage != null && c2Usage != null) && (c1Usage.equals("Door") || c2Usage.equals("Door"))) {
         	newBoundary.setBoundaryType(BoundaryType.Door);
         }
         
@@ -1539,7 +1559,11 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         CellSpaceOnFloor cellSpaceOnFloor = project.getCurrentCellSpaceOnFloor();
         ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
         for (CellSpace cellSpace : cellSpaceMember) {
-            if (isInPolygon(cellSpace.getGeometry2D(), e.getX(), e.getY())) {
+        	Point p = new Point();
+        	p.setPanelX(e.getX());
+        	p.setPanelY(e.getY());
+        	if (GeometryUtil.isContainsPolygon(cellSpace.getGeometry2D(), p)) {
+            //if (isInPolygon(cellSpace.getGeometry2D(), e.getX(), e.getY())) {
                 pointInCellSpace = cellSpace;
 
                 System.out.println("select cellspace");
@@ -1624,6 +1648,9 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         LineString minLS = null;
         CellSpace minCS = null;
         for (CellSpace cellSpace : cellSpaceMember) {
+        	if (cellSpace.getGmlID().equals("C944")) {
+        		System.out.println("C944 found");
+        	}
             double d = GeometryUtil.getDistancePointToPolygon(cellSpace.getGeometry2D(), e.getX(), e.getY());
             if(d > 100) continue;
             for (LineString ls : cellSpace.getLineStringElements()) {
@@ -1703,7 +1730,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             if (geometry2D.getxLinkGeometry() != null)
                 continue;
 
-            Point p1 = geometry2D.getPoints().get(0);
+            Point p1 = null;
+            try {
+            	p1 = geometry2D.getPoints().get(0);
+            } catch(Exception e1) {
+            	e1.printStackTrace();
+            }
             Point p2 = geometry2D.getPoints().get(1);
 
             if (isAdjacencyPointToPoint(p1, e.getX(), e.getY())) {
@@ -1818,12 +1850,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         }
 
         if (direction > 0) {
-            if (scale > 0.3) {
-                scale -= 0.1;
+            if (scale > 2) {
+                scale -= 1.00;
             }
         } else {
-            if (scale < 10.0) {
-                scale += 0.1;
+            if (scale < 20.0) {
+                scale += 1.00;
             }
         }
         project.setCurrentFloorPlanScale(scale);
@@ -2040,18 +2072,6 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             // this.getHeight(), this);
         }
 
-        if (project.getCurrentStateOnFloor() != null) {
-            floorPlan = project.getCurrentFloorPlan();
-            floorPlanScale = project.getCurrentFloorPlanScale();
-
-            // display state
-
-            ArrayList<State> stateList = project.getCurrentStateOnFloor().getStateMember();
-            for (State state : stateList) {
-                displayState(g, state, Color.RED, floorPlanWidth, floorPlanHeight, floorPlanScale);
-            }
-        }
-
         // display transition(creating transition)
         for (int i = 0; i < transitionPoints.size(); i++) {
             setPanelXYForCurrentScale(transitionPoints.get(i));
@@ -2083,6 +2103,17 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             }
         }
 
+        // display state
+        if (project.getCurrentStateOnFloor() != null) {
+            floorPlan = project.getCurrentFloorPlan();
+            floorPlanScale = project.getCurrentFloorPlanScale();
+
+            ArrayList<State> stateList = project.getCurrentStateOnFloor().getStateMember();
+            for (State state : stateList) {
+                displayState(g, state, Color.RED, floorPlanWidth, floorPlanHeight, floorPlanScale);
+            }
+        }
+        
         // display points(creating cellspace)
         g2.setColor(Color.blue);
         for (LineString ls : cellSpaceCreatingLineStrings) {
@@ -2771,7 +2802,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
     private void showPropertiesDialog(String type, AbstractFeature feature) {
             JDialog dialog = null;
             if(type.equalsIgnoreCase("STATE")) {
-            	dialog = new StatePropertiesDialog((State) feature);
+            	dialog = new StatePropertiesDialog((State) feature, project.getMultiLayeredGraph().getInterEdges().get(0));
             } else if(type.equalsIgnoreCase("TRANSITION")) {
             	dialog = new TransitionPropertiesDialog((Transition) feature);
             } else if(type.equalsIgnoreCase("CELLSPACE")) {
@@ -2804,6 +2835,7 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
             }
             
             System.out.println("properties end");
+            repaint();
     }
     private JMenuItem getMntmStateDuality() {
         if (mntmStateDuality == null) {
@@ -2973,13 +3005,27 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
 			ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 			for (CellSpace cellSpace : cellSpaceMember) {
 				Polygon geometry2D = cellSpace.getGeometry2D();
-				LineString exteriorRing = geometry2D.getExteriorRing();
+				LinearRing exteriorRing = geometry2D.getExteriorRing();
 				setPanelXYForCurrentScaleForJSK(exteriorRing, width, height, floorPlanScale);
 				
-				ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements();
+				ArrayList<LineString> lineStringElements = cellSpace.getLineStringElements(); // (p1,p2) (p2,p3) (p3,p1)
+				for (int i = 0; i < exteriorRing.getPoints().size() - 1; i++) { // p1 p2 p3 p1
+					int previous = i - 1;
+					if (previous == -1) {
+						previous = exteriorRing.getPoints().size() - 2;
+					}
+					Point p = exteriorRing.getPoints().get(i);
+					Point prevP = lineStringElements.get(previous).getPoints().get(1);
+					Point nextP = lineStringElements.get(i).getPoints().get(0);
+					
+					prevP.copy(p);
+					nextP.copy(p);					
+				}
+				/*
 				for (LineString ls : lineStringElements) {
 					setPanelXYForCurrentScaleForJSK(ls, width, height, floorPlanScale);
 				}
+				*/
 			}
     	}
     	

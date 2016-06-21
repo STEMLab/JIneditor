@@ -151,7 +151,7 @@ public class IndoorGMLCloneGenerator {
 				cellSpaceBoundaryOnFloor.getLineStringOfAdjacencyBoundaryMap();
 		for (LineString sourceLS : sourcelineBoundaryMap.keySet()) {
 			if (!IGMLMap.containsKey(sourceLS)) {
-				System.out.println("IGMLMap don't have clone of LineString");
+				System.out.println(cellSpaceBoundaryOnFloor.getFloorProperty().getLevel() + " IGMLMap don't have clone of LineString");
 				continue;
 			}
 			

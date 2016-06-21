@@ -88,9 +88,11 @@ public class GeometryExportDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
+						Geometry3DRemover.removeGeometry3D(project.getIndoorFeatures());
+						
 						// 준석햄 데이터를 위한 boundary 생성
-						CellSpaceBoundaryBuilder csbb = new CellSpaceBoundaryBuilder(panel, project.getIndoorFeatures());
-						csbb.build();
+						//CellSpaceBoundaryBuilder csbb = new CellSpaceBoundaryBuilder(panel, project.getIndoorFeatures());
+						//csbb.build();
 						
 						// 에디터 상에서는 붙어 있는 벽, 문에 대한 boundary가 하나로 되어있지만
 						// 실제 IndoorGML의 데이터 모델로는 boundary가 두개 생겨 양쪽에서 봤을 때 벽을 모두 볼 수 있어야 한다.

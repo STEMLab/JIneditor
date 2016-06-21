@@ -125,7 +125,7 @@ public class GeometryUtil {
 	        
 	        com.vividsolutions.jts.geom.Geometry geom = line1.intersection(line2);
 	        if (!geom.getGeometryType().equalsIgnoreCase("LineString")) {
-	        	//System.out.println("intersection is not LineString type");
+	        	System.out.println("intersection is not LineString type");
 	        	return null;
 	        }
 	        com.vividsolutions.jts.geom.LineString intersection = (com.vividsolutions.jts.geom.LineString) geom;
@@ -142,7 +142,8 @@ public class GeometryUtil {
 		        } else if (line1StartPoint.distance(line2EndPoint) <= epsilon && line1EndPoint.distance(line2StartPoint) <= epsilon) {
 		        	intersection = (com.vividsolutions.jts.geom.LineString) line1.clone();
 		        } else {
-		        	//System.out.println("LINESTRING EMPTY");
+		        	System.out.println("LINESTRING EMPTY");
+		        	return null;
 		        }
 	        }
 	        

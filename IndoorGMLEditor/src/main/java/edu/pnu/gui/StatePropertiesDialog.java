@@ -18,17 +18,23 @@ package edu.pnu.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import edu.pnu.project.FloorProperty;
+import net.opengis.indoorgml.core.InterEdges;
+import net.opengis.indoorgml.core.InterLayerConnection;
 import net.opengis.indoorgml.core.State;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 /**
  * @author Donguk Seo
@@ -46,29 +52,34 @@ public class StatePropertiesDialog extends JDialog {
     private JTextField textField_Description;
     private JTextField textField_Duality;
     
+    private InterEdges interEdges;
     private State state;
+    private JLabel lblInterlayerconnection;
+    private JComboBox comboBox_ILC;
+    private JButton btnDelete;
 
     /**
      * Launch the application.
      */
-    /*public static void main(String[] args) {
+    public static void main(String[] args) {
         try {
-            StatePropertiesDialog dialog = new StatePropertiesDialog();
+            StatePropertiesDialog dialog = new StatePropertiesDialog(new State(), new InterEdges());
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     /**
      * Create the dialog.
      */
-    public StatePropertiesDialog(State state) {
+    public StatePropertiesDialog(State state, InterEdges interEdges) {
+    	this.interEdges = interEdges;
         this.state = state;
         
         setTitle("Properties");
-        setBounds(100, 100, 240, 191);
+        setBounds(100, 100, 283, 227);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -81,6 +92,9 @@ public class StatePropertiesDialog extends JDialog {
         contentPanel.add(getTextField_Name());
         contentPanel.add(getTextField_Description());
         contentPanel.add(getTextField_Duality());
+        contentPanel.add(getLblInterlayerconnection());
+        contentPanel.add(getComboBox_ILC());
+        contentPanel.add(getBtnDelete());
         {
             JPanel buttonPane = new JPanel();
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -143,7 +157,7 @@ public class StatePropertiesDialog extends JDialog {
     private JTextField getTextField_ID() {
         if (textField_ID == null) {
         	textField_ID = new JTextField();
-        	textField_ID.setBounds(91, 7, 116, 21);
+        	textField_ID.setBounds(91, 7, 164, 21);
         	textField_ID.setColumns(10);
         }
         textField_ID.setText(state.getGmlID());
@@ -152,7 +166,7 @@ public class StatePropertiesDialog extends JDialog {
     private JTextField getTextField_Name() {
         if (textField_Name == null) {
         	textField_Name = new JTextField();
-        	textField_Name.setBounds(91, 32, 116, 21);
+        	textField_Name.setBounds(91, 32, 164, 21);
         	textField_Name.setColumns(10);
         }
         textField_Name.setText(state.getName());
@@ -161,7 +175,7 @@ public class StatePropertiesDialog extends JDialog {
     private JTextField getTextField_Description() {
         if (textField_Description == null) {
         	textField_Description = new JTextField();
-        	textField_Description.setBounds(91, 57, 116, 21);
+        	textField_Description.setBounds(91, 57, 164, 21);
         	textField_Description.setColumns(10);
         }
         textField_Description.setText(state.getDescription("Description"));
@@ -171,12 +185,84 @@ public class StatePropertiesDialog extends JDialog {
         if (textField_Duality == null) {
         	textField_Duality = new JTextField();
         	textField_Duality.setEditable(false);
-        	textField_Duality.setBounds(91, 82, 116, 21);
+        	textField_Duality.setBounds(91, 82, 164, 21);
         	textField_Duality.setColumns(10);
         }
+        
         if(state.getDuality() != null) {
             textField_Duality.setText(state.getDuality().getGmlID());
         }
+        
         return textField_Duality;
     }
+	private JLabel getLblInterlayerconnection() {
+		if (lblInterlayerconnection == null) {
+			lblInterlayerconnection = new JLabel("<html>InterLayer<br>Connection</html>");
+			lblInterlayerconnection.setBounds(12, 110, 73, 30);
+		}
+		return lblInterlayerconnection;
+	}
+	private JComboBox getComboBox_ILC() {
+		if (comboBox_ILC == null) {
+			comboBox_ILC = new JComboBox();
+			comboBox_ILC.setBounds(91, 119, 88, 21);
+		}
+		
+		ArrayList<InterLayerConnection> ilcMember = interEdges.getInterLayerConnectionMember();
+		ArrayList<String> targets = new ArrayList<String>();
+		for (InterLayerConnection ilc : ilcMember) {
+			State[] states = ilc.getInterConnects();
+			if (states != null) {
+				State target = null;
+				if (states[0].equals(state)) {
+					target = states[1];
+				} else if (states[1].equals(state)) {
+					target = states[0];
+				} else {
+					continue;
+				}
+				
+				targets.add(target.getGmlID());
+			}
+		}
+		
+		if (!targets.isEmpty()) {
+			String[] items = new String[targets.size()];
+			items = targets.toArray(items);
+	        DefaultComboBoxModel model = new DefaultComboBoxModel(items);
+	        comboBox_ILC.setModel(model);
+		}
+		
+		return comboBox_ILC;
+	}
+	private JButton getBtnDelete() {
+		if (btnDelete == null) {
+			btnDelete = new JButton("Delete");
+			btnDelete.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String target = (String) comboBox_ILC.getSelectedItem();
+					
+					InterLayerConnection targetILC = null;
+					ArrayList<InterLayerConnection> ilcMember = interEdges.getInterLayerConnectionMember();
+					for (InterLayerConnection ilc : ilcMember) {
+						State[] states = ilc.getInterConnects();
+						if (states[0].equals(state) && states[1].getGmlID().equals(target)) {
+							targetILC = ilc;
+							break;
+						} else if (states[1].equals(state) && states[0].getGmlID().equals(target)) {
+							targetILC = ilc;
+							break;
+						}
+					}
+					
+					if (targetILC != null) {
+						ilcMember.remove(targetILC);
+						comboBox_ILC.removeItem(target);
+					}
+				}
+			});
+			btnDelete.setBounds(182, 117, 73, 23);
+		}
+		return btnDelete;
+	}
 }
