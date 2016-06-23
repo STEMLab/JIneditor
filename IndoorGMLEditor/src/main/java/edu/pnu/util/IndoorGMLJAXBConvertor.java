@@ -535,7 +535,7 @@ public class IndoorGMLJAXBConvertor {
 		
 		CellSpaceBoundary duality = transition.getDuality();
 		if(duality != null) {
-			if (boundary3DMap.containsKey(duality)) {
+			if (boundary3DMap != null && boundary3DMap.containsKey(duality)) {
 				duality = boundary3DMap.get(duality);
 			}
 			CellSpaceBoundaryPropertyType cellSpaceBoundaryPropertyType = IGMLFactory.createCellSpaceBoundaryPropertyType();
@@ -761,6 +761,23 @@ public class IndoorGMLJAXBConvertor {
         } else {
                 polygon = _polygon;
         }
+        /* for 2D generation
+		LineString exteriorRing = polygon.getExteriorRing();
+		ArrayList<Point> points = null;
+		com.vividsolutions.jts.geom.LineString jtsLine = JTSUtil.convertJTSLineString(exteriorRing);
+		double isCounterClockwise = JTSUtil.Orientation2D_Polygon(jtsLine.getNumPoints(), jtsLine.getCoordinateSequence());
+		if (isCounterClockwise > 0) {			
+			points = new ArrayList<Point>();
+			ArrayList<Point> originPoints = exteriorRing.getPoints();
+			for (int i = originPoints.size() - 1; i >= 0; i--) {
+				points.add(originPoints.get(i));
+			}
+		} else {
+			points = exteriorRing.getPoints();
+		}
+		polygon.getExteriorRing().setPoints(points);
+		*/
+        
         PolygonType polygonType = GMLFactory.createPolygonType();
         
         String generatedID = generateGMLID(polygon);

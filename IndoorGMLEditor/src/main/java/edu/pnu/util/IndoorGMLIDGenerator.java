@@ -70,8 +70,8 @@ public class IndoorGMLIDGenerator {
 		Polygon.setLabelNumber(1);
 		Solid.setLabelNumber(1);
 		
-		//isMLGHeight = false;
-		//traversePrimalSpaceFeatures(indoorFeatures.getPrimalSpaceFeatures());
+		isMLGHeight = false;
+		traversePrimalSpaceFeatures(indoorFeatures.getPrimalSpaceFeatures());
 		isMLGHeight = true;
 		traverseMultiLayeredGraph(indoorFeatures.getMultiLayeredGraph());
 	}
