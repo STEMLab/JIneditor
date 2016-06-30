@@ -1,11 +1,7 @@
 package edu.pnu.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
-import edu.pnu.project.StateOnFloor;
-import edu.pnu.project.TransitionOnFloor;
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
@@ -27,6 +23,8 @@ import net.opengis.indoorgml.geometry.Point;
 import net.opengis.indoorgml.geometry.Polygon;
 import net.opengis.indoorgml.geometry.Shell;
 import net.opengis.indoorgml.geometry.Solid;
+import edu.pnu.project.StateOnFloor;
+import edu.pnu.project.TransitionOnFloor;
 
 public class IndoorGMLIDGenerator {
 	private boolean is3DGeometry;
@@ -250,13 +248,6 @@ public class IndoorGMLIDGenerator {
 	public void traversePoint(Point point) {
 		point.setGMLID("P" + Point.getLabelNumber());
 		Point.setLabelNumber(Point.getLabelNumber() + 1);
-		
-		point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-		point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
-		//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
-		if(!is3DGeometry || isMLGHeight) {
-			point.setZ(floorGroundHeight);
-		}
 	}
 	
 	public void traverseLineString(LineString lineString) {
@@ -265,28 +256,9 @@ public class IndoorGMLIDGenerator {
 		
 		lineString.setGMLID("LS" + LineString.getLabelNumber());
 		LineString.setLabelNumber(LineString.getLabelNumber() + 1);
-		
-		ArrayList<Point> points = lineString.getPoints();
-		for(Point point : points) {
-			point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
-			//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
-			if(!is3DGeometry || isMLGHeight) {
-				point.setZ(floorGroundHeight);
-			}
-		}
 	}
 	
 	public void traverseLinearRing(LinearRing linearRing) {
-		ArrayList<Point> points = linearRing.getPoints();
-		for(Point point : points) {
-			point.setRealX(lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX()));
-			point.setRealY(lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY()));
-			//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
-			if(!is3DGeometry || isMLGHeight) {
-				point.setZ(floorGroundHeight);
-			}
-		}
 	}
 
 	public void traversePolygon(Polygon polygon) {

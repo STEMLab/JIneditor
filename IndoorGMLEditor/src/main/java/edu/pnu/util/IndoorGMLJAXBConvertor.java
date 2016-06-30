@@ -128,7 +128,7 @@ public class IndoorGMLJAXBConvertor {
 			target = IGMLFactory.createIndoorFeaturesType();
 		}
 		// 준석햄 데이터를 위한 ID 생성
-		String generatedID = "1" + generateGMLID(indoorFeatures);
+		String generatedID = generateGMLID(indoorFeatures);
 		target.setId(generatedID);
 		
 		//target.setId(indoorFeatures.getGmlID());
@@ -443,9 +443,6 @@ public class IndoorGMLJAXBConvertor {
 		ArrayList<Transition> connects = state.getTransitionReference();
 		if(state.getTransitionReference().size() > 0) {
 			for(Transition connect : connects) {
-				if (connect.getGmlID().equals("T37")) {
-					System.out.println("T37 found");
-				}
 				TransitionPropertyType transitionPropertyType = IGMLFactory.createTransitionPropertyType();
 				
 				String generatedHref = generateGMLID(connect);
@@ -540,7 +537,7 @@ public class IndoorGMLJAXBConvertor {
 		}
 		
 		CellSpaceBoundary duality = transition.getDuality();
-		if(duality != null) {
+		if(is3DGeometry && duality != null) {
 			if (boundary3DMap.containsKey(duality)) {
 				duality = boundary3DMap.get(duality);
 			}

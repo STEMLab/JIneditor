@@ -36,6 +36,7 @@ public class JTSUtil {
 	}
 	
 	public static Point snapPointToLineStringByEquation(LineString line, Point point) {
+		double epsilon = 0.05;
 		Point startPoint = line.getStartPoint();
         Point endPoint = line.getEndPoint();
 		double x1 = startPoint.getX();
@@ -50,8 +51,14 @@ public class JTSUtil {
         if (y1 == y2) {
         	p2 = p1;
         	q2 = y1;
+        } else if (Math.abs(y2 - y1) <= epsilon) {
+        	p2 = p1;
+        	q2 = (y2 + y1) / 2;
         } else if (x1 == x2) {
         	p2 = x1;
+        	q2 = q1;
+        } else if (Math.abs(x2 - x1) <= epsilon) {
+        	p2 = (x1 + x2) / 2;
         	q2 = q1;
         } else {
 	        double m1 = (y2 - y1) / (x2 - x1);

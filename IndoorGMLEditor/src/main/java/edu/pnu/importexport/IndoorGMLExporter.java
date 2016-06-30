@@ -57,7 +57,7 @@ public class IndoorGMLExporter {
 	    IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(indoorFeatures, is3DGeometry);
 		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(indoorFeatures, is3DGeometry, boundary3DMap);
 		idGenerator.generateGMLID();
-		coordinateGenerator.generate();				
+		coordinateGenerator.generate();
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("net.opengis.indoorgml.core.v_1_0"
             + ":net.opengis.gml.v_3_2_1");

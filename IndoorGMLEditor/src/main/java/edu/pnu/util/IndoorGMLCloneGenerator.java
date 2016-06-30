@@ -369,9 +369,12 @@ public class IndoorGMLCloneGenerator {
 				State[] sourceConnects = sourceTransition.getStates();
 				State[] targetConnects = new State[2];
 				targetConnects[0] = (State) IGMLMap.get(sourceConnects[0]);
-				targetConnects[1] = (State) IGMLMap.get(sourceConnects[1]);
-				
+				targetConnects[1] = (State) IGMLMap.get(sourceConnects[1]);				
 				targetTransition.setStates(targetConnects);
+				
+				LineString path = targetTransition.getPath();
+				path.getPoints().set(0, targetConnects[0].getPosition());
+				path.getPoints().set(path.getPoints().size() - 1, targetConnects[1].getPosition());
 			} else {
 				targetTransition = createTransition(sourceTransition);
 			}

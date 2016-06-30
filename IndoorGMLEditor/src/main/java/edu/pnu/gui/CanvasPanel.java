@@ -1648,8 +1648,8 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         LineString minLS = null;
         CellSpace minCS = null;
         for (CellSpace cellSpace : cellSpaceMember) {
-        	if (cellSpace.getGmlID().equals("C944")) {
-        		System.out.println("C944 found");
+        	if (cellSpace.getGmlID().equals("C2774")) {
+        		System.out.println("C2774 found");
         	}
             double d = GeometryUtil.getDistancePointToPolygon(cellSpace.getGeometry2D(), e.getX(), e.getY());
             if(d > 100) continue;
@@ -1850,12 +1850,12 @@ public class CanvasPanel extends JPanel implements MouseListener, MouseMotionLis
         }
 
         if (direction > 0) {
-            if (scale > 2) {
-                scale -= 1.00;
+            if (scale > 1) {
+                scale -= 0.5;
             }
         } else {
-            if (scale < 20.0) {
-                scale += 1.00;
+            if (scale < 80.0) {
+                scale += 0.5;
             }
         }
         project.setCurrentFloorPlanScale(scale);

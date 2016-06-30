@@ -183,7 +183,7 @@ public class IndoorCoordinateGenerator {
 		}
 	}
 
-	public void traverseTransition(Transition transition) {		
+	public void traverseTransition(Transition transition) {
 		//generateLineStringCoordinate(transition.getPath());
 	}
 	
@@ -284,6 +284,7 @@ public class IndoorCoordinateGenerator {
 	                */
 			generatePointCoordinate(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
+			
 			if(!is3DGeometry || isMLGHeight) {
 				point.setZ(floorGroundHeight);
 			}
