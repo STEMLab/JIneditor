@@ -362,7 +362,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 						} catch (ParserConfigurationException | SAXException
 								| IOException e2) {
 							// TODO Auto-generated catch block
-							e2.printStackTrace();
+							//e2.printStackTrace();
 						}
                     	/* */
                     	
