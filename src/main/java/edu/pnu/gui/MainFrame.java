@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -46,6 +47,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -68,6 +70,7 @@ import net.opengis.indoorgml.core.State;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import edu.pnu.importexport.CityGMLExporter;
 import edu.pnu.importexport.ProjectMetaDataExporter;
 import edu.pnu.importexport.ProjectMetaDataImporter;
 import edu.pnu.importexport.WKTImporter;
@@ -75,12 +78,10 @@ import edu.pnu.project.EditState;
 import edu.pnu.project.EditWorkState;
 import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
-import edu.pnu.project.ProjectMetaData;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 import edu.pnu.util.IndoorGMLIDGenerator;
 import edu.pnu.util.InterLayerConnectionGenerator;
-import java.awt.Font;
 
 public class MainFrame extends JFrame implements ComponentListener, KeyListener {
 
@@ -170,6 +171,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JMenu mnWkt;
     private JMenuItem mntmImport;
     private JMenuItem mntmClearFloor;
+    private JMenuItem mntmCitygml;
 
     /**
      * Launch the application.
@@ -518,6 +520,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         if (mnExport == null) {
             mnExport = new JMenu("Export");
             mnExport.add(getMnExportToIndoorGML());
+            mnExport.add(getMntmCitygml());
         }
         return mnExport;
     }
@@ -1164,7 +1167,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        btnImport.setVisible(false);
+        //btnImport.setVisible(false);
         return btnImport;
     }
     private JTextField getTextField_ID() {
@@ -1172,7 +1175,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	textField_ID = new JTextField();
         	textField_ID.setColumns(10);
         }
-        textField_ID.setVisible(false);
+        //textField_ID.setVisible(false);
         return textField_ID;
     }
     private JButton getBtnAa() {
@@ -1184,7 +1187,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        btnAa.setVisible(false);
+        //btnAa.setVisible(false);
         return btnAa;
     }
 	private JMenu getMnAssist() {
@@ -1194,7 +1197,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			mnAssist.add(getMnWkt());
 			mnAssist.add(getMntmClearFloor());
 		}
-		mnAssist.setVisible(false);
+		//mnAssist.setVisible(false);
 		return mnAssist;
 	}
 	private JMenuItem getMntmGenerateInterlayerconnection() {
@@ -1270,7 +1273,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 				}
 			});
 		}
-		btnClearFloor.setVisible(false);
+		//btnClearFloor.setVisible(false);
 		return btnClearFloor;
 	}
 	private JMenu getMnWkt() {
@@ -1312,5 +1315,22 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			});
 		}
 		return mntmClearFloor;
+	}
+	private JMenuItem getMntmCitygml() {
+		if (mntmCitygml == null) {
+			mntmCitygml = new JMenuItem("CityGML");
+			mntmCitygml.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					CityGMLExporter exporter = new CityGMLExporter(currentProject.getIndoorFeatures());
+					try {
+						exporter.export();
+					} catch (JAXBException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			});
+		}
+		return mntmCitygml;
 	}
 }

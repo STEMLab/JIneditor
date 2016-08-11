@@ -749,7 +749,7 @@ public class IndoorGMLJAXBConvertor {
 			JAXBElement<OrientableSurfaceType> jOrientableSurfaceType = GMLFactory.createOrientableSurface(orientableSurfaceType);
 			target.setAbstractSurface(jOrientableSurfaceType);
 			
-			idCheck(orientableSurfaceType);       
+			idCheck(orientableSurfaceType);
         } else {
         	PolygonType polygonType = GMLFactory.createPolygonType();
             

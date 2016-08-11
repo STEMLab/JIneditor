@@ -38,7 +38,11 @@ public class IndoorGML3DGeometryBuilder {
 		combineLineStrings = new ArrayList<LineString>();
 		
 		boundary3DMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
-		this.xLinkBoundaryMap = xLinkBoundaryMap;
+		if (xLinkBoundaryMap == null) {
+			this.xLinkBoundaryMap = new HashMap<CellSpaceBoundary, CellSpaceBoundary>();
+		} else {
+			this.xLinkBoundaryMap = xLinkBoundaryMap;
+		}
 	}
 
 	public void create3DGeometry() {
