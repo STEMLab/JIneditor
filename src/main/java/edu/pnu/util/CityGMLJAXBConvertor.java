@@ -249,6 +249,12 @@ public class CityGMLJAXBConvertor {
 							doorSurface.add(cellBoundary.getGeometry3D());
 						}
 					}
+					
+					// TODO: SolidSurface Orientation
+					// TODO: boundarySurface.isEmpty() && !doorSurface.isEmpty()
+					if (boundarySurface.isEmpty() && !doorSurface.isEmpty()) {
+						
+					}
 				} else {
 					boundarySurface.add(surfaceMember.get(i));
 				}
