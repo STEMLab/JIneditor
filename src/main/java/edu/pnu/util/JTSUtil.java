@@ -1,20 +1,21 @@
 package edu.pnu.util;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
-
-import edu.pnu.gui.CanvasPanel;
 
 public class JTSUtil {
     private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FIXED);
@@ -130,7 +131,7 @@ public class JTSUtil {
 		Coordinate[] coordsArr = new Coordinate[coords.size()];
 		coords.toArray(coordsArr);
 		LineString lineString = gf.createLineString(coordsArr);
-				
+
 		return lineString;
 	}
 	
@@ -145,6 +146,13 @@ public class JTSUtil {
 	public static Polygon convertJTSPolygon(net.opengis.indoorgml.geometry.Polygon poly) {
 	        LinearRing exterior = convertJTSLinearRing(poly.getExteriorRing());
 	        LinearRing[] interior = null; // Polygon have no interiorRings in this version.
+	        if (poly.getInteriorRing() != null && !poly.getInteriorRing().isEmpty()) {
+	        	ArrayList<net.opengis.indoorgml.geometry.LinearRing> interiors = poly.getInteriorRing();
+	        	interior = new LinearRing[interiors.size()];
+	        	for (int i = 0; i < interiors.size(); i++) {
+	        		interior[i] = convertJTSLinearRing(interiors.get(i));
+	        	}
+	        }
 	        Polygon polygon = gf.createPolygon(exterior, interior);
 	        
 	        return polygon;
@@ -383,5 +391,23 @@ public class JTSUtil {
                 return IsLeft(V.getCoordinate(n - 2), V.getCoordinate(0), V.getCoordinate(1));
             else
                 return IsLeft(V.getCoordinate(rmin - 1), V.getCoordinate(rmin), V.getCoordinate((rmin + 1) % n));
+        }
+        
+        public static net.opengis.indoorgml.geometry.Polygon getConvexHull(List<net.opengis.indoorgml.geometry.Polygon> polygonList) {
+        	Polygon[] polygons = new Polygon[polygonList.size()];
+        	for (int i = 0; i < polygonList.size(); i++) {
+        		polygons[i] = convertJTSPolygon(polygonList.get(i));
+        	}
+        	
+        	MultiPolygon multiPolygon = gf.createMultiPolygon(polygons);
+        	ConvexHull convex = new ConvexHull(multiPolygon);
+        	Geometry convexHull = convex.getConvexHull();
+        	
+        	if (convexHull == null || !convexHull.getGeometryType().equals("Polygon")) {
+        		return null;
+        	}
+        	
+        	net.opengis.indoorgml.geometry.Polygon result = convertPolygon((Polygon) convexHull);
+        	return result;
         }
 }

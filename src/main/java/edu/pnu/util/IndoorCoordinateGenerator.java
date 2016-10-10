@@ -2,6 +2,8 @@ package edu.pnu.util;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import net.opengis.indoorgml.core.CellSpace;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
@@ -107,7 +109,7 @@ public class IndoorCoordinateGenerator {
 			generatePolygonCoordinate(cellSpaceBoundary.getGeometry3D());
 		} else {
 			if(cellSpaceBoundary.getGeometry2D() == null) return;
-			generateLineStringCoordinate(cellSpaceBoundary.getGeometry2D());
+			generateLineStringCoordinate(cellSpaceBoundary.getGeometry2D(), false);
 		}
 	}
 
@@ -184,7 +186,8 @@ public class IndoorCoordinateGenerator {
 	}
 
 	public void traverseTransition(Transition transition) {
-		//generateLineStringCoordinate(transition.getPath());
+		
+		generateLineStringCoordinate(transition.getPath(), true);
 	}
 	
 	public void traverseInterEdges(InterEdges interEdges) {		
@@ -197,40 +200,15 @@ public class IndoorCoordinateGenerator {
 	public void traverseInterLayerConnection(InterLayerConnection interLayerConnection) {
 	}
 
-	public void generatePointCoordinate(Point point) {
-	        // AffineTransformation
-	        /*
-                Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
-                point.setRealX(transformationP.getPanelX());
-                point.setRealY(transformationP.getPanelY());
-                */
-	        
-	        /*double tempX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
-	        double tempY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
-	        NumberFormat nf = NumberFormat.getInstance();
-                nf.setGroupingUsed(false);
-                String realXStr = nf.format(tempX);
-                String realYStr = nf.format(tempY);
-	        int index = realXStr.indexOf(".");
-	        if(index != -1) {
-	            realXStr = realXStr.substring(0, index) + realXStr.substring(index + 1, realXStr.length());
-	        }
-	        index = realYStr.indexOf(".");
-                if(index != -1) {
-                    realYStr = realYStr.substring(0, index) + realYStr.substring(index + 1, realYStr.length());
-                }
-	        realXStr = realXStr.substring(0, 2) + "." + realXStr.substring(2, realXStr.length());
-	        realYStr = realYStr.substring(0, 3) + "." + realYStr.substring(3, realYStr.length());
-	        double realX = Double.parseDouble(realXStr);
-	        double realY = Double.parseDouble(realYStr);*/
-	        
-	        DecimalFormat format = new DecimalFormat(".#####");
-	        double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
-	        double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
-                String realXStr = format.format(realX);
-                String realYStr = format.format(realY);
-                realX = Double.parseDouble(realXStr);
-                realY = Double.parseDouble(realYStr);
+	public void generatePointCoordinate(Point point) {	        
+        DecimalFormat format = new DecimalFormat(".##########");
+        double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
+        double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
+        String realXStr = format.format(realX);
+        String realYStr = format.format(realY);
+        
+        realX = Double.parseDouble(realXStr);
+        realY = Double.parseDouble(realYStr);
 		point.setRealX(realX);
 		point.setRealY(realY);
 		//point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
@@ -239,54 +217,36 @@ public class IndoorCoordinateGenerator {
 		}
 	}
 	
-	public void generateLineStringCoordinate(LineString lineString) {
+	public void generateLineStringCoordinate(LineString lineString, boolean isSetEndPoints) {
 		//if(lineString.getxLinkGeometry() != null) return;
 		if(lineString.getPoints().size() == 0) return;
-		
+				
 		ArrayList<Point> points = lineString.getPoints();
-		for(Point point : points) {
-		        // AffineTransmation
-		        /*
-                        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
-                        point.setRealX(transformationP.getPanelX());
-                        point.setRealY(transformationP.getPanelY());
-                        */
-                        
-		        /*double tempX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
-	                double tempY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
-	                NumberFormat nf = NumberFormat.getInstance();
-                        nf.setGroupingUsed(false);
-                        String realXStr = nf.format(tempX);
-                        String realYStr = nf.format(tempY);
-	                int index = realXStr.indexOf(".");
-	                if(index != -1) {
-	                    realXStr = realXStr.substring(0, index) + realXStr.substring(index + 1, realXStr.length());
-	                }
-	                index = realYStr.indexOf(".");
-	                if(index != -1) {
-	                    realYStr = realYStr.substring(0, index) + realYStr.substring(index + 1, realYStr.length());
-	                }
-	                realXStr = realXStr.substring(0, 2) + "." + realXStr.substring(2, realXStr.length());
-	                realYStr = realYStr.substring(0, 3) + "." + realYStr.substring(3, realYStr.length());
-	                double realX = Double.parseDouble(realXStr);
-	                double realY = Double.parseDouble(realYStr);*/
+		Point start = points.get(0);
+		Point end = points.get(points.size() - 1);
+		boolean isFloorConnection = false;
+		double offset = Double.NaN;
+		if (start.getZ() != end.getZ()) {
+			isFloorConnection = true;
+			offset = (end.getZ() - start.getZ()) / (points.size() - 1);
+		}
+		
+		for(int i = 0; i < points.size(); i++) {
+			if (isSetEndPoints) {
+				if (i == 0 || i == points.size() - 1) continue;
+			}
+			Point point = points.get(i);
 			
-		        /*
-		        DecimalFormat format = new DecimalFormat(".###");
-	                double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
-	                double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
-	                String realXStr = format.format(realX);
-	                String realYStr = format.format(realY);
-	                realX = Double.parseDouble(realXStr);
-	                realY = Double.parseDouble(realYStr);
-	                point.setRealX(realX);
-	                point.setRealY(realY);
-	                */
 			generatePointCoordinate(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			
 			if(!is3DGeometry || isMLGHeight) {
-				point.setZ(floorGroundHeight);
+				if (!isFloorConnection) {
+					point.setZ(floorGroundHeight);
+				} else {
+					double z = start.getZ() + (offset * i);
+					point.setZ(z);
+				}
 			}
 		}
 	}
@@ -294,45 +254,6 @@ public class IndoorCoordinateGenerator {
 	public void generateLinearRingCoordinate(LinearRing linearRing) {
 		ArrayList<Point> points = linearRing.getPoints();
 		for(Point point : points) {
-		        // AffineTransformation
-		        /*
-                        Point transformationP = transformation(point.getPanelRatioX(), 1 - point.getPanelRatioY());
-                        point.setRealX(transformationP.getPanelX());
-                        point.setRealY(transformationP.getPanelY());
-		         */
-		        /*double tempX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
-	                double tempY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
-	                NumberFormat nf = NumberFormat.getInstance();
-	                nf.setGroupingUsed(false);
-	                String realXStr = nf.format(tempX);
-	                String realYStr = nf.format(tempY);
-	                int index = realXStr.indexOf(".");
-	                if(index != -1) {
-	                    realXStr = realXStr.substring(0, index) + realXStr.substring(index + 1, realXStr.length());
-	                }
-	                index = realYStr.indexOf(".");
-	                if(index != -1) {
-	                    realYStr = realYStr.substring(0, index) + realYStr.substring(index + 1, realYStr.length());
-	                }
-	                realXStr = realXStr.substring(0, 2) + "." + realXStr.substring(2, realXStr.length());
-	                realYStr = realYStr.substring(0, 3) + "." + realYStr.substring(3, realYStr.length());
-	                double realX = Double.parseDouble(realXStr);
-	                double realY = Double.parseDouble(realYStr);
-	                
-	                point.setRealX(realX);
-	                point.setRealY(realY);*/
-		    
-		        /*
-    		        DecimalFormat format = new DecimalFormat(".###");
-                        double realX = lowerCornerReference.getPanelX() + point.getPanelRatioX() * (upperCornerReference.getPanelX() - lowerCornerReference.getPanelX());
-                        double realY = lowerCornerReference.getPanelY() + (1 - point.getPanelRatioY()) * (upperCornerReference.getPanelY() - lowerCornerReference.getPanelY());
-                        String realXStr = format.format(realX);
-                        String realYStr = format.format(realY);
-                        realX = Double.parseDouble(realXStr);
-                        realY = Double.parseDouble(realYStr);
-                        point.setRealX(realX);
-                        point.setRealY(realY);
-                        */
 			generatePointCoordinate(point);
 	                //point.setY(lowerCornerReference.getY() + point.getPanelRatioY() * (upperCornerReference.getY() - lowerCornerReference.getY()));
 			if(!is3DGeometry || isMLGHeight) {

@@ -1,5 +1,6 @@
 package edu.pnu.util;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,10 +8,13 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBElement;
 
+import net.opengis.citygml.building.AbstractBuilding;
 import net.opengis.citygml.building.v_2_0.AbstractBoundarySurfaceType;
 import net.opengis.citygml.building.v_2_0.AbstractBuildingType;
 import net.opengis.citygml.building.v_2_0.AbstractOpeningType;
 import net.opengis.citygml.building.v_2_0.BoundarySurfacePropertyType;
+import net.opengis.citygml.building.v_2_0.BuildingPartPropertyType;
+import net.opengis.citygml.building.v_2_0.BuildingPartType;
 import net.opengis.citygml.building.v_2_0.BuildingType;
 import net.opengis.citygml.building.v_2_0.CeilingSurfaceType;
 import net.opengis.citygml.building.v_2_0.ClosureSurfaceType;
@@ -30,8 +34,11 @@ import net.opengis.gml.v_3_1_1.AbstractGeometryType;
 import net.opengis.gml.v_3_1_1.AbstractRingPropertyType;
 import net.opengis.gml.v_3_1_1.AbstractRingType;
 import net.opengis.gml.v_3_1_1.AbstractSurfaceType;
+import net.opengis.gml.v_3_1_1.BoundingShapeType;
 import net.opengis.gml.v_3_1_1.CompositeSurfaceType;
 import net.opengis.gml.v_3_1_1.DirectPositionListType;
+import net.opengis.gml.v_3_1_1.DirectPositionType;
+import net.opengis.gml.v_3_1_1.EnvelopeType;
 import net.opengis.gml.v_3_1_1.FeaturePropertyType;
 import net.opengis.gml.v_3_1_1.LinearRingType;
 import net.opengis.gml.v_3_1_1.MultiSurfacePropertyType;
@@ -56,6 +63,7 @@ import net.opengis.indoorgml.geometry.Polygon;
 import net.opengis.indoorgml.geometry.Shell;
 import net.opengis.indoorgml.geometry.Solid;
 import edu.pnu.project.BoundaryType;
+import edu.pnu.project.FloorProperty;
 
 public class CityGMLJAXBConvertor {
 	private net.opengis.citygml.building.v_2_0.ObjectFactory bldgFactory;
@@ -64,14 +72,19 @@ public class CityGMLJAXBConvertor {
 	
 	private IndoorFeatures indoorFeatures;
 	private Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap;
+	private List<FloorProperty> floorList;
+	private List<AbstractBuilding> buildingList;
 	
-	public CityGMLJAXBConvertor(IndoorFeatures indoorFeatures, Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap) {
+	public CityGMLJAXBConvertor(IndoorFeatures indoorFeatures, Map<CellSpaceBoundary, CellSpaceBoundary> boundary3DMap,
+			List<FloorProperty> floorList, List<AbstractBuilding> buildingList) {
 		bldgFactory = new net.opengis.citygml.building.v_2_0.ObjectFactory();
 		coreFactory = new net.opengis.citygml.v_2_0.ObjectFactory();
 		gmlFactory = new net.opengis.gml.v_3_1_1.ObjectFactory();
 		
 		this.indoorFeatures = indoorFeatures;
 		this.boundary3DMap = boundary3DMap;
+		this.floorList = floorList;
+		this.buildingList = buildingList;
 	}
 	
 	public JAXBElement<CityModelType> getJAXBElement() {
@@ -86,18 +99,91 @@ public class CityGMLJAXBConvertor {
 		setAbstractGML(target, indoorFeatures);
 		
 		// TODO: implementation Envelope
+		BoundingShapeType boundingShapeType = createBoundingShapeType(floorList);
+		target.setBoundedBy(boundingShapeType);
 		
-		// create Building
-		List<FeaturePropertyType> featureMember = target.getFeatureMember();
-		FeaturePropertyType fp = gmlFactory.createFeaturePropertyType();
+		// create Building		
 		
-		JAXBElement<? extends AbstractCityObjectType> jCityObject = createCityObjectType(indoorFeatures);
-		fp.setFeature(jCityObject);
+		List<JAXBElement<FeaturePropertyType>> jFeatureMember = target.getFeatureMember();
 		
-		featureMember.add(fp);
+		JAXBElement<FeaturePropertyType> jCityObjectMember = createCityObjectMemberType(indoorFeatures);
+		jFeatureMember.add(jCityObjectMember);
 		
+		//
+		for (AbstractBuilding building : buildingList) {
+			AbstractBuildingType buildingType = createBuildingType(building, indoorFeatures);
+			//JAXBElement<? extends AbstractCityObjectType> jCityObjectMemberr = createCityObjectType(building, indoorFeatures);
+			//jFeatureMember.add(jCityObjectMemberr);
+		}
+		//
 		
 		return target;
+	}
+	
+	public BoundingShapeType createBoundingShapeType(List<FloorProperty> floorList) {
+		BoundingShapeType target = gmlFactory.createBoundingShapeType();
+		
+		EnvelopeType envelopeType = createEnvelopeType(floorList);
+		JAXBElement<EnvelopeType> jEnvelope = gmlFactory.createEnvelope(envelopeType);
+		target.setEnvelope(jEnvelope);
+				
+		return target;
+	}
+	
+	public EnvelopeType createEnvelopeType(List<FloorProperty> floorList) {
+		EnvelopeType target = gmlFactory.createEnvelopeType();
+		
+		// TODO: implement srsName part
+		
+		target.setSrsDimension(new BigInteger("3"));
+		
+		double minX = Double.NaN;	double minY = Double.NaN;	double minZ = Double.NaN;
+		double maxX = Double.NaN;	double maxY = Double.NaN;	double maxZ = Double.NaN;		
+		for (FloorProperty floor : floorList) {
+			double corner1X = floor.getBottomLeftPoint().getPanelX();
+			double corner1Y = floor.getBottomLeftPoint().getPanelY();
+			double corner1Z = floor.getGroundHeight();
+			if (Double.isNaN(minX) || corner1X < minX) {
+				minX = corner1X;
+			}
+			if (Double.isNaN(minY) || corner1Y < minY) {
+				minY = corner1Y;
+			}
+			if (Double.isNaN(minZ) || corner1Z < minZ) {
+				minZ = corner1Z;
+			}
+			
+			double corner2X = floor.getTopRightPoint().getPanelX();
+			double corner2Y = floor.getTopRightPoint().getPanelY();
+			double corner2Z = floor.getCeilingHeight();
+			if (Double.isNaN(maxX) || corner1X > maxX) {
+				maxX = corner2X;
+			}
+			if (Double.isNaN(maxY) || corner1Y > maxY) {
+				maxY = corner2Y;
+			}
+			if (Double.isNaN(maxZ) || corner1Z > maxZ) {
+				maxZ = corner2Z;
+			}
+		}
+		DirectPositionType lowerCorner = createDirectPositionType(new double[] {minX, minY, minZ});
+		target.setLowerCorner(lowerCorner);
+		DirectPositionType upperCorner = createDirectPositionType(new double[] {maxX, maxY, maxZ});
+		target.setUpperCorner(upperCorner);
+				
+		return target;
+	}
+	
+	public JAXBElement<FeaturePropertyType> createCityObjectMemberType(IndoorFeatures indoorFeatures) {
+		JAXBElement<FeaturePropertyType> jCityObjectMember = null;
+		
+		FeaturePropertyType featurePropertyType = gmlFactory.createFeaturePropertyType();
+		JAXBElement<? extends AbstractCityObjectType> jCityObject = createCityObjectType(indoorFeatures);
+		featurePropertyType.setFeature(jCityObject);
+		
+		jCityObjectMember = coreFactory.createCityObjectMember(featurePropertyType);
+		
+		return jCityObjectMember;
 	}
 	
 	public JAXBElement<? extends AbstractCityObjectType> createCityObjectType(IndoorFeatures indoorFeatures) {
@@ -187,6 +273,55 @@ public class CityGMLJAXBConvertor {
 		// IntBuildingInstalltion
 		// BuildingParts
 		
+		return target;
+	}
+	
+	public AbstractBuildingType createBuildingType(AbstractBuilding building, IndoorFeatures indoorFeatures) {
+		AbstractBuildingType target = null;
+		
+		if (building.getType().equals("Building")) {
+			target = bldgFactory.createBuildingType();
+		} else if (building.getType().equals("BuildingPart")) {
+			target = bldgFactory.createBuildingPartType();
+		}
+		
+		// set attributes
+		
+		// RoofSurface
+		List<CellSpaceOnFloor> roofCellFloor = getCellSpaceFloors(building.getRoofFloor(), indoorFeatures.getPrimalSpaceFeatures()); 		
+		List<Polygon> convexHulls = getFloorConvexHull(roofCellFloor);
+		for (Polygon convexHull : convexHulls) {
+			System.out.println(convexHull.toString());
+		}
+		
+		// Rooms
+		List<InteriorRoomPropertyType> interiorRoomProps = target.getInteriorRoom();
+		PrimalSpaceFeatures primalSpaceFeatures = indoorFeatures.getPrimalSpaceFeatures();
+		List<CellSpaceOnFloor> cellSpaceOnFloors = primalSpaceFeatures.getCellSpaceOnFloors();
+		List<CellSpaceBoundaryOnFloor> cellSpaceBoundaryOnFloors = primalSpaceFeatures.getCellSpaceBoundaryOnFloors();
+		for (int i = 0; i < cellSpaceOnFloors.size(); i++) {
+			CellSpaceOnFloor cellFloor = cellSpaceOnFloors.get(i);
+			CellSpaceBoundaryOnFloor boundaryFloor = cellSpaceBoundaryOnFloors.get(i);
+			
+			List<CellSpace> cellSpaceMember = cellFloor.getCellSpaceMember();
+			for (CellSpace cellSpace : cellSpaceMember) {
+				InteriorRoomPropertyType interiorRoomProp = bldgFactory.createInteriorRoomPropertyType();
+				RoomType roomType = createRoomType(cellSpace, boundaryFloor);
+				interiorRoomProp.setRoom(roomType);
+				interiorRoomProps.add(interiorRoomProp);
+			}
+		}
+		
+		// BuildingPart
+		List<BuildingPartPropertyType> consistsOfBuildingPart = target.getConsistsOfBuildingPart();
+		List<AbstractBuilding> buildingParts = building.getBuildingParts();
+		for (AbstractBuilding buildingPart : buildingParts) {
+			BuildingPartPropertyType buildingPartPropertyType = bldgFactory.createBuildingPartPropertyType();
+			AbstractBuildingType buildingPartType = createBuildingType(buildingPart, indoorFeatures);
+			buildingPartPropertyType.setBuildingPart((BuildingPartType) buildingPartType);
+			consistsOfBuildingPart.add(buildingPartPropertyType);
+		}
+	
 		return target;
 	}
 	
@@ -315,7 +450,7 @@ public class CityGMLJAXBConvertor {
 		}
 		
 		// Opening (only door)
-		if (doorSurface.size() > 0) {
+		if (doorSurface != null && doorSurface.size() > 0) {
 			List<OpeningPropertyType> openingProps = target.getOpening();
 			for (Polygon door : doorSurface) {
 				OpeningPropertyType openingProp = bldgFactory.createOpeningPropertyType();
@@ -514,4 +649,64 @@ public class CityGMLJAXBConvertor {
 		return jRing;
 	}
 	
+	public DirectPositionType createDirectPositionType(double[] coords) {
+		DirectPositionType target = gmlFactory.createDirectPositionType();
+		
+		List<Double> values = target.getValue();
+		values.add(coords[0]);
+		values.add(coords[1]);
+		values.add(coords[2]);
+		
+		return target;
+	}
+	
+	public List<CellSpaceOnFloor> getCellSpaceFloors(List<FloorProperty> floorPropertyList, PrimalSpaceFeatures psf) {
+		ArrayList<CellSpaceOnFloor> cellSpaceFloors = psf.getCellSpaceOnFloors();
+		List<CellSpaceOnFloor> floors = new ArrayList<CellSpaceOnFloor>();
+		
+		for (FloorProperty fp : floorPropertyList) {
+			for (CellSpaceOnFloor c : cellSpaceFloors) {
+				if (c.getFloorProperty().equals(fp)) {
+					floors.add(c);
+					break;
+				}
+			}
+		}
+		
+		return floors;
+	}
+	
+	public List<CellSpaceBoundaryOnFloor> getCellSpaceBoundaryFloors(List<FloorProperty> floorPropertyList, PrimalSpaceFeatures psf) {
+		ArrayList<CellSpaceBoundaryOnFloor> cellSpaceBoundaryFloors = psf.getCellSpaceBoundaryOnFloors();
+		List<CellSpaceBoundaryOnFloor> floors = new ArrayList<CellSpaceBoundaryOnFloor>();
+		
+		for (FloorProperty fp : floorPropertyList) {
+			for (CellSpaceBoundaryOnFloor c : cellSpaceBoundaryFloors) {
+				if (c.getFloorProperty().equals(fp)) {
+					floors.add(c);
+					break;
+				}
+			}
+		}
+		
+		return floors;
+	}
+	
+	public List<Polygon> getFloorConvexHull(List<CellSpaceOnFloor> floors) {
+		List<Polygon> convexHulls = new ArrayList<Polygon>();
+		
+		for (CellSpaceOnFloor floor : floors) {
+			ArrayList<CellSpace> cellSpaceMember = floor.getCellSpaceMember();
+			List<Polygon> geometry2DList = new ArrayList<Polygon>();
+			
+			for (CellSpace cellSpace : cellSpaceMember) {
+				Polygon geometry2D = cellSpace.getGeometry2D();
+				geometry2DList.add(geometry2D);
+			}
+			
+			Polygon convexHull = JTSUtil.getConvexHull(geometry2DList);
+			convexHulls.add(convexHull);
+		}
+		return convexHulls;
+	}
 }

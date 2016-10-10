@@ -1,5 +1,6 @@
 package edu.pnu.util;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,9 +10,11 @@ import javax.xml.bind.JAXBElement;
 import net.opengis.gml.v_3_2_1.AbstractFeatureType;
 import net.opengis.gml.v_3_2_1.AbstractGMLType;
 import net.opengis.gml.v_3_2_1.AbstractRingPropertyType;
+import net.opengis.gml.v_3_2_1.BoundingShapeType;
 import net.opengis.gml.v_3_2_1.CodeType;
 import net.opengis.gml.v_3_2_1.CurvePropertyType;
 import net.opengis.gml.v_3_2_1.DirectPositionType;
+import net.opengis.gml.v_3_2_1.EnvelopeType;
 import net.opengis.gml.v_3_2_1.FeaturePropertyType;
 import net.opengis.gml.v_3_2_1.LineStringType;
 import net.opengis.gml.v_3_2_1.LinearRingType;
@@ -74,11 +77,28 @@ import net.opengis.indoorgml.geometry.Point;
 import net.opengis.indoorgml.geometry.Polygon;
 import net.opengis.indoorgml.geometry.Shell;
 import net.opengis.indoorgml.geometry.Solid;
+
+import org.geotools.geometry.jts.JTSFactoryFinder;
+
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.GeometryFactory;
+
 import edu.pnu.project.BoundaryType;
 import edu.pnu.project.StateOnFloor;
 import edu.pnu.project.TransitionOnFloor;
 
 public class IndoorGMLJAXBConvertor {
+	private int numberOfCell = 0;
+	private int numberOfState = 0;
+	private int numberOfState2 = 0;
+	private int numberOfTransition = 0;
+	private int numberOfTransition2 = 0;
+	private boolean isLayer2 = false;
+	
+	private Envelope envelope;
+	private double minZ = Double.NaN;
+	private double maxZ = Double.NaN;
+	
 	private ObjectFactory IGMLFactory;
 	private net.opengis.gml.v_3_2_1.ObjectFactory GMLFactory;
 	
@@ -120,6 +140,14 @@ public class IndoorGMLJAXBConvertor {
 		IndoorFeaturesType indoorFeaturesType = createIndoorFeaturesType(null, indoorFeatures);
 		JAXBElement<IndoorFeaturesType> je = IGMLFactory.createIndoorFeatures(indoorFeaturesType);
 		
+		/*
+		System.out.println("Number of Cell : " + numberOfCell);
+		System.out.println("Number of State : " + numberOfState);
+		System.out.println("Number of Transition : " + numberOfTransition);
+		System.out.println("Number of State2 : " + numberOfState2);
+		System.out.println("Number of Transition2 : " + numberOfTransition2);
+		*/
+		
 		return je;
 	}
 
@@ -143,6 +171,38 @@ public class IndoorGMLJAXBConvertor {
 		target.setPrimalSpaceFeatures(primalSpaceFeaturesPropertyType);
 		
 		idCheck(target);
+		
+		// BoundedBy
+		BoundingShapeType boundingShapeType = createBoundedBy(null);
+		target.setBoundedBy(boundingShapeType);
+		
+		return target;
+	}
+	
+	private BoundingShapeType createBoundedBy(BoundingShapeType target) {
+		if (target == null) {
+			target = GMLFactory.createBoundingShapeType();
+		}
+		
+		EnvelopeType envelopeType = GMLFactory.createEnvelopeType();
+		
+		DirectPositionType lowerCorner = GMLFactory.createDirectPositionType();
+		lowerCorner.getValue().add(envelope.getMinX());
+		lowerCorner.getValue().add(envelope.getMinY());
+		lowerCorner.getValue().add(minZ);
+		envelopeType.setLowerCorner(lowerCorner);
+
+		DirectPositionType upperCorner = GMLFactory.createDirectPositionType();
+		upperCorner.getValue().add(envelope.getMaxX());
+		upperCorner.getValue().add(envelope.getMaxY());
+		upperCorner.getValue().add(maxZ);
+		envelopeType.setUpperCorner(upperCorner);
+		
+		envelopeType.setSrsDimension(BigInteger.valueOf(3));
+		envelopeType.setSrsName("EPSG::4326"); // WGS84		
+		
+		JAXBElement<EnvelopeType> jEnvelope = GMLFactory.createEnvelope(envelopeType);
+		target.setEnvelope(jEnvelope);
 		
 		return target;
 	}
@@ -177,14 +237,14 @@ public class IndoorGMLJAXBConvertor {
 		ArrayList<CellSpace> cellSpaceMember = cellSpaceOnFloor.getCellSpaceMember();
 		for(CellSpace cellSpace : cellSpaceMember) {
 			//cellSpaceMemberType = IGMLFactory.createCellSpaceMemberType();
-			setFloorDescription(cellSpace, cellSpaceOnFloor.getFloorProperty().getLevel());
-			CellSpaceType cellSpaceType = createCellSpaceType(null, cellSpace);
-
 			String description = cellSpace.getDescription("Usage");
-			if (description != null && description.equals("Stair")) {
-				System.out.println(cellSpace.getGmlID());
-				count++;
+			if (description == null || description.equals("")) {
+				cellSpace.setDescription("Usage", "Room");
+				description = cellSpace.getDescription("Usage");
 			}
+			
+			setFloorDescription(cellSpace, cellSpaceOnFloor.getFloorProperty().getLevel());
+			CellSpaceType cellSpaceType = createCellSpaceType(null, cellSpace);		
 			
 			//cellSpaceMemberType.setCellSpace(cellSpaceType);
 			FeaturePropertyType featurePropertyType = GMLFactory.createFeaturePropertyType();
@@ -199,6 +259,8 @@ public class IndoorGMLJAXBConvertor {
 	}
 
 	private CellSpaceType createCellSpaceType(CellSpaceType target, CellSpace cellSpace) {
+		numberOfCell++;
+		
 		if(target == null) {
 			target = IGMLFactory.createCellSpaceType();
 		}
@@ -367,6 +429,9 @@ public class IndoorGMLJAXBConvertor {
 	}
 
 	private SpaceLayerType createSpaceLayerType(SpaceLayerType target, SpaceLayer spaceLayer) {
+		if (spaceLayer.getGmlID().equalsIgnoreCase("IS2")) {
+			isLayer2 = true;
+		}
 		if(target == null) {
 			target = IGMLFactory.createSpaceLayerType();
 		}
@@ -430,6 +495,10 @@ public class IndoorGMLJAXBConvertor {
 	}
 
 	private StateType createStateType(StateType target, State state) {
+		numberOfState++;
+		if (isLayer2) {
+			numberOfState2++;
+		}
 		if(target == null) {
 			target = IGMLFactory.createStateType();
 		}
@@ -515,6 +584,10 @@ public class IndoorGMLJAXBConvertor {
 	}
 
 	private TransitionType createTransitionType(TransitionType target, Transition transition) {
+		numberOfTransition++;
+		if (isLayer2) {
+			numberOfTransition2++;
+		}
 		if(target == null) {
 			target = IGMLFactory.createTransitionType();
 		}
@@ -648,6 +721,8 @@ public class IndoorGMLJAXBConvertor {
 		target.setPoint(pointType);
 		
 		idCheck(pointType);
+		
+		expandEnvelope(point.getRealX(), point.getRealY(), point.getZ());
 		return target;
 	}
 	
@@ -680,10 +755,7 @@ public class IndoorGMLJAXBConvertor {
 			ArrayList<Point> points = lineString.getPoints();
 			for(int i = 0; i < points.size(); i++) {
 				Point point = points.get(i);
-	                        /*if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
-	                                && points.get(i - 1).getRealY() == points.get(i).getRealY()
-	                                && points.get(i - 1).getZ() == points.get(i).getZ()) 
-	                            continue;*/
+
 				DirectPositionType directPositionType = GMLFactory.createDirectPositionType();
 				directPositionType.getValue().add(point.getRealX());
 				directPositionType.getValue().add(point.getRealY());
@@ -691,6 +763,8 @@ public class IndoorGMLJAXBConvertor {
 				
 				JAXBElement<DirectPositionType> jPosition = GMLFactory.createPos(directPositionType);
 				lineStringType.getPosOrPointPropertyOrPointRep().add(jPosition);
+				
+				expandEnvelope(point.getRealX(), point.getRealY(), point.getZ());
 			}
 			
 			JAXBElement<LineStringType> jAbstractCurve = GMLFactory.createLineString(lineStringType);
@@ -709,11 +783,8 @@ public class IndoorGMLJAXBConvertor {
 		LinearRingType linearRingType = GMLFactory.createLinearRingType();
 		ArrayList<Point> points = linearRing.getPoints();
 		for(int i = 0; i < points.size(); i++) {
-		        Point point = points.get(i);
-		        /*if(i != 0 && points.get(i - 1).getRealX() == points.get(i).getRealX()
-                                && points.get(i - 1).getRealY() == points.get(i).getRealY()
-                                && points.get(i - 1).getZ() == points.get(i).getZ()) 
-                            continue;*/
+	        Point point = points.get(i);
+
 			DirectPositionType directPositonType = GMLFactory.createDirectPositionType();
 			directPositonType.getValue().add(point.getRealX());
 			directPositonType.getValue().add(point.getRealY());
@@ -721,6 +792,8 @@ public class IndoorGMLJAXBConvertor {
 			
 			JAXBElement<DirectPositionType> jPosition = GMLFactory.createPos(directPositonType);
 			linearRingType.getPosOrPointPropertyOrPointRep().add(jPosition);
+			
+			expandEnvelope(point.getRealX(), point.getRealY(), point.getZ());
 		}
 		
 		JAXBElement<LinearRingType> jExteriorRing = GMLFactory.createLinearRing(linearRingType);
@@ -962,5 +1035,21 @@ public class IndoorGMLJAXBConvertor {
 		}
 		
 		return code;
+	}
+	
+	private void expandEnvelope(double x, double y, double z) {
+		if (envelope == null) {
+			envelope = new Envelope();
+			minZ = z;
+			maxZ = z;
+		}
+		
+		envelope.expandToInclude(x, y);
+		if (minZ > z) {
+			minZ = z;
+		}
+		if (maxZ < z) {
+			maxZ = z;
+		}
 	}
 }

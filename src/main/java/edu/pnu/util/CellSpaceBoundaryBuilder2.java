@@ -72,9 +72,31 @@ public class CellSpaceBoundaryBuilder2 {
 					}
 				}
 			}
+			
+			for (CellSpace cellSpace : cellSpaceMember) {
+				ArrayList<CellSpaceBoundary> boundedBy = cellSpace.getPartialBoundedBy();
+				State duality = cellSpace.getDuality();
+				if (duality == null) continue;
+				
+				ArrayList<Transition> connects =duality.getTransitionReference();
+				for (Transition connect : connects) {
+					if (connect.getDuality() != null) continue;
+					
+					LineString transitionLS = connect.getPath();
+					for (CellSpaceBoundary boundary : boundedBy) {
+						LineString boundaryLS = boundary.getGeometry2D();
+						
+						if (GeometryUtil.isIntersectsLineString(transitionLS, boundaryLS)) {
+							connect.setDuality(boundary);
+							boundary.setDuality(connect);
+							break;
+						}
+					}
+				}
+			}
 		}
 		
-		System.out.println("build end");
+		//System.out.println("build end");
 	}
 
 	public CellSpaceBoundary createCellSpaceBoundaryForJSK(LineString ls, LineString otherLS, CellSpace c1, CellSpace c2, CellSpaceBoundaryOnFloor cellSpaceBoundaryOnFloor) {
