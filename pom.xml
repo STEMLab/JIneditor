@@ -24,9 +24,9 @@
 		<dependency>
 			<groupId>edu.pnu</groupId>
 			<artifactId>kairos-citygml-xsd-v_2_0</artifactId>
-			<version>1.0</version>
+			<version>1.0.0</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/citygml-xsd-v_2_0-1.0.0.jar</systemPath>
+			<systemPath>${pom.basedir}/lib/citygml-xsd-v_2_0-1.0.0.jar</systemPath>
 		</dependency>
 
 		<!-- JAXB 
