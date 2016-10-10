@@ -1,6 +1,7 @@
 package edu.pnu.importexport;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFileChooser;
@@ -9,7 +10,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.PropertyException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import net.opengis.citygml.building.AbstractBuilding;
 import net.opengis.citygml.v_2_0.CityModelType;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.IndoorFeatures;
@@ -28,7 +29,7 @@ import org.w3c.dom.Document;
 
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
-import edu.pnu.importexport.IndoorGMLExporter.IndoorGMLNameSpaceMapper;
+import edu.pnu.project.ProjectFile;
 import edu.pnu.util.CityGMLJAXBConvertor;
 import edu.pnu.util.IndoorCoordinateGenerator;
 import edu.pnu.util.IndoorGML3DGeometryBuilder;
@@ -36,14 +37,18 @@ import edu.pnu.util.IndoorGMLCloneGenerator;
 import edu.pnu.util.IndoorGMLIDGenerator;
 
 public class CityGMLExporter {
-	private IndoorFeatures indoorFeatures;
+	private ProjectFile project;
 	private boolean is3DGeometry = true;
+	private List<AbstractBuilding> buildingList;
 
-	public CityGMLExporter(IndoorFeatures indoorFeatures) {
-		this.indoorFeatures = indoorFeatures;
+	public CityGMLExporter(ProjectFile project, List<AbstractBuilding> buildingList) {
+		this.project = project;
+		this.buildingList = buildingList;
 	}
 
 	public void export() throws JAXBException {
+		IndoorFeatures indoorFeatures = project.getIndoorFeatures();
+		
 		IndoorGMLCloneGenerator cloneGenerator = new IndoorGMLCloneGenerator();
 		IndoorFeatures clone = cloneGenerator.getClone(indoorFeatures);
 		Map<CellSpaceBoundary, CellSpaceBoundary> xLinkBoundaryMap = cloneGenerator.getXLinkBoundaryMap();
@@ -58,7 +63,7 @@ public class CityGMLExporter {
 		coordinateGenerator.generate();
 		
 
-		CityGMLJAXBConvertor jaxbConvertor = new CityGMLJAXBConvertor(clone, boundary3DMap);
+		CityGMLJAXBConvertor jaxbConvertor = new CityGMLJAXBConvertor(clone, boundary3DMap, project.getBuildingProperty().getFloorProperties(), buildingList);
 		JAXBElement<CityModelType> jCityModel = jaxbConvertor.getJAXBElement();
 		
 		JAXBContext context;
@@ -68,6 +73,9 @@ public class CityGMLExporter {
 				"net.opengis.citygml.v_2_0"
 				+ ":net.opengis.citygml.building.v_2_0"
 				+ ":net.opengis.gml.v_3_1_1"
+				+ ":org.w3.smil.v_2_0"
+				+ ":org.w3.smil.v_2_0.language"
+				+ ":org.w3.xlink"
 		);
 		
 		File output = null;
@@ -88,12 +96,13 @@ public class CityGMLExporter {
 				"http://www.opengis.net/citygml/profiles/base/2.0 http://schemas.opengis.net/citygml/profiles/base/2.0/CityGML.xsd");
 		marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
+		/*
 		try{
 			marshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new CityGMLNameSpaceMapper());
 		} catch(PropertyException e){
 			e.printStackTrace();
 		}
-				
+		*/
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = null;
 		try {

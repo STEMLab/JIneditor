@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -15,8 +16,9 @@ import javax.swing.border.EmptyBorder;
 import net.opengis.indoorgml.core.CellSpaceBoundary;
 import net.opengis.indoorgml.core.IndoorFeatures;
 import edu.pnu.importexport.IndoorGMLExporter;
+import edu.pnu.project.FloorProperty;
 import edu.pnu.project.ProjectFile;
-import edu.pnu.util.CellSpaceBoundaryBuilder;
+import edu.pnu.query.QuerySelector;
 import edu.pnu.util.CellSpaceBoundaryBuilder2;
 import edu.pnu.util.Geometry3DRemover;
 import edu.pnu.util.IndoorGML3DGeometryBuilder;
@@ -87,7 +89,7 @@ public class GeometryExportDialog extends JDialog {
 			{
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
+					public void actionPerformed(ActionEvent e) {						
 						Geometry3DRemover.removeGeometry3D(project.getIndoorFeatures());
 						
 						// Cell과 Door사이에 대해 만들어지지 않은 boundary 생성
@@ -113,7 +115,23 @@ public class GeometryExportDialog extends JDialog {
 							project.setIs3DGeometry(false);
 						}
 						
+						// Query Test : Aveneul 1F + 2F
+						// Only consider SpaceLayer 1
+						/*
+						String[] fpString = new String[]{"Avenuel_1F", "Avenuel_2F", "Avenuel_3F", "Avenuel_4F", "Avenuel_5F", "Avenuel_6F",
+														"Shopping_1F", "Shopping_2F", "Shopping_3F", "Shopping_4F", "Shopping_5F", "Shopping_6F", "Shopping_B1",
+														"Cinema_7F", "Cinema_8F", "Cinema_9F", "Cinema_10F", "Cinema_11F",
+														"Parkinglot_B2", "Parkinglot_B3", "Parkinglot_B4", "Parkinglot_B5", "Parkinglot_B6"};
+														
+						//String[] fpString = new String[]{"Avenuel_1F", "Shopping_1F"};
+						//String[] fpString = new String[]{"Avenuel_1F", "Avenuel_2F"};
+						List<FloorProperty> queryFP = QuerySelector.getQueryFloors(project, fpString);
+						IndoorFeatures queryIndoorFeatures = QuerySelector.getQueryResult(clone, queryFP);
+						
+						IndoorGMLExporter exporter = new IndoorGMLExporter(queryIndoorFeatures, project.getIs3DGeometry());
+						*/
 						IndoorGMLExporter exporter = new IndoorGMLExporter(clone, project.getIs3DGeometry());
+						
 						try {
 							exporter.setBoundary3DMap(boundary3DMap);
 							exporter.export();

@@ -28,6 +28,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
@@ -56,6 +57,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import net.opengis.citygml.building.AbstractBuilding;
 import net.opengis.indoorgml.core.CellSpaceBoundaryOnFloor;
 import net.opengis.indoorgml.core.CellSpaceOnFloor;
 import net.opengis.indoorgml.core.Edges;
@@ -1321,15 +1323,25 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			mntmCitygml = new JMenuItem("CityGML");
 			mntmCitygml.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					CityGMLExporter exporter = new CityGMLExporter(currentProject.getIndoorFeatures());
+					CityGMLExportDialog dialog = new CityGMLExportDialog(panel, currentProject);
+                    dialog.setModal(true);
+                    dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                    dialog.setVisible(true);
+                    
+                    List<AbstractBuilding> buildingList = dialog.getBuildingList();
+					CityGMLExporter exporter = new CityGMLExporter(currentProject, buildingList);
+					
 					try {
 						exporter.export();
 					} catch (JAXBException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
+					
 				}
 			});
+			
+			mntmCitygml.setEnabled(false);
 		}
 		return mntmCitygml;
 	}

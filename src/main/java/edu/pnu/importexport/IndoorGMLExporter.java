@@ -30,6 +30,8 @@ import org.w3c.dom.Document;
 import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 import edu.pnu.project.ProjectFile;
+import edu.pnu.query.QuerySelector;
+import edu.pnu.util.CoordinateTransformUtil;
 import edu.pnu.util.IndoorCoordinateGenerator;
 import edu.pnu.util.IndoorGMLIDGenerator;
 import edu.pnu.util.IndoorGMLJAXBConvertor;
@@ -51,13 +53,18 @@ public class IndoorGMLExporter {
 		this.boundary3DMap = boundary3DMap;
 	}
 	
-	public void export() throws JAXBException{
+	public void export() throws JAXBException{		
 		//IndoorGMLIDCoordinateGenerateVisitor idCoordinateVisitor = new IndoorGMLIDCoordinateGenerateVisitor(project.getIs3DGeometry());
 		IndoorGMLIDGenerator idGenerator = new IndoorGMLIDGenerator(indoorFeatures, is3DGeometry);
 	    IndoorCoordinateGenerator coordinateGenerator = new IndoorCoordinateGenerator(indoorFeatures, is3DGeometry);
 		IndoorGMLJAXBConvertor jaxbConvertor = new IndoorGMLJAXBConvertor(indoorFeatures, is3DGeometry, boundary3DMap);
 		idGenerator.generateGMLID();
 		coordinateGenerator.generate();
+		
+		// Transformation Test
+		//CoordinateTransformUtil.setReferences();
+		//indoorFeatures = CoordinateTransformUtil.transform(indoorFeatures, is3DGeometry);
+		
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("net.opengis.indoorgml.core.v_1_0"
             + ":net.opengis.gml.v_3_2_1");
