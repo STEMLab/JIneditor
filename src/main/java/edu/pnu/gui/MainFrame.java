@@ -174,6 +174,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JMenuItem mntmImport;
     private JMenuItem mntmClearFloor;
     private JMenuItem mntmCitygml;
+    private JMenu mnView;
+    private JMenuItem mntmIndoorGMLViewer;
 
     /**
      * Launch the application.
@@ -327,6 +329,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             menuBar.add(getMnFile());
             menuBar.add(getMnEdit());
             menuBar.add(getMnSettings());
+            menuBar.add(getMnView());
             menuBar.add(getMnAssist());
         }
         return menuBar;
@@ -1344,5 +1347,23 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			mntmCitygml.setEnabled(false);
 		}
 		return mntmCitygml;
+	}
+	private JMenu getMnView() {
+		if (mnView == null) {
+			mnView = new JMenu("View");
+			mnView.add(getMntmIndoorGMLViewer());
+		}
+		return mnView;
+	}
+	private JMenuItem getMntmIndoorGMLViewer() {
+		if (mntmIndoorGMLViewer == null) {
+			mntmIndoorGMLViewer = new JMenuItem("IndoorGML Viewer");
+			mntmIndoorGMLViewer.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					
+				}
+			});
+		}
+		return mntmIndoorGMLViewer;
 	}
 }
