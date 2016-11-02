@@ -914,7 +914,7 @@ public class IndoorGMLJAXBConvertor {
 	}
 	
 	private StringOrRefType createStringOrRefType(StringOrRefType target, String value) {
-        if(value == null)
+        if(value == null || value.equals(""))
         	return null;
         
         if(target == null) {

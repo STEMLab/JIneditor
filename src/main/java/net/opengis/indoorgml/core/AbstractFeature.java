@@ -44,7 +44,7 @@ public abstract class AbstractFeature implements Serializable {
     	for (int i = 0; i < splitByType.length; i++) {
     		String[] splits = splitByType[i].split("=");
     		
-    		if (splits[0].equals(type)) {
+    		if (splits.length == 2 && splits[0].equals(type)) {
     			return splits[1];
     		}
     	}
@@ -57,8 +57,35 @@ public abstract class AbstractFeature implements Serializable {
     }
     public void setDescription(String type, String value) {
     	if (value == null || value.equals("")) {
+    		if (description == null) return;
+    		
+    		String[] splitByType = description.split(":");
+    		int removeIdx = -1;
+    		for (int i = 0; i < splitByType.length; i++) {
+    			String[] splits = splitByType[i].split("=");
+    			if (splits[0].equals(type)) {
+    				removeIdx = i;
+    				break;
+    			}
+    		}
+    		
+    		StringBuffer sb = new StringBuffer("");
+    		boolean isFirst = true;
+    		for (int i = 0; i < splitByType.length; i++) {
+    			if (removeIdx != i) {
+    				if (i != 0 && !isFirst) {
+    					sb.append(":");
+    				}
+    				
+    				sb.append(splitByType[i]);
+    				isFirst = false;
+    			}
+    		}
+    		description = sb.toString();
+    		
     		return;
     	}
+    	
     	if (description == null) {
     		description = "";
     	}
