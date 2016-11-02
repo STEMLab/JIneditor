@@ -174,6 +174,8 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
     private JMenuItem mntmImport;
     private JMenuItem mntmClearFloor;
     private JMenuItem mntmCitygml;
+    private JMenu mnView;
+    private JMenuItem mntmIndoorGMLViewer;
 
     /**
      * Launch the application.
@@ -327,6 +329,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
             menuBar.add(getMnFile());
             menuBar.add(getMnEdit());
             menuBar.add(getMnSettings());
+            menuBar.add(getMnView());
             menuBar.add(getMnAssist());
         }
         return menuBar;
@@ -1169,7 +1172,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        //btnImport.setVisible(false);
+        btnImport.setVisible(false);
         return btnImport;
     }
     private JTextField getTextField_ID() {
@@ -1177,7 +1180,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	textField_ID = new JTextField();
         	textField_ID.setColumns(10);
         }
-        //textField_ID.setVisible(false);
+        textField_ID.setVisible(false);
         return textField_ID;
     }
     private JButton getBtnAa() {
@@ -1189,7 +1192,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
         	    }
         	});
         }
-        //btnAa.setVisible(false);
+        btnAa.setVisible(false);
         return btnAa;
     }
 	private JMenu getMnAssist() {
@@ -1275,7 +1278,7 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 				}
 			});
 		}
-		//btnClearFloor.setVisible(false);
+		btnClearFloor.setVisible(false);
 		return btnClearFloor;
 	}
 	private JMenu getMnWkt() {
@@ -1344,5 +1347,23 @@ public class MainFrame extends JFrame implements ComponentListener, KeyListener 
 			mntmCitygml.setEnabled(false);
 		}
 		return mntmCitygml;
+	}
+	private JMenu getMnView() {
+		if (mnView == null) {
+			mnView = new JMenu("View");
+			mnView.add(getMntmIndoorGMLViewer());
+		}
+		return mnView;
+	}
+	private JMenuItem getMntmIndoorGMLViewer() {
+		if (mntmIndoorGMLViewer == null) {
+			mntmIndoorGMLViewer = new JMenuItem("IndoorGML Viewer");
+			mntmIndoorGMLViewer.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					
+				}
+			});
+		}
+		return mntmIndoorGMLViewer;
 	}
 }

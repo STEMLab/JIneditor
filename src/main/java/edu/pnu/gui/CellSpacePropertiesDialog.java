@@ -205,7 +205,7 @@ public class CellSpacePropertiesDialog extends JDialog {
 	private JComboBox getComboBox_Usage() {
 		if (comboBox_Usage == null) {
 			comboBox_Usage = new JComboBox();
-			comboBox_Usage.setModel(new DefaultComboBoxModel(new String[] {"Room", "Corridor", "Stair", "Elevator", "Door"}));
+			comboBox_Usage.setModel(new DefaultComboBoxModel(new String[] {"Room", "Corridor", "Stair", "Elevator", "Door", "Entrance"}));
 			comboBox_Usage.setBounds(113, 132, 120, 21);
 		}
 		for (int i = 0; i < comboBox_Usage.getItemCount(); i++) {
