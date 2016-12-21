@@ -124,7 +124,7 @@ public class GeometryExportDialog extends JDialog {
 														"Parkinglot_B2", "Parkinglot_B3", "Parkinglot_B4", "Parkinglot_B5", "Parkinglot_B6"};
 														
 						//String[] fpString = new String[]{"Avenuel_1F", "Shopping_1F"};
-						//String[] fpString = new String[]{"Avenuel_1F", "Avenuel_2F"};
+						String[] fpString = new String[]{"Avenuel_1F"};
 						List<FloorProperty> queryFP = QuerySelector.getQueryFloors(project, fpString);
 						IndoorFeatures queryIndoorFeatures = QuerySelector.getQueryResult(clone, queryFP);
 						

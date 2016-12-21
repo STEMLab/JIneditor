@@ -18,15 +18,15 @@ import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
 
 public class JTSUtil {
-    private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.FIXED);
-	private static final GeometryFactory gf = new GeometryFactory(pm); 
+    private static final PrecisionModel pm = new PrecisionModel(PrecisionModel.maximumPreciseValue);
+	private static final GeometryFactory gf = new GeometryFactory(pm);
 	
 	public static Point snapPointToLineStringByLIL(LineString line, Point point) {
 		//new PrecisionModel(
 		System.out.println("scale " + pm.getScale());
 		LocationIndexedLine lil = new LocationIndexedLine(line);
 		LinearLocation here = lil.project(point.getCoordinate());
-		Coordinate coord = lil.extractPoint(here);
+		Coordinate coord = lil.extractPoint(here, 0);
 		Point p = gf.createPoint(coord);
 		
 		System.out.println("LIL isContains : " + line.contains(p));

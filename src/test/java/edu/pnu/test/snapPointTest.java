@@ -35,13 +35,13 @@ public class snapPointTest {
     @Test
     public void snapPointTest() {
         GeometryFactory gf = JTSFactoryFinder.getGeometryFactory();
-        Coordinate coord1 = new Coordinate(0,0);
-        Coordinate coord2 = new Coordinate(125,130);
-        Coordinate coord3 = new Coordinate(40,50);
+        Coordinate coord1 = new Coordinate(89.37412487,110.2487538);
+        Coordinate coord2 = new Coordinate(125.76543268795456, 130.0001458);
+        Coordinate coord3 = new Coordinate(100.02458, 119.88754);
         LineString line = gf.createLineString(new Coordinate[]{coord1, coord2});
         Point point = gf.createPoint(coord3);
         
-        Point snapPoint = JTSUtil.snapPointToLineString(line, point);
+        Point snapPoint = JTSUtil.snapPointToLineStringByLIL(line, point);
         System.out.println(snapPoint.toText());
         
         Double a = 5.00000;
